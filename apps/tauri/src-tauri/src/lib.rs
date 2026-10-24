@@ -1,12 +1,44 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
 
-/// A file handed to the app from outside, held until the page asks for it.
+const MAIN: &str = "main";
+
+/// Files handed to the app from outside, each held for its window until the
+/// page in that window asks for it.
 #[derive(Default)]
-struct OpenedFile(Mutex<Option<String>>);
+struct Opened {
+    files: HashMap<String, String>,
+    /// The main window has asked, so a later file needs a window of its own.
+    is_main_taken: bool,
+    windows: u32,
+}
+
+impl Opened {
+    /// Assigns `path` to a window. Returns the label of a window to create.
+    fn route(&mut self, path: String) -> Option<String> {
+        if !self.is_main_taken && !self.files.contains_key(MAIN) {
+            self.files.insert(MAIN.to_string(), path);
+            return None;
+        }
+        self.windows += 1;
+        let label = format!("document-{}", self.windows);
+        self.files.insert(label.clone(), path);
+        Some(label)
+    }
+
+    fn take(&mut self, label: &str) -> Option<String> {
+        if label == MAIN {
+            self.is_main_taken = true;
+        }
+        self.files.remove(label)
+    }
+}
+
+struct OpenedFiles(Mutex<Opened>);
 
 #[tauri::command]
-fn take_opened_file(state: tauri::State<OpenedFile>) -> Option<String> {
-    state.0.lock().ok()?.take()
+fn take_opened_file(window: tauri::Window, state: tauri::State<OpenedFiles>) -> Option<String> {
+    state.0.lock().ok()?.take(window.label())
 }
 
 /// Windows and Linux pass an opened file as an argument; macOS sends an event.
@@ -15,28 +47,79 @@ fn file_argument() -> Option<String> {
 }
 
 pub fn run() {
+    let mut opened = Opened::default();
+    if let Some(path) = file_argument() {
+        opened.route(path);
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .manage(OpenedFile(Mutex::new(file_argument())))
+        .manage(OpenedFiles(Mutex::new(opened)))
         .invoke_handler(tauri::generate_handler![take_opened_file])
         .build(tauri::generate_context!())
         .expect("error while building the app")
         .run(|app, event| {
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Opened { urls } = event {
-                use tauri::{Emitter, Manager};
-                let opened = urls.into_iter().find_map(|url| url.to_file_path().ok());
-                if let Some(path) = opened {
-                    let path = path.to_string_lossy().into_owned();
-                    if let Ok(mut held) = app.state::<OpenedFile>().0.lock() {
-                        *held = Some(path.clone());
-                    }
-                    let _ = app.emit("opened-file", path);
+                for path in urls.into_iter().filter_map(|url| url.to_file_path().ok()) {
+                    open_in_window(app, path);
                 }
             }
             #[cfg(not(target_os = "macos"))]
             let _ = (app, event);
         });
+}
+
+/// macOS keeps one process, so a file opened while it runs gets a new window.
+#[cfg(target_os = "macos")]
+fn open_in_window(app: &tauri::AppHandle, path: std::path::PathBuf) {
+    use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+
+    let title = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "MD Viewer".to_string());
+    let label = match app.state::<OpenedFiles>().0.lock() {
+        Ok(mut opened) => opened.route(path.to_string_lossy().into_owned()),
+        Err(_) => return,
+    };
+    if let Some(label) = label {
+        let _ = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+            .title(title)
+            .inner_size(1200.0, 800.0)
+            .min_inner_size(640.0, 400.0)
+            .build();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gives_the_first_file_to_the_main_window() {
+        let mut opened = Opened::default();
+        assert_eq!(opened.route("/a.md".into()), None);
+        assert_eq!(opened.take(MAIN), Some("/a.md".into()));
+    }
+
+    #[test]
+    fn opens_a_new_window_once_the_main_window_has_asked() {
+        let mut opened = Opened::default();
+        assert_eq!(opened.take(MAIN), None);
+        assert_eq!(opened.route("/a.md".into()), Some("document-1".into()));
+        assert_eq!(opened.route("/b.md".into()), Some("document-2".into()));
+        assert_eq!(opened.take("document-2"), Some("/b.md".into()));
+        assert_eq!(opened.take("document-1"), Some("/a.md".into()));
+    }
+
+    #[test]
+    fn opens_a_new_window_for_a_second_file_at_launch() {
+        let mut opened = Opened::default();
+        assert_eq!(opened.route("/a.md".into()), None);
+        assert_eq!(opened.route("/b.md".into()), Some("document-1".into()));
+        assert_eq!(opened.take(MAIN), Some("/a.md".into()));
+    }
 }

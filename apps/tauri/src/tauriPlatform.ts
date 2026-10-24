@@ -2,11 +2,11 @@
  * The viewer on the desktop. Tauri's fs plugin reads any folder the person
  * picks; the app is not sandboxed, so a stored path is all a bookmark needs.
  * A file opened from Finder or the shell reaches the page through the Rust
- * side, which holds it until the page asks.
+ * side, which holds it for its window until the page asks. A file opened
+ * while the app runs gets a new window, so a window never changes file.
  */
 
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-dialog';
 import { exists, readDir, readTextFile, watch } from '@tauri-apps/plugin-fs';
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -14,8 +14,6 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import type { Platform } from '@md-viewer/viewer/platform';
 
 import { toNativePath, toViewerPath } from './paths';
-
-const OPENED_EVENT = 'opened-file';
 
 /** Ties an async subscription to a synchronous stop. */
 function stopLater(start: Promise<() => void>): () => void {
@@ -84,12 +82,8 @@ export function createTauriPlatform(): Platform {
       return path === null ? null : toViewerPath(path);
     },
 
-    watchOpenedFile(onOpen) {
-      return stopLater(
-        listen<string>(OPENED_EVENT, event =>
-          onOpen(toViewerPath(event.payload)),
-        ),
-      );
+    watchOpenedFile() {
+      return () => {};
     },
 
     forgetOpenedFile() {},
