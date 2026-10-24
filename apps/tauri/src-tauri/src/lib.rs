@@ -72,6 +72,10 @@ pub fn run() {
         });
 }
 
+/// How far a new window sits from the window it opens over.
+#[cfg(target_os = "macos")]
+const CASCADE: f64 = 28.0;
+
 /// macOS keeps one process, so a file opened while it runs gets a new window.
 #[cfg(target_os = "macos")]
 fn open_in_window(app: &tauri::AppHandle, path: std::path::PathBuf) {
@@ -85,13 +89,35 @@ fn open_in_window(app: &tauri::AppHandle, path: std::path::PathBuf) {
         Ok(mut opened) => opened.route(path.to_string_lossy().into_owned()),
         Err(_) => return,
     };
-    if let Some(label) = label {
-        let _ = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
-            .title(title)
-            .inner_size(1200.0, 800.0)
-            .min_inner_size(640.0, 400.0)
-            .build();
+    let Some(label) = label else {
+        return;
+    };
+    let mut builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+        .title(title)
+        .inner_size(1200.0, 800.0)
+        .min_inner_size(640.0, 400.0);
+    // A new window at the default spot would cover the one under it exactly.
+    if let Some((x, y)) = cascade_origin(app) {
+        builder = builder.position(x + CASCADE, y + CASCADE);
     }
+    let _ = builder.build();
+}
+
+/// Top-left corner, in logical pixels, of the focused window, else of any.
+#[cfg(target_os = "macos")]
+fn cascade_origin(app: &tauri::AppHandle) -> Option<(f64, f64)> {
+    use tauri::Manager;
+
+    let windows = app.webview_windows();
+    let window = windows
+        .values()
+        .find(|window| window.is_focused().unwrap_or(false))
+        .or_else(|| windows.values().next())?;
+    let position = window
+        .outer_position()
+        .ok()?
+        .to_logical::<f64>(window.scale_factor().ok()?);
+    Some((position.x, position.y))
 }
 
 #[cfg(test)]
