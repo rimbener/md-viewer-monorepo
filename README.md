@@ -24,6 +24,8 @@ pnpm dev:web        # web app on http://localhost:5173
 pnpm dev:tauri      # desktop app, with hot reload
 pnpm build:web      # static site in apps/web/dist
 pnpm build:tauri    # installers in apps/tauri/src-tauri/target/release/bundle
+pnpm build:macos    # MD Viewer.app only
+pnpm install:macos  # build, then copy MD Viewer.app to /Applications
 pnpm test           # vitest, every package
 pnpm typecheck
 pnpm lint

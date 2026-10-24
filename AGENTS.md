@@ -22,6 +22,7 @@ pnpm dev:web                     # Vite dev server for apps/web
 pnpm dev:tauri                   # desktop app (needs Rust)
 pnpm build:web                   # static site in apps/web/dist
 pnpm build:tauri                 # desktop installers
+pnpm install:macos               # build MD Viewer.app, copy to /Applications
 
 pnpm test                        # vitest, every project
 npx vitest run --project viewer  # one project: markdown, viewer, web, tauri

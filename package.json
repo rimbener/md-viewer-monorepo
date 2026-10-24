@@ -11,6 +11,8 @@
     "build:web": "pnpm --filter @md-viewer/web build",
     "dev:tauri": "pnpm --filter @md-viewer/tauri tauri dev",
     "build:tauri": "pnpm --filter @md-viewer/tauri tauri build",
+    "build:macos": "pnpm --filter @md-viewer/tauri tauri build --bundles app",
+    "install:macos": "pnpm build:macos && ditto 'apps/tauri/src-tauri/target/release/bundle/macos/MD Viewer.app' '/Applications/MD Viewer.app'",
     "test": "vitest run",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
