@@ -19,6 +19,7 @@ type FakeDirectory = {
   values: () => AsyncIterable<FakeEntry>;
   getDirectoryHandle: (name: string) => Promise<FakeDirectory>;
   getFileHandle: (name: string) => Promise<FakeFile>;
+  isSameEntry: (other: unknown) => Promise<boolean>;
 };
 
 /** A directory handle over a nested object; a string value is a file. */
@@ -45,7 +46,7 @@ function directory(name: string, tree: Record<string, unknown>): FakeDirectory {
     }
     return entry(key) as T;
   };
-  return {
+  const handle: FakeDirectory = {
     kind: 'directory',
     name,
     async *values() {
@@ -55,7 +56,9 @@ function directory(name: string, tree: Record<string, unknown>): FakeDirectory {
     },
     getDirectoryHandle: async key => find<FakeDirectory>(key, 'directory'),
     getFileHandle: async key => find<FakeFile>(key, 'file'),
+    isSameEntry: async other => other === handle,
   };
+  return handle;
 }
 
 function pick(handle: FakeDirectory | DOMException) {
@@ -96,6 +99,24 @@ describe('folders', () => {
     await expect(platform.readFile('/notes/guide/b.md')).resolves.toBe('# B');
     await expect(platform.folderExists('/notes')).resolves.toBe(true);
     await expect(platform.folderExists('/other')).resolves.toBe(false);
+  });
+
+  it('keeps one path per folder, and numbers a second folder of that name', async () => {
+    const platform = createWebPlatform();
+    const first = directory('notes', { 'a.md': '# First' });
+    const second = directory('notes', { 'a.md': '# Second' });
+
+    pick(first);
+    expect(await platform.askForFolder()).toBe('/notes');
+    pick(second);
+    expect(await platform.askForFolder()).toBe('/notes (2)');
+    pick(first);
+    expect(await platform.askForFolder()).toBe('/notes');
+
+    await expect(platform.readFile('/notes/a.md')).resolves.toBe('# First');
+    await expect(platform.readFile('/notes (2)/a.md')).resolves.toBe(
+      '# Second',
+    );
   });
 
   it('answers null when the picker is cancelled or not allowed', async () => {

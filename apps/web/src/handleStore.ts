@@ -45,3 +45,13 @@ export function loadHandle(
 ): Promise<FileSystemDirectoryHandle | undefined> {
   return run('readonly', store => store.get(key));
 }
+
+export async function loadHandles(): Promise<
+  [string, FileSystemDirectoryHandle][]
+> {
+  const [keys, handles] = await Promise.all([
+    run<IDBValidKey[]>('readonly', store => store.getAllKeys()),
+    run<FileSystemDirectoryHandle[]>('readonly', store => store.getAll()),
+  ]);
+  return keys.map((key, index) => [String(key), handles[index]]);
+}

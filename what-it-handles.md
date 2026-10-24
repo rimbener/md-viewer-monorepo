@@ -217,7 +217,8 @@ folder. Its relative images resolve against its URL. The server of the document
 must allow cross-origin reads; `raw.githubusercontent.com` does. Opening a
 folder removes the `src` from the address bar.
 
-A folder has no disk path in a browser, so its path is `/<folder name>`.
+A folder has no disk path in a browser, so its path is `/<folder name>`. A
+second folder with the same name gets `/<folder name> (2)`.
 
 ### Desktop app
 
@@ -225,7 +226,8 @@ The desktop app is the same viewer in a Tauri window, on macOS, Windows and
 Linux. It reads any folder the person picks; it is not sandboxed. It is
 registered for `.md`, `.markdown` and `.mdc`. A file opened from Finder, or
 passed as the first argument on Windows and Linux, is shown alone, under the
-name of its parent folder. The other files in the folder stay unread. The app
+name of its parent folder. A file opened while the app runs gets a new window,
+titled with the file name. The other files in the folder stay unread. The app
 does not store that file as the last folder. A different app stays the default
 when a person has already chosen one.
 

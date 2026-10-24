@@ -4,7 +4,8 @@
  * which works everywhere: `?src=<url>` opens it, so a link can share it.
  *
  * A folder is addressed as `/<folder name>/…`. The page never learns where a
- * folder is on disk, so its name is the only path it has.
+ * folder is on disk, so its name is the only path it has. A second folder
+ * with the same name gets `/<folder name> (2)`.
  */
 
 import type {
@@ -14,7 +15,7 @@ import type {
 } from '@md-viewer/viewer/platform';
 import { isHttpUrl } from '@md-viewer/viewer/url';
 
-import { loadHandle, saveHandle } from './handleStore';
+import { loadHandle, loadHandles, saveHandle } from './handleStore';
 
 const SOURCE_PARAM = 'src';
 
@@ -57,9 +58,23 @@ export function createWebPlatform(): Platform {
   const roots = new Map<string, FileSystemDirectoryHandle>();
   const images = new Map<string, string>();
 
-  const addRoot = (handle: FileSystemDirectoryHandle): string => {
-    const path = `/${handle.name}`;
+  const addRoot = (path: string, handle: FileSystemDirectoryHandle): string => {
     roots.set(path, handle);
+    return path;
+  };
+
+  const pathFor = async (handle: FileSystemDirectoryHandle) => {
+    const stored = await loadHandles().catch(() => []);
+    const known = new Map([...stored, ...roots]);
+    for (const [path, other] of known) {
+      if (await other.isSameEntry(handle)) {
+        return path;
+      }
+    }
+    let path = `/${handle.name}`;
+    for (let copy = 2; known.has(path); copy += 1) {
+      path = `/${handle.name} (${copy})`;
+    }
     return path;
   };
 
@@ -92,9 +107,11 @@ export function createWebPlatform(): Platform {
 
     async askForFolder() {
       try {
-        return addRoot(
-          await window.showDirectoryPicker({ id: 'md-viewer', mode: 'read' }),
-        );
+        const handle = await window.showDirectoryPicker({
+          id: 'md-viewer',
+          mode: 'read',
+        });
+        return addRoot(await pathFor(handle), handle);
       } catch (cause) {
         // Cancelled, or asked for without a click, which the browser refuses.
         if (
@@ -132,7 +149,7 @@ export function createWebPlatform(): Platform {
         state = await handle.requestPermission(options).catch(() => state);
       }
       return state === 'granted'
-        ? { path: addRoot(handle), isStale: false }
+        ? { path: addRoot(bookmark, handle), isStale: false }
         : null;
     },
 

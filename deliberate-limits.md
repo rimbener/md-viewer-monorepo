@@ -87,9 +87,11 @@ delimiter matching in ambiguous cases such as `**a*b**`.
 ## A web folder is known by its name
 
 A browser never tells the page where a folder is on disk, so the web app calls
-a folder `/<folder name>`. Two folders with the same name are one entry in the
-recent folder menu, and the newer one replaces the older. Their file lists and
-scroll positions share keys too.
+a folder `/<folder name>`. A picked folder is compared with the folders the
+page already knows. The same folder keeps its path. A different folder with
+the same name gets `/<folder name> (2)`, `(3)` and so on, so it has its own
+entry in the recent folder menu, its own file list and its own scroll
+positions. The number shows in the menu in place of the parent folder.
 
 The browser may forget the read permission between visits. The page can ask for
 it again only after a click, so the last folder does not reopen by itself; the
@@ -113,9 +115,10 @@ URL is not watched.
 ## A file from outside stays one file
 
 A file opened from Finder, or by URL, is shown alone. The sidebar does not list
-the files beside it. The next launch reopens the last folder, not that file. On
-Windows and Linux a file opened while the app is running starts a second app
-instead of showing in the first.
+the files beside it. The next launch reopens the last folder, not that file. A
+file opened while the app is running gets a new window: on macOS a new window
+of the same app, on Windows and Linux a second app. The window that is open
+keeps its file.
 
 ## The desktop app can read any file
 
