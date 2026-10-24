@@ -1,0 +1,24 @@
+{
+  "name": "@md-viewer/viewer",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./Viewer": "./src/Viewer.tsx",
+    "./platform": "./src/platform.ts",
+    "./url": "./src/url.ts",
+    "./theme": "./src/theme.ts",
+    "./OpenUrlForm": "./src/components/OpenUrlForm.tsx",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@md-viewer/markdown": "workspace:*",
+    "mermaid": "^12.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

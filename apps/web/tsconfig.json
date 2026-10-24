@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vitest/globals",
+      "vite/client",
+      "wicg-file-system-access"
+    ]
+  },
+  "include": ["src", "test", "vite.config.ts"]
+}

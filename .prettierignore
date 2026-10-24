@@ -1,0 +1,4 @@
+pnpm-lock.yaml
+dist
+apps/tauri/src-tauri/target
+apps/tauri/src-tauri/gen

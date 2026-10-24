@@ -1,0 +1,23 @@
+{
+  "name": "@md-viewer/tauri",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tauri": "tauri",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@md-viewer/viewer": "workspace:*",
+    "@tauri-apps/api": "^2.12.1",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-fs": "^2.4.4",
+    "@tauri-apps/plugin-opener": "^2.5.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1",
+    "@vitejs/plugin-react": "^5.0.2",
+    "vite": "^7.1.5"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Read-only access to the folders and files the viewer shows.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "opener:allow-open-url",
+    "fs:allow-exists",
+    "fs:allow-read-dir",
+    "fs:allow-read-text-file",
+    "fs:allow-watch",
+    "fs:allow-unwatch",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    }
+  ]
+}
