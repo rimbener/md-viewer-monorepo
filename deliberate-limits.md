@@ -141,10 +141,10 @@ The source editor changes what the viewer renders, not the file, until the
 person clicks Save. Save shows only while the editor is open, to the right of
 the editor button, and is enabled only while the buffer has unsaved edits. A
 document's buffer is kept for as long as the app is running, so switching to
-another file and back does not lose it, but quitting does. There is no undo
-history beyond the text field's own, no keyboard shortcut for Save, and no
-prompt on the way out. The header says `edited, not saved` whenever a buffer
-has diverged from disk.
+another file and back does not lose it, but quitting does. There is no
+keyboard shortcut for Save and no prompt on the way out. The header says
+`edited, not saved` whenever a buffer has diverged from disk, and stops when
+the text matches the file again.
 
 If the file changes on disk under that buffer, the header adds `file changed
 on disk` and the typed text is kept. Disk does not overwrite a session edit.
@@ -154,6 +154,20 @@ choice is theirs.
 The web app opens a folder for reading only. The first Save asks the browser
 for write access to that file; when it is refused, the header says so and the
 buffer stays. A document opened by URL cannot be saved.
+
+## Undo keeps 100 steps per file
+
+Undo and Redo show beside Save while the editor is open. Command-Z or
+Control-Z undoes, Shift-Command-Z, Shift-Control-Z or Control-Y redoes, and
+the Edit menu's Undo goes to the same history. The text field's own history
+is not used: it does not know about switched files and saves.
+
+Each step is a full copy of the text, so a file keeps at most 100 steps and
+the oldest go first. Edits less than one second apart are one step, so Undo
+takes back a burst of typing, not one character. Each file has its own
+history for as long as the app runs; quitting loses it. Undo can go back past
+a save. A change on disk does not clear the history, so Undo can go back to
+text from before that change.
 
 ## The preview trails the typing by a moment
 

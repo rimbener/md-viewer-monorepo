@@ -206,3 +206,104 @@ it('keeps the buffer and says why when the save fails', async () => {
   expect(editor()).toHaveValue('# Changed');
   expect(saveButton()).toBeEnabled();
 });
+
+function undoButton(): HTMLElement {
+  return screen.getByRole('button', { name: 'Undo' });
+}
+
+function redoButton(): HTMLElement {
+  return screen.getByRole('button', { name: 'Redo' });
+}
+
+/** Types `source`, then waits long enough that the next edit is a new step. */
+async function typeStep(source: string): Promise<void> {
+  type(source);
+  await act(() => vi.advanceTimersByTimeAsync(1100));
+}
+
+it('shows Undo and Redo only while the editor is open', async () => {
+  await renderApp();
+  expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
+
+  fireEvent.click(toggle());
+
+  expect(undoButton()).toBeDisabled();
+  expect(redoButton()).toBeDisabled();
+});
+
+it('takes edits back and puts them back with the buttons', async () => {
+  await renderApp();
+  fireEvent.click(toggle());
+  await typeStep('# One');
+  await typeStep('# Two');
+
+  fireEvent.click(undoButton());
+  expect(editor()).toHaveValue('# One');
+  expect(redoButton()).toBeEnabled();
+
+  fireEvent.click(undoButton());
+  expect(editor()).toHaveValue('# Notes');
+  // Back to what is on disk, so there is nothing left to save.
+  expect(screen.queryByText(/edited, not saved/)).toBeNull();
+  expect(undoButton()).toBeDisabled();
+
+  fireEvent.click(redoButton());
+  fireEvent.click(redoButton());
+  expect(editor()).toHaveValue('# Two');
+  await waitForPreview();
+  expect(shows('Two')).toBe(true);
+});
+
+it('undoes and redoes from the keyboard', async () => {
+  await renderApp();
+  fireEvent.click(toggle());
+  await typeStep('# One');
+
+  fireEvent.keyDown(editor(), { key: 'z', metaKey: true });
+  expect(editor()).toHaveValue('# Notes');
+
+  fireEvent.keyDown(editor(), { key: 'z', metaKey: true, shiftKey: true });
+  expect(editor()).toHaveValue('# One');
+
+  fireEvent.keyDown(editor(), { key: 'z', ctrlKey: true });
+  fireEvent.keyDown(editor(), { key: 'y', ctrlKey: true });
+  expect(editor()).toHaveValue('# One');
+});
+
+it('takes back a burst of typing in one step', async () => {
+  await renderApp();
+  fireEvent.click(toggle());
+  type('# N');
+  type('# Ne');
+  type('# New');
+
+  fireEvent.click(undoButton());
+
+  expect(editor()).toHaveValue('# Notes');
+});
+
+it('keeps each file its own history', async () => {
+  await renderApp();
+  fireEvent.click(toggle());
+  await typeStep('# Changed');
+
+  await open('other.md');
+  expect(undoButton()).toBeDisabled();
+
+  await open('notes.md');
+  fireEvent.click(undoButton());
+  expect(editor()).toHaveValue('# Notes');
+});
+
+it('undoes past a save', async () => {
+  await renderApp();
+  fireEvent.click(toggle());
+  await typeStep('# Changed');
+  fireEvent.click(saveButton() as HTMLElement);
+  await settle();
+
+  fireEvent.click(undoButton());
+
+  expect(editor()).toHaveValue('# Notes');
+  expect(screen.getByText('— edited, not saved')).toBeInTheDocument();
+});

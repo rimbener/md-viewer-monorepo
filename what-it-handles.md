@@ -188,6 +188,10 @@ buffer to the file and clears `edited, not saved`. The desktop app writes
 through the file system. The web app asks the browser for write access on the
 first save.
 
+Undo and Redo sit to the right of Save. Command-Z or Control-Z undoes;
+Shift-Command-Z, Shift-Control-Z or Control-Y redoes. Each file keeps its own
+history while the app runs.
+
 Blank space follows the last line. Its height is the view height, minus one
 line, the padding under the text, and 300 px. Full scroll leaves that line
 300 px below the top of the view.

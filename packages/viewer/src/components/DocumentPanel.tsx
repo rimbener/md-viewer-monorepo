@@ -11,6 +11,16 @@ import {
 import { parseMarkdown } from '@md-viewer/markdown/parseBlocks';
 
 import { DEFAULT_CHARACTERS } from '../column';
+import {
+  canRedo,
+  canUndo,
+  emptyEditHistory,
+  recordEdit,
+  redoEdit,
+  undoEdit,
+  type EditHistory,
+  type HistoryStep,
+} from '../editHistory';
 import { FindProvider, useShowText } from '../find';
 import { usePlatform } from '../platform';
 import {
@@ -45,6 +55,7 @@ import { Markdown } from './Markdown';
 import { SaveButton } from './SaveButton';
 import { SidebarToggle } from './SidebarToggle';
 import { Spinner } from './Spinner';
+import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
 
@@ -130,6 +141,9 @@ export function DocumentPanel({
    * another document does not throw the work away.
    */
   const drafts = useRef(new Map<string, string>());
+  /** Undo and Redo per file, kept as long as its draft. */
+  const histories = useRef(new Map<string, EditHistory>());
+  const [history, setHistory] = useState(emptyEditHistory);
   const sourceRef = useRef<string | null>(null);
   const draftRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -255,6 +269,7 @@ export function DocumentPanel({
     if (path === null) {
       setSource(null);
       setDraft(null);
+      setHistory(emptyEditHistory());
       setSettledDraft(null);
       setError(null);
       setDiskChanged(false);
@@ -264,6 +279,7 @@ export function DocumentPanel({
     // Whatever was typed into this file earlier is what it should open on.
     const stored = drafts.current.get(path) ?? null;
     setDraft(stored);
+    setHistory(histories.current.get(path) ?? emptyEditHistory());
     setSettledDraft(stored);
     draftRef.current = stored;
     setDiskChanged(false);
@@ -329,24 +345,64 @@ export function DocumentPanel({
     };
   }, [path, platform]);
 
-  const edit = useCallback(
-    (next: string) => {
+  /** Puts `next` in the editor. Text that matches the file is not a draft. */
+  const applyText = useCallback(
+    (next: string, nextHistory: EditHistory) => {
       if (path === null) {
         return;
       }
-      drafts.current.set(path, next);
-      setDraft(next);
+      histories.current.set(path, nextHistory);
+      setHistory(nextHistory);
+      const nextDraft = next === sourceRef.current ? null : next;
+      if (nextDraft === null) {
+        drafts.current.delete(path);
+        setDiskChanged(false);
+      } else {
+        drafts.current.set(path, nextDraft);
+      }
+      draftRef.current = nextDraft;
+      setDraft(nextDraft);
       setSaveError(null);
       if (reparse.current !== null) {
         clearTimeout(reparse.current);
       }
       reparse.current = setTimeout(() => {
         reparse.current = null;
-        setSettledDraft(next);
+        setSettledDraft(nextDraft);
       }, REPARSE_DELAY_MS);
     },
     [path],
   );
+
+  const currentText = () => draftRef.current ?? sourceRef.current ?? '';
+
+  const edit = useCallback(
+    (next: string) => {
+      const before = currentText();
+      if (path === null || next === before) {
+        return;
+      }
+      const stored = histories.current.get(path) ?? emptyEditHistory();
+      applyText(next, recordEdit(stored, before, Date.now()));
+    },
+    [path, applyText],
+  );
+
+  const step = useCallback(
+    (move: (history: EditHistory, current: string) => HistoryStep | null) => {
+      if (path === null) {
+        return;
+      }
+      const stored = histories.current.get(path) ?? emptyEditHistory();
+      const next = move(stored, currentText());
+      if (next !== null) {
+        applyText(next.text, next.history);
+      }
+    },
+    [path, applyText],
+  );
+  const undo = useCallback(() => step(undoEdit), [step]);
+  const redo = useCallback(() => step(redoEdit), [step]);
 
   const save = useCallback(() => {
     const write = platform.writeFile;
@@ -578,7 +634,15 @@ export function DocumentPanel({
                 onToggle={toggleEditor}
               />
               {isEditorVisible && canEdit ? (
-                <SaveButton disabled={!canSave} onSave={save} />
+                <>
+                  <SaveButton disabled={!canSave} onSave={save} />
+                  <UndoRedo
+                    canUndo={canUndo(history)}
+                    canRedo={canRedo(history)}
+                    onUndo={undo}
+                    onRedo={redo}
+                  />
+                </>
               ) : null}
             </div>
           </Tool>
@@ -626,7 +690,13 @@ export function DocumentPanel({
           </div>
         ) : isEditorVisible && canEdit ? (
           <div style={styles.split}>
-            <Editor value={text ?? ''} scale={scale} onChange={edit} />
+            <Editor
+              value={text ?? ''}
+              scale={scale}
+              onChange={edit}
+              onUndo={undo}
+              onRedo={redo}
+            />
             <div style={{ width: 1, backgroundColor: theme.border }} />
             <div style={styles.preview}>{document}</div>
           </div>
