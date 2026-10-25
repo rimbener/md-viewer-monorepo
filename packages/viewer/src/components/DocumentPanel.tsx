@@ -53,7 +53,7 @@ import { FontControl } from './FontControl';
 import { HistoryNav } from './HistoryNav';
 import { Markdown } from './Markdown';
 import { SaveButton } from './SaveButton';
-import { SidebarToggle } from './SidebarToggle';
+import { SidebarToggle, SIDEBAR_TOGGLE_CLEARANCE } from './SidebarToggle';
 import { Spinner } from './Spinner';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
@@ -511,11 +511,6 @@ export function DocumentPanel({
     [path],
   );
 
-  const sidebarTool = (
-    <Tool title="Sidebar">
-      <SidebarToggle isVisible={isSidebarVisible} onToggle={onToggleSidebar} />
-    </Tool>
-  );
   const historyTool = (
     <Tool title="History">
       <HistoryNav
@@ -527,15 +522,22 @@ export function DocumentPanel({
     </Tool>
   );
 
+  const headerStyle: CSSProperties = {
+    ...styles.header,
+    borderBottomColor: theme.border,
+    ...(isSidebarVisible ? null : { paddingLeft: SIDEBAR_TOGGLE_CLEARANCE }),
+  };
+  const sidebarToggle = (
+    <SidebarToggle isVisible={isSidebarVisible} onToggle={onToggleSidebar} />
+  );
+
   if (file === null) {
     return (
       <main style={styles.container}>
-        <header style={{ ...styles.header, borderBottomColor: theme.border }}>
+        <header style={headerStyle}>
+          {sidebarToggle}
           <TitleRow />
-          <div style={styles.tools}>
-            {sidebarTool}
-            {historyTool}
-          </div>
+          <div style={styles.tools}>{historyTool}</div>
         </header>
         <div style={{ ...styles.body, ...styles.centered }}>
           <span style={{ ...styles.message, color: theme.mutedText }}>
@@ -603,7 +605,8 @@ export function DocumentPanel({
 
   return (
     <main style={styles.container}>
-      <header style={{ ...styles.header, borderBottomColor: theme.border }}>
+      <header style={headerStyle}>
+        {sidebarToggle}
         <TitleRow>
           <h1
             title={file.path}
@@ -624,7 +627,6 @@ export function DocumentPanel({
           </span>
         </TitleRow>
         <div style={styles.tools}>
-          {sidebarTool}
           {historyTool}
           <Tool title="Editor">
             <div style={styles.toolRow}>
@@ -780,6 +782,7 @@ const styles = {
     fontSize: 13,
   },
   header: {
+    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     gap: 10,

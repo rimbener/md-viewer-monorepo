@@ -43,6 +43,36 @@ it('hides the tree and brings it back', async () => {
   expect(showsTree()).toBe(true);
 });
 
+it('points the way the sidebar will move', async () => {
+  await renderApp();
+  expect(toggle()).toHaveTextContent('←');
+  expect(toggle()).toHaveStyle({ position: 'absolute', left: '-14px' });
+
+  fireEvent.click(toggle());
+
+  expect(toggle()).toHaveTextContent('→');
+  expect(toggle()).toHaveStyle({ left: '6px' });
+});
+
+it('floats at the middle of the header, outside the tools', async () => {
+  await renderApp();
+  const header = toggle().closest('header') as HTMLElement;
+
+  expect(toggle()).toHaveStyle({ top: '50%', marginTop: '-14px' });
+  expect(header).toHaveStyle({ position: 'relative' });
+  expect(screen.queryByText('Sidebar')).toBeNull();
+});
+
+it('moves the header clear of the button while the tree is hidden', async () => {
+  await renderApp();
+  const header = () => toggle().closest('header') as HTMLElement;
+  expect(header()).toHaveStyle({ paddingLeft: '24px' });
+
+  fireEvent.click(toggle());
+
+  expect(header()).toHaveStyle({ paddingLeft: '44px' });
+});
+
 it('remembers that the tree was hidden', async () => {
   await renderApp();
 

@@ -12,6 +12,8 @@ export interface Theme {
   selectedText: string;
   hairline: string;
   accent: string;
+  /** The shadow under a control that floats over the page. */
+  floatShadow: string;
   /** Backdrop for code spans and fenced code blocks. */
   code: string;
   /** Text of a `code` span. */
@@ -59,6 +61,7 @@ const light: Theme = {
   selectedText: '#ffffff',
   hairline: '#d8d8dc',
   accent: '#0a66d0',
+  floatShadow: 'rgba(26, 37, 54, 0.18)',
   code: '#f2f2f4',
   inlineCode: '#d39039',
   codeBorder: '#e0e0e2',
@@ -90,6 +93,7 @@ const dark: Theme = {
   selectedText: '#ffffff',
   hairline: '#37373a',
   accent: '#69a8f5',
+  floatShadow: 'rgba(0, 0, 0, 0.5)',
   code: '#2a2a2e',
   inlineCode: '#d39039',
   codeBorder: '#37373a',

@@ -198,7 +198,12 @@ line, the padding under the text, and 300 px. Full scroll leaves that line
 
 ## Find
 
-The file name sits on its own row above the tools. Each tool has a small title: Sidebar, History, Editor, Font, Width, Zoom, and Find. Find is the last control on that tools row.
+The file name sits on its own row above the tools. Each tool has a small title: History, Editor, Font, Width, Zoom, and Find. Find is the last control on that tools row.
+
+The sidebar toggle is not on that row. It is a round button at the vertical
+middle of the header, centred on the sidebar's right edge. It shows `←` to
+hide the sidebar. While the sidebar is hidden, it moves to the window's left
+edge and shows `→`, and the header moves right to make space for it.
 The field marks hits in the open document. Letter case does not matter.
 Command-F, or Control-F off the Mac, focuses the field instead of the browser's
 own find.

@@ -11,6 +11,7 @@ const theme = {
   selectedText: '#000000',
   hairline: '#000000',
   accent: '#777777',
+  floatShadow: '#000000',
   code: '#333333',
   inlineCode: '#000000',
   codeBorder: '#000000',

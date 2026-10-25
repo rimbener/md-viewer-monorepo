@@ -1,5 +1,12 @@
 import { useTheme } from '../theme';
-import { ToolButton } from './ToolButton';
+
+const SIZE = 28;
+
+/** Gap to the window edge while the sidebar is hidden. */
+const CLOSED_INSET = 6;
+
+/** Left padding the header needs so the hidden-sidebar button covers nothing. */
+export const SIDEBAR_TOGGLE_CLEARANCE = CLOSED_INSET + SIZE + 10;
 
 interface SidebarToggleProps {
   isVisible: boolean;
@@ -7,21 +14,42 @@ interface SidebarToggleProps {
 }
 
 /**
- * Shows and hides the file tree. It lives in the document header rather than
- * in the sidebar itself, because a control inside the sidebar disappears with
- * it and leaves no way back.
+ * Shows and hides the file tree. A circle at the vertical middle of the
+ * header, centred on the sidebar's edge, so it is never inside the panel it
+ * hides. Its parent must be positioned.
  */
 export function SidebarToggle({ isVisible, onToggle }: SidebarToggleProps) {
   const theme = useTheme();
 
   return (
-    <ToolButton
-      accessibilityLabel={isVisible ? 'Hide sidebar' : 'Show sidebar'}
+    <button
+      type="button"
+      className="pressable"
+      aria-label={isVisible ? 'Hide sidebar' : 'Show sidebar'}
       title="Shows or hides the list of markdown files"
-      onPress={onToggle}
+      onClick={onToggle}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: isVisible ? -SIZE / 2 : CLOSED_INSET,
+        zIndex: 1,
+        width: SIZE,
+        height: SIZE,
+        marginTop: -SIZE / 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 0,
+        border: `1px solid ${theme.border}`,
+        borderRadius: '50%',
+        backgroundColor: theme.background,
+        boxShadow: `0 1px 4px ${theme.floatShadow}`,
+        color: theme.mutedText,
+        fontSize: 14,
+        lineHeight: 1,
+      }}
     >
-      {/* A square whose left column is filled while the panel is showing. */}
-      <span style={{ color: theme.mutedText }}>{isVisible ? '◧' : '◻'}</span>
-    </ToolButton>
+      {isVisible ? '←' : '→'}
+    </button>
   );
 }

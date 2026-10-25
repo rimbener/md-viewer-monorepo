@@ -78,10 +78,10 @@ it('sits on the file name row, to the right of the name', async () => {
   await renderPanel();
   const name = screen.getByRole('heading', { name: 'notes.md' });
   const system = schemeButton('System color scheme');
-  const sidebar = screen.getByText('Sidebar');
+  const history = screen.getByText('History');
 
   expect(follows(name, system)).toBe(true);
-  expect(follows(system, sidebar)).toBe(true);
+  expect(follows(system, history)).toBe(true);
 });
 
 it('starts on System and switches the document to dark', async () => {
