@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tauri dev",
+    "dev": "vite",
     "build": "vite build",
     "tauri": "tauri",
     "typecheck": "tsc -p ."
