@@ -196,6 +196,11 @@ history while the app runs.
 The editor and the preview scroll together. When you scroll one, the other
 goes to the same fraction of its length.
 
+Drag the line between the editor and the preview to resize the two panes.
+Each pane keeps at least 20% of the width. The arrow keys move the line in 5%
+steps when it has focus. A double click sets an even split again. The app
+remembers the split for the next launch.
+
 Blank space follows the last line. Its height is the view height, minus one
 line, the padding under the text, and 300 px. Full scroll leaves that line
 300 px below the top of the view. The source editor leaves the same space under

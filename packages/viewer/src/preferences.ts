@@ -1,6 +1,7 @@
 /**
  * Viewer preferences that outlive a launch: the zoom level, the line length,
  * the font scheme, the color scheme, the sidebar and editor visibility, the
+ * editor's share of the split, the
  * folder and file that were open last, the last folders opened, the
  * files opened in each folder, and where each file was scrolled to.
  *
@@ -27,6 +28,7 @@ import {
   encodeScrollPositions,
   type ScrollPosition,
 } from './scrollPositions';
+import { isEditorFraction } from './split';
 import { storage } from './storage';
 import { isSchemeId } from './typography';
 import { isZoomLevel } from './zoom';
@@ -40,6 +42,7 @@ const FONT_KEY = 'mdviewer.fontScheme';
 const COLOR_SCHEME_KEY = 'mdviewer.colorScheme';
 const SIDEBAR_KEY = 'mdviewer.sidebarVisible';
 const EDITOR_KEY = 'mdviewer.editorVisible';
+const EDITOR_FRACTION_KEY = 'mdviewer.editorFraction';
 const HISTORY_INDEX_KEY = 'mdviewer.fileHistoryFolders';
 const RECENT_FOLDERS_KEY = 'mdviewer.recentFolders';
 const SCROLL_KEY = 'mdviewer.scrollPositions';
@@ -142,6 +145,20 @@ export async function loadEditorVisible(): Promise<boolean | null> {
 
 export function saveEditorVisible(isVisible: boolean): void {
   write(EDITOR_KEY, String(isVisible));
+}
+
+/** The editor's share of the split, or null when there is no usable one. */
+export async function loadEditorFraction(): Promise<number | null> {
+  const stored = await read(EDITOR_FRACTION_KEY);
+  if (stored === null) {
+    return null;
+  }
+  const value = Number.parseFloat(stored);
+  return isEditorFraction(value) ? value : null;
+}
+
+export function saveEditorFraction(fraction: number): void {
+  write(EDITOR_FRACTION_KEY, String(fraction));
 }
 
 /** The folder open when the app last closed. */

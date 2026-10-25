@@ -25,16 +25,19 @@ import { FindProvider, useShowText } from '../find';
 import { usePlatform } from '../platform';
 import {
   loadCharacters,
+  loadEditorFraction,
   loadEditorVisible,
   loadFontScheme,
   loadZoom,
   saveCharacters,
+  saveEditorFraction,
   saveEditorVisible,
   saveFontScheme,
   saveZoom,
 } from '../preferences';
 import { useScrollMemory } from '../scrollMemory';
 import { useScrollSync } from '../scrollSync';
+import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
 import type { FileNode } from '../types';
 import { isHttpUrl } from '../url';
@@ -56,6 +59,7 @@ import { Markdown } from './Markdown';
 import { SaveButton } from './SaveButton';
 import { SidebarToggle, SIDEBAR_TOGGLE_CLEARANCE } from './SidebarToggle';
 import { Spinner } from './Spinner';
+import { SplitDivider } from './SplitDivider';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
@@ -170,6 +174,8 @@ export function DocumentPanel({
   const hasChosenCharacters = useRef(false);
   const hasChosenScheme = useRef(false);
   const hasChosenEditor = useRef(false);
+  const [editorFraction, setEditorFraction] = useState(DEFAULT_EDITOR_FRACTION);
+  const hasChosenEditorFraction = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,6 +202,12 @@ export function DocumentPanel({
     loadEditorVisible().then(stored => {
       if (!cancelled && stored !== null && !hasChosenEditor.current) {
         setIsEditorVisible(stored);
+      }
+    });
+
+    loadEditorFraction().then(stored => {
+      if (!cancelled && stored !== null && !hasChosenEditorFraction.current) {
+        setEditorFraction(stored);
       }
     });
 
@@ -243,6 +255,11 @@ export function DocumentPanel({
     setIsEditorVisible(next);
     saveEditorVisible(next);
   }, [isEditorVisible]);
+
+  const changeEditorFraction = useCallback((next: number) => {
+    hasChosenEditorFraction.current = true;
+    setEditorFraction(next);
+  }, []);
 
   const path = file?.path ?? null;
   const pathRef = useRef(path);
@@ -727,17 +744,28 @@ export function DocumentPanel({
           </div>
         ) : isEditorVisible && canEdit ? (
           <div style={styles.split}>
-            <Editor
-              value={text ?? ''}
-              scale={scale}
-              lastLineInset={LAST_LINE_INSET}
-              onChange={edit}
-              onUndo={undo}
-              onRedo={redo}
-              fieldRef={scrollSync.attachEditor}
-              onScroll={scrollSync.onEditorScroll}
+            <div
+              style={{
+                ...styles.source,
+                flexBasis: `${editorFraction * 100}%`,
+              }}
+            >
+              <Editor
+                value={text ?? ''}
+                scale={scale}
+                lastLineInset={LAST_LINE_INSET}
+                onChange={edit}
+                onUndo={undo}
+                onRedo={redo}
+                fieldRef={scrollSync.attachEditor}
+                onScroll={scrollSync.onEditorScroll}
+              />
+            </div>
+            <SplitDivider
+              fraction={editorFraction}
+              onChange={changeEditorFraction}
+              onCommit={saveEditorFraction}
             />
-            <div style={{ width: 1, backgroundColor: theme.border }} />
             <div style={styles.preview}>{document}</div>
           </div>
         ) : (
@@ -877,10 +905,16 @@ const styles = {
     minHeight: 0,
     overflowY: 'auto',
   },
-  // Source on the left, rendered document on the right, an even split.
+  // Source on the left, rendered document on the right; the divider sets the share.
   split: {
     flex: 1,
     minHeight: 0,
+    display: 'flex',
+  },
+  source: {
+    flexGrow: 0,
+    flexShrink: 0,
+    minWidth: 0,
     display: 'flex',
   },
   preview: {
