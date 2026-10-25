@@ -34,6 +34,7 @@ import {
   saveZoom,
 } from '../preferences';
 import { useScrollMemory } from '../scrollMemory';
+import { useScrollSync } from '../scrollSync';
 import { useTheme } from '../theme';
 import type { FileNode } from '../types';
 import { isHttpUrl } from '../url';
@@ -489,11 +490,17 @@ export function DocumentPanel({
         : 'single';
   const scrollMemory = useScrollMemory(path, scrollRef, bodyHeight, mountKey);
   const { onContentSizeChange } = scrollMemory;
+  const scrollSync = useScrollSync();
+  const { attachPreview } = scrollSync;
 
   // The scroll view remounts per file and per layout, so the observers follow it.
-  const attachScroll = useCallback((element: HTMLDivElement | null) => {
-    scrollRef.current = element;
-  }, []);
+  const attachScroll = useCallback(
+    (element: HTMLDivElement | null) => {
+      scrollRef.current = element;
+      attachPreview(element);
+    },
+    [attachPreview],
+  );
   useEffect(
     () =>
       observeHeight(scrollRef.current, next =>
@@ -573,7 +580,10 @@ export function DocumentPanel({
       ref={attachScroll}
       data-testid="document-scroll"
       style={styles.scroll}
-      onScroll={scrollMemory.onScroll}
+      onScroll={event => {
+        scrollMemory.onScroll(event);
+        scrollSync.onPreviewScroll();
+      }}
     >
       <div
         ref={contentRef}
@@ -699,6 +709,8 @@ export function DocumentPanel({
               onChange={edit}
               onUndo={undo}
               onRedo={redo}
+              fieldRef={scrollSync.attachEditor}
+              onScroll={scrollSync.onEditorScroll}
             />
             <div style={{ width: 1, backgroundColor: theme.border }} />
             <div style={styles.preview}>{document}</div>

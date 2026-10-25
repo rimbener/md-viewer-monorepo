@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { useTheme } from '../theme';
 import { CODE_FONT } from '../typography';
@@ -18,6 +24,9 @@ interface EditorProps {
   onChange: (next: string) => void;
   onUndo: () => void;
   onRedo: () => void;
+  /** Receives the text field, for a caller that follows its scroll. */
+  fieldRef?: (element: HTMLTextAreaElement | null) => void;
+  onScroll?: () => void;
 }
 
 /** Where `next` stops matching `previous`, counted from the end of the change. */
@@ -51,12 +60,21 @@ export function Editor({
   onChange,
   onUndo,
   onRedo,
+  fieldRef,
+  onScroll,
 }: EditorProps) {
   const theme = useTheme();
   const field = useRef<HTMLTextAreaElement | null>(null);
   const shown = useRef(value);
   const commands = useRef({ onUndo, onRedo });
   commands.current = { onUndo, onRedo };
+  const attachField = useCallback(
+    (element: HTMLTextAreaElement | null) => {
+      field.current = element;
+      fieldRef?.(element);
+    },
+    [fieldRef],
+  );
   const [height, setHeight] = useState(0);
   const lineHeight = LINE * scale;
   const endSpace = Math.max(PADDING, height - lineHeight - lastLineInset);
@@ -112,7 +130,8 @@ export function Editor({
 
   return (
     <textarea
-      ref={field}
+      ref={attachField}
+      onScroll={onScroll}
       className="field"
       aria-label="Markdown source"
       autoComplete="off"

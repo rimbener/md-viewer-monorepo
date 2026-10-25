@@ -179,6 +179,14 @@ work less frequent, not smaller, so a document of a few hundred thousand
 characters still types roughly. Past 500,000 characters the editor is disabled
 outright, because that document is already falling back to plain text.
 
+## The two panes scroll by fraction
+
+The source editor and the preview scroll together: when one pane is halfway
+down, the other is halfway down too. The parser does not record which source
+line each block comes from, so the panes cannot be matched line by line. For
+prose the two stay close. An image, a diagram or a long table takes more space
+in the preview than in the source, so the panes drift near it.
+
 ## The tree is walked three levels at a time
 
 A full recursive walk of a large project is expensive and can hang the UI.

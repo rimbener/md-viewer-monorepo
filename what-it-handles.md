@@ -192,6 +192,9 @@ Undo and Redo sit to the right of Save. Command-Z or Control-Z undoes;
 Shift-Command-Z, Shift-Control-Z or Control-Y redoes. Each file keeps its own
 history while the app runs.
 
+The editor and the preview scroll together. When you scroll one, the other
+goes to the same fraction of its length.
+
 Blank space follows the last line. Its height is the view height, minus one
 line, the padding under the text, and 300 px. Full scroll leaves that line
 300 px below the top of the view. The source editor leaves the same space under
