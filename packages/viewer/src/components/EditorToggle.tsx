@@ -22,7 +22,7 @@ export function EditorToggle({
   return (
     <ToolButton
       accessibilityLabel={isVisible ? 'Hide editor' : 'Show editor'}
-      title="Shows or hides the markdown source editor"
+      title="Shows or hides the markdown source editor (⌘E, Ctrl+E)"
       disabled={disabled}
       // Open reads as accent rather than as a different glyph: the pencil
       // has no second form the way the sidebar's half-filled square does.

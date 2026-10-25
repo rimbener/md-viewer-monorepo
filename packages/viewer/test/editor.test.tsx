@@ -352,3 +352,17 @@ it('writes nothing on Command-S while the editor is closed', async () => {
 
   expect(platform.writeFile).not.toHaveBeenCalled();
 });
+
+it.each([
+  ['Command', { metaKey: true }],
+  ['Control', { ctrlKey: true }],
+])('toggles the editor on %s-E', async (_name, modifier) => {
+  await renderApp();
+
+  const isDefault = fireEvent.keyDown(window, { key: 'e', ...modifier });
+  expect(isDefault).toBe(false);
+  expect(toggle()).toHaveAccessibleName('Hide editor');
+
+  fireEvent.keyDown(window, { key: 'e', ...modifier });
+  expect(toggle()).toHaveAccessibleName('Show editor');
+});

@@ -13,7 +13,7 @@ export function SaveButton({ disabled = false, onSave }: SaveButtonProps) {
   return (
     <ToolButton
       accessibilityLabel="Save"
-      title="Writes the edited source to the file"
+      title="Writes the edited source to the file (⌘S, Ctrl+S)"
       disabled={disabled}
       onPress={onSave}
     >

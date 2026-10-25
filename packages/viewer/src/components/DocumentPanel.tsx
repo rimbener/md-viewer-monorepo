@@ -421,22 +421,25 @@ export function DocumentPanel({
   );
   /** What Command-S does now, or null while Save is not on offer. */
   const saveShortcut = useRef<(() => void) | null>(null);
+  /** What Command-E does now, or null while the editor button is disabled. */
+  const editorShortcut = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    // Command-S (Control-S off the Mac) saves the draft, not the page.
-    const saveOnKey = (event: globalThis.KeyboardEvent) => {
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey &&
-        !event.shiftKey &&
-        event.key.toLowerCase() === 's'
-      ) {
+    // Control stands in for Command off the Mac; the page's own S and E give way.
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
+        return;
+      }
+      const shortcut = { s: saveShortcut, e: editorShortcut }[
+        event.key.toLowerCase()
+      ];
+      if (shortcut !== undefined) {
         event.preventDefault();
-        saveShortcut.current?.();
+        shortcut.current?.();
       }
     };
-    window.addEventListener('keydown', saveOnKey);
-    return () => window.removeEventListener('keydown', saveOnKey);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const undo = useCallback(() => step(undoEdit), [step]);
@@ -576,6 +579,7 @@ export function DocumentPanel({
   );
 
   saveShortcut.current = null;
+  editorShortcut.current = null;
 
   if (file === null) {
     return (
@@ -604,6 +608,9 @@ export function DocumentPanel({
     !isSaving &&
     platform.writeFile !== undefined &&
     !isHttpUrl(file.path);
+  if (canEdit) {
+    editorShortcut.current = toggleEditor;
+  }
   if (isEditorVisible && canEdit && canSave) {
     saveShortcut.current = save;
   }
