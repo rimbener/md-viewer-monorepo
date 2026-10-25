@@ -95,3 +95,42 @@ it('shrinks the space when the line grows', async () => {
   expect(lastLineHeight()).toBeGreaterThan(before);
   expect(spaceUnderText()).toBe(expectedSpace(640));
 });
+
+describe('the editor', () => {
+  function editor(): HTMLTextAreaElement {
+    return screen.getByRole('textbox', { name: 'Markdown source' });
+  }
+
+  async function openEditor(): Promise<void> {
+    await renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Show editor' }));
+  }
+
+  function expectedEditorSpace(viewHeight: number): number {
+    return viewHeight - px(editor().style.lineHeight) - LAST_LINE_INSET;
+  }
+
+  it('leaves its last line 300 px below the top too', async () => {
+    await openEditor();
+
+    layOut(640);
+
+    expect(px(editor().style.paddingBottom)).toBe(expectedEditorSpace(640));
+  });
+
+  it('follows the height and the zoom', async () => {
+    await openEditor();
+    layOut(800);
+    fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
+
+    expect(px(editor().style.paddingBottom)).toBe(expectedEditorSpace(800));
+  });
+
+  it('keeps the plain padding in a short view', async () => {
+    await openEditor();
+
+    layOut(200);
+
+    expect(editor().style.paddingBottom).toBe('20px');
+  });
+});

@@ -1,12 +1,20 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useTheme } from '../theme';
 import { CODE_FONT } from '../typography';
+
+/** Padding around the source, and the least space under its last line. */
+const PADDING = 20;
+
+/** Source line, before zoom. */
+const LINE = 18;
 
 interface EditorProps {
   value: string;
   /** Zoom, applied to the source the same way it is applied to the prose. */
   scale: number;
+  /** Full scroll leaves the last line this far below the top, as in the document. */
+  lastLineInset: number;
   onChange: (next: string) => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -39,6 +47,7 @@ function caretAfterChange(previous: string, next: string): number {
 export function Editor({
   value,
   scale,
+  lastLineInset,
   onChange,
   onUndo,
   onRedo,
@@ -48,6 +57,22 @@ export function Editor({
   const shown = useRef(value);
   const commands = useRef({ onUndo, onRedo });
   commands.current = { onUndo, onRedo };
+  const [height, setHeight] = useState(0);
+  const lineHeight = LINE * scale;
+  const endSpace = Math.max(PADDING, height - lineHeight - lastLineInset);
+
+  useEffect(() => {
+    const element = field.current;
+    if (element === null || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const measure = () => setHeight(element.offsetHeight);
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => observer.disconnect();
+  }, []);
+
   // A value set from outside moves the caret to the end; an undo should leave
   // it where the text changed, as the text field's own undo would.
   useLayoutEffect(() => {
@@ -121,10 +146,11 @@ export function Editor({
         minWidth: 0,
         resize: 'none',
         border: 'none',
-        padding: 20,
+        padding: PADDING,
+        paddingBottom: endSpace,
         fontFamily: CODE_FONT,
         fontSize: 12.5 * scale,
-        lineHeight: `${18 * scale}px`,
+        lineHeight: `${lineHeight}px`,
         backgroundColor: theme.sidebar,
         color: theme.text,
       }}

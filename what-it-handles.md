@@ -194,7 +194,8 @@ history while the app runs.
 
 Blank space follows the last line. Its height is the view height, minus one
 line, the padding under the text, and 300 px. Full scroll leaves that line
-300 px below the top of the view.
+300 px below the top of the view. The source editor leaves the same space under
+its last line.
 
 ## Find
 

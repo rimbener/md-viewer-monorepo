@@ -27,7 +27,10 @@ class FakeResizeObserver {
 }
 
 function heightOf(element: HTMLElement): number {
-  if (element.dataset.testid === SCROLL_TEST_ID) {
+  if (
+    element.dataset.testid === SCROLL_TEST_ID ||
+    element.tagName === 'TEXTAREA'
+  ) {
     return heights.view;
   }
   return element.parentElement?.dataset.testid === SCROLL_TEST_ID

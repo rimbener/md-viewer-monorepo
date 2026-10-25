@@ -695,6 +695,7 @@ export function DocumentPanel({
             <Editor
               value={text ?? ''}
               scale={scale}
+              lastLineInset={LAST_LINE_INSET}
               onChange={edit}
               onUndo={undo}
               onRedo={redo}
