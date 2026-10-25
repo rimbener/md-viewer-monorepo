@@ -184,7 +184,8 @@ again, so a save in another editor shows up without switching away. A session
 edit is left alone: the header says the file changed, and the buffer stays.
 
 The editor has a Save button to the right of the editor button. It writes the
-buffer to the file and clears `edited, not saved`. The desktop app writes
+buffer to the file and clears `edited, not saved`. Command-S, or Control-S
+off the Mac, does the same. The desktop app writes
 through the file system. The web app asks the browser for write access on the
 first save.
 

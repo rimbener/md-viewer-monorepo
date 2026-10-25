@@ -141,8 +141,9 @@ The source editor changes what the viewer renders, not the file, until the
 person clicks Save. Save shows only while the editor is open, to the right of
 the editor button, and is enabled only while the buffer has unsaved edits. A
 document's buffer is kept for as long as the app is running, so switching to
-another file and back does not lose it, but quitting does. There is no
-keyboard shortcut for Save and no prompt on the way out. The header says
+another file and back does not lose it, but quitting does. Command-S, or
+Control-S off the Mac, does what Save does, and only while Save is enabled;
+it never opens the browser's own save. There is no prompt on the way out. The header says
 `edited, not saved` whenever a buffer has diverged from disk, and stops when
 the text matches the file again.
 

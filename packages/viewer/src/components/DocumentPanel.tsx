@@ -402,6 +402,26 @@ export function DocumentPanel({
     },
     [path, applyText],
   );
+  /** What Command-S does now, or null while Save is not on offer. */
+  const saveShortcut = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    // Command-S (Control-S off the Mac) saves the draft, not the page.
+    const saveOnKey = (event: globalThis.KeyboardEvent) => {
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.key.toLowerCase() === 's'
+      ) {
+        event.preventDefault();
+        saveShortcut.current?.();
+      }
+    };
+    window.addEventListener('keydown', saveOnKey);
+    return () => window.removeEventListener('keydown', saveOnKey);
+  }, []);
+
   const undo = useCallback(() => step(undoEdit), [step]);
   const redo = useCallback(() => step(redoEdit), [step]);
 
@@ -538,6 +558,8 @@ export function DocumentPanel({
     <SidebarToggle isVisible={isSidebarVisible} onToggle={onToggleSidebar} />
   );
 
+  saveShortcut.current = null;
+
   if (file === null) {
     return (
       <main style={styles.container}>
@@ -565,6 +587,9 @@ export function DocumentPanel({
     !isSaving &&
     platform.writeFile !== undefined &&
     !isHttpUrl(file.path);
+  if (isEditorVisible && canEdit && canSave) {
+    saveShortcut.current = save;
+  }
   const lineHeight = isTruncated
     ? PLAIN_LINE * scale
     : bodyLineHeight(scale, schemeById(schemeId).body.scale);

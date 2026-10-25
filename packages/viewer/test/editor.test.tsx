@@ -307,3 +307,48 @@ it('undoes past a save', async () => {
   expect(editor()).toHaveValue('# Notes');
   expect(screen.getByText('— edited, not saved')).toBeInTheDocument();
 });
+
+it.each([
+  ['Command', { metaKey: true }],
+  ['Control', { ctrlKey: true }],
+])('saves on %s-S', async (_name, modifier) => {
+  const platform = await renderApp();
+  fireEvent.click(toggle());
+  type('# Changed');
+
+  let isDefault = true;
+  await act(async () => {
+    isDefault = fireEvent.keyDown(window, { key: 's', ...modifier });
+  });
+  await settle();
+
+  expect(platform.writeFile).toHaveBeenCalledWith(
+    '/notes/notes.md',
+    '# Changed',
+  );
+  // The browser's own save would otherwise open over the page.
+  expect(isDefault).toBe(false);
+  expect(screen.queryByText(/edited, not saved/)).toBeNull();
+});
+
+it('writes nothing on Command-S with nothing to save', async () => {
+  const platform = await renderApp();
+  fireEvent.click(toggle());
+
+  const isDefault = fireEvent.keyDown(window, { key: 's', metaKey: true });
+
+  expect(platform.writeFile).not.toHaveBeenCalled();
+  expect(isDefault).toBe(false);
+});
+
+it('writes nothing on Command-S while the editor is closed', async () => {
+  const platform = await renderApp();
+  fireEvent.click(toggle());
+  type('# Changed');
+  fireEvent.click(toggle());
+
+  fireEvent.keyDown(window, { key: 's', metaKey: true });
+  await settle();
+
+  expect(platform.writeFile).not.toHaveBeenCalled();
+});
