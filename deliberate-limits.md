@@ -122,8 +122,9 @@ keeps its file.
 
 ## The desktop app can read any file
 
-The desktop app is not sandboxed, and its file scope allows reads everywhere,
-because the person picks the folder at run time. It never writes. A store
+The desktop app is not sandboxed, and its file scope allows reads and writes
+everywhere, because the person picks the folder at run time. It writes only
+when the person clicks Save. A store
 build for the Mac App Store would need the sandbox and security-scoped
 bookmarks back.
 
@@ -134,22 +135,25 @@ undo typing. Opening a file after you went back drops the files that were
 ahead, as a browser does. The list stops at 100 files. Only the 20 folders
 opened most recently keep a list, so the store stays bounded.
 
-## Edits are never written to disk
+## Edits are written only on Save
 
-The source editor changes what the viewer renders, not the file. A document's
-buffer is kept for as long as the app is running, so switching to another file
-and back does not lose it, but quitting does and there is no save, no undo
-history beyond the text field's own, and no prompt on the way out. The header
-says `edited, not saved` whenever a buffer has diverged from disk.
+The source editor changes what the viewer renders, not the file, until the
+person clicks Save. Save shows only while the editor is open, to the right of
+the editor button, and is enabled only while the buffer has unsaved edits. A
+document's buffer is kept for as long as the app is running, so switching to
+another file and back does not lose it, but quitting does. There is no undo
+history beyond the text field's own, no keyboard shortcut for Save, and no
+prompt on the way out. The header says `edited, not saved` whenever a buffer
+has diverged from disk.
 
 If the file changes on disk under that buffer, the header adds `file changed
 on disk` and the typed text is kept. Disk does not overwrite a session edit.
+Save then writes the buffer over the new file: the person was told, and the
+choice is theirs.
 
-Writing is the obvious next step, and it is a larger change than it looks: it
-needs a save command, a decision about what to do when the file has changed
-underneath the buffer, and write access, because both apps ask only for
-read-only access to what the person picked. Nothing can be written even while
-the folder is open.
+The web app opens a folder for reading only. The first Save asks the browser
+for write access to that file; when it is refused, the header says so and the
+buffer stays. A document opened by URL cannot be saved.
 
 ## The preview trails the typing by a moment
 

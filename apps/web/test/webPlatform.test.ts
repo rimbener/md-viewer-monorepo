@@ -11,7 +11,16 @@ type FakeFile = {
   kind: 'file';
   name: string;
   getFile: () => Promise<File>;
+  queryPermission: () => Promise<PermissionState>;
+  requestPermission: () => Promise<PermissionState>;
+  createWritable: () => Promise<{
+    write: (contents: string) => Promise<void>;
+    close: () => Promise<void>;
+  }>;
 };
+
+/** What a save wrote, and the answer a permission request gets. */
+const disk = { written: new Map<string, string>(), grant: 'granted' };
 
 type FakeDirectory = {
   kind: 'directory';
@@ -37,6 +46,14 @@ function directory(name: string, tree: Record<string, unknown>): FakeDirectory {
               lastModified: 1,
               size: value.length,
             }) as unknown as File,
+          queryPermission: async () => 'prompt',
+          requestPermission: async () => disk.grant as PermissionState,
+          createWritable: async () => ({
+            write: async contents => {
+              disk.written.set(key, contents);
+            },
+            close: async () => {},
+          }),
         }
       : directory(key, value as Record<string, unknown>);
   };
@@ -71,6 +88,8 @@ function pick(handle: FakeDirectory | DOMException) {
 }
 
 afterEach(() => {
+  disk.written.clear();
+  disk.grant = 'granted';
   delete (window as { showDirectoryPicker?: unknown }).showDirectoryPicker;
   window.history.replaceState(null, '', '/');
   vi.unstubAllGlobals();
@@ -125,6 +144,28 @@ describe('folders', () => {
     await expect(platform.askForFolder()).resolves.toBeNull();
     pick(new DOMException('no click', 'SecurityError'));
     await expect(platform.askForFolder()).resolves.toBeNull();
+  });
+
+  it('asks for write access, then writes the file', async () => {
+    pick(directory('notes', { 'a.md': '# A' }));
+    const platform = createWebPlatform();
+    await platform.askForFolder();
+
+    await platform.writeFile?.('/notes/a.md', '# Saved');
+
+    expect(disk.written.get('a.md')).toBe('# Saved');
+  });
+
+  it('writes nothing when write access is refused', async () => {
+    pick(directory('notes', { 'a.md': '# A' }));
+    const platform = createWebPlatform();
+    await platform.askForFolder();
+    disk.grant = 'denied';
+
+    await expect(
+      platform.writeFile?.('/notes/a.md', '# Saved'),
+    ).rejects.toThrow('Permission to save was refused.');
+    expect(disk.written.size).toBe(0);
   });
 
   it('refuses a path outside every open folder', async () => {

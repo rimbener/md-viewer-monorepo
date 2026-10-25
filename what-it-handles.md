@@ -183,6 +183,11 @@ app checks its size and change time each second. When it changes, it is read
 again, so a save in another editor shows up without switching away. A session
 edit is left alone: the header says the file changed, and the buffer stays.
 
+The editor has a Save button to the right of the editor button. It writes the
+buffer to the file and clears `edited, not saved`. The desktop app writes
+through the file system. The web app asks the browser for write access on the
+first save.
+
 Blank space follows the last line. Its height is the view height, minus one
 line, the padding under the text, and 300 px. Full scroll leaves that line
 300 px below the top of the view.

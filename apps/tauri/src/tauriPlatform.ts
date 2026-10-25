@@ -8,7 +8,13 @@
 
 import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
-import { exists, readDir, readTextFile, watch } from '@tauri-apps/plugin-fs';
+import {
+  exists,
+  readDir,
+  readTextFile,
+  watch,
+  writeTextFile,
+} from '@tauri-apps/plugin-fs';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
 import type { Platform } from '@md-viewer/viewer/platform';
@@ -71,6 +77,10 @@ export function createTauriPlatform(): Platform {
 
     readFile(path) {
       return readTextFile(toNativePath(path));
+    },
+
+    writeFile(path, contents) {
+      return writeTextFile(toNativePath(path), contents);
     },
 
     watchFile(path, onChange) {

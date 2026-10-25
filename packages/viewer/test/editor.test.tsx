@@ -7,6 +7,7 @@ import { act, fireEvent, screen } from '@testing-library/react';
 
 import {
   createFakePlatform,
+  type FakePlatform,
   renderViewer,
   settle,
   storeSession,
@@ -21,13 +22,17 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-async function renderApp(): Promise<void> {
-  await renderViewer(
-    createFakePlatform(
-      { '/notes': ['notes.md', 'other.md'] },
-      { '/notes/notes.md': '# Notes', '/notes/other.md': '# Other' },
-    ),
+async function renderApp(): Promise<FakePlatform> {
+  const platform = createFakePlatform(
+    { '/notes': ['notes.md', 'other.md'] },
+    { '/notes/notes.md': '# Notes', '/notes/other.md': '# Other' },
   );
+  await renderViewer(platform);
+  return platform;
+}
+
+function saveButton(): HTMLElement | null {
+  return screen.queryByRole('button', { name: 'Save' });
 }
 
 function toggle(): HTMLElement {
@@ -148,4 +153,56 @@ it('says so when the buffer no longer matches the file on disk', async () => {
   type('# Changed');
 
   expect(screen.getByText('— edited, not saved')).toBeInTheDocument();
+});
+
+it('shows Save only while the editor is open', async () => {
+  await renderApp();
+  expect(saveButton()).toBeNull();
+
+  fireEvent.click(toggle());
+  expect(saveButton()).toBeDisabled();
+
+  type('# Changed');
+  expect(saveButton()).toBeEnabled();
+
+  fireEvent.click(toggle());
+  expect(saveButton()).toBeNull();
+});
+
+it('writes the buffer to disk and clears the unsaved mark', async () => {
+  const platform = await renderApp();
+  fireEvent.click(toggle());
+  type('# Changed');
+
+  fireEvent.click(saveButton() as HTMLElement);
+  await settle();
+
+  expect(platform.writeFile).toHaveBeenCalledWith(
+    '/notes/notes.md',
+    '# Changed',
+  );
+  expect(screen.queryByText(/edited, not saved/)).toBeNull();
+  expect(saveButton()).toBeDisabled();
+  expect(editor()).toHaveValue('# Changed');
+
+  // The watcher sees the app's own write; it is not a change under a buffer.
+  platform.changeFile('/notes/notes.md');
+  await act(() => vi.advanceTimersByTimeAsync(200));
+  expect(screen.queryByText(/file changed on disk/)).toBeNull();
+});
+
+it('keeps the buffer and says why when the save fails', async () => {
+  const platform = await renderApp();
+  platform.writeFile.mockRejectedValueOnce(new Error('Disk full.'));
+  fireEvent.click(toggle());
+  type('# Changed');
+
+  fireEvent.click(saveButton() as HTMLElement);
+  await settle();
+
+  expect(
+    screen.getByText('— edited, not saved — Disk full.'),
+  ).toBeInTheDocument();
+  expect(editor()).toHaveValue('# Changed');
+  expect(saveButton()).toBeEnabled();
 });

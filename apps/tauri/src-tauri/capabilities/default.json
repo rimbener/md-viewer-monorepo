@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Read-only access to the folders and files the viewer shows.",
+  "description": "Access to the folders and files the viewer shows, and saves to them.",
   "windows": ["main", "document-*"],
   "permissions": [
     "core:default",
@@ -10,6 +10,7 @@
     "fs:allow-exists",
     "fs:allow-read-dir",
     "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
     "fs:allow-watch",
     "fs:allow-unwatch",
     {

@@ -26,6 +26,7 @@ import {
 import { useScrollMemory } from '../scrollMemory';
 import { useTheme } from '../theme';
 import type { FileNode } from '../types';
+import { isHttpUrl } from '../url';
 import {
   CODE_FONT,
   columnWidth,
@@ -41,6 +42,7 @@ import { EditorToggle } from './EditorToggle';
 import { FontControl } from './FontControl';
 import { HistoryNav } from './HistoryNav';
 import { Markdown } from './Markdown';
+import { SaveButton } from './SaveButton';
 import { SidebarToggle } from './SidebarToggle';
 import { Spinner } from './Spinner';
 import { oneLine } from './text';
@@ -124,8 +126,8 @@ export function DocumentPanel({
   const reparse = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reread = useRef<ReturnType<typeof setTimeout> | null>(null);
   /**
-   * Edits for every file touched this session. Nothing is written to disk, so
-   * without this a glance at another document would throw the work away.
+   * Unsaved edits for every file touched this session, so a glance at
+   * another document does not throw the work away.
    */
   const drafts = useRef(new Map<string, string>());
   const sourceRef = useRef<string | null>(null);
@@ -133,6 +135,8 @@ export function DocumentPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [diskChanged, setDiskChanged] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   // Zoom and line length are properties of the reader rather than of the
   // document: they survive switching files, and are restored on the next launch.
   const [scale, setScale] = useState(DEFAULT_ZOOM);
@@ -226,6 +230,8 @@ export function DocumentPanel({
   }, [isEditorVisible]);
 
   const path = file?.path ?? null;
+  const pathRef = useRef(path);
+  pathRef.current = path;
   sourceRef.current = source;
   draftRef.current = draft;
 
@@ -244,6 +250,7 @@ export function DocumentPanel({
     setActive(0);
     setMatchCount(0);
     setCapped(false);
+    setSaveError(null);
 
     if (path === null) {
       setSource(null);
@@ -329,6 +336,7 @@ export function DocumentPanel({
       }
       drafts.current.set(path, next);
       setDraft(next);
+      setSaveError(null);
       if (reparse.current !== null) {
         clearTimeout(reparse.current);
       }
@@ -339,6 +347,46 @@ export function DocumentPanel({
     },
     [path],
   );
+
+  const save = useCallback(() => {
+    const write = platform.writeFile;
+    const contents = draftRef.current;
+    if (path === null || write === undefined || contents === null) {
+      return;
+    }
+    setIsSaving(true);
+    setSaveError(null);
+    write(path, contents)
+      .then(() => {
+        // Typing during the write leaves a newer draft, which stays unsaved.
+        if (drafts.current.get(path) === contents) {
+          drafts.current.delete(path);
+        }
+        if (pathRef.current !== path) {
+          return;
+        }
+        // Set before the watcher rereads, so the own write is not a change.
+        sourceRef.current = contents;
+        setSource(contents);
+        if (draftRef.current === contents) {
+          if (reparse.current !== null) {
+            clearTimeout(reparse.current);
+            reparse.current = null;
+          }
+          setDraft(null);
+          setSettledDraft(null);
+          setDiskChanged(false);
+        }
+      })
+      .catch((cause: unknown) => {
+        if (pathRef.current === path) {
+          setSaveError(
+            cause instanceof Error ? cause.message : 'Could not save the file.',
+          );
+        }
+      })
+      .finally(() => setIsSaving(false));
+  }, [path, platform]);
 
   useEffect(
     () => () => {
@@ -447,6 +495,11 @@ export function DocumentPanel({
   // A document too large to parse is shown as plain text, and editing it would
   // reparse nothing — so the source pane has nothing to offer there.
   const canEdit = !isTruncated && error === null;
+  const canSave =
+    draft !== null &&
+    !isSaving &&
+    platform.writeFile !== undefined &&
+    !isHttpUrl(file.path);
   const lineHeight = isTruncated
     ? PLAIN_LINE * scale
     : bodyLineHeight(scale, schemeById(schemeId).body.scale);
@@ -509,23 +562,25 @@ export function DocumentPanel({
               color: theme.syntaxKeyword,
             }}
           >
-            {/* Edits live in memory only, which is worth saying out loud. */}
             {draft === null
               ? null
-              : diskChanged
-                ? ` — edited, not saved — file changed on disk`
-                : ` — edited, not saved`}
+              : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
           </span>
         </TitleRow>
         <div style={styles.tools}>
           {sidebarTool}
           {historyTool}
           <Tool title="Editor">
-            <EditorToggle
-              isVisible={isEditorVisible}
-              disabled={!canEdit}
-              onToggle={toggleEditor}
-            />
+            <div style={styles.toolRow}>
+              <EditorToggle
+                isVisible={isEditorVisible}
+                disabled={!canEdit}
+                onToggle={toggleEditor}
+              />
+              {isEditorVisible && canEdit ? (
+                <SaveButton disabled={!canSave} onSave={save} />
+              ) : null}
+            </div>
           </Tool>
           <div style={{ flex: 1 }} />
           <Tool title="Font">
@@ -683,6 +738,10 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: 4,
+  },
+  toolRow: {
+    display: 'flex',
+    gap: 6,
   },
   toolTitle: {
     fontSize: 10,

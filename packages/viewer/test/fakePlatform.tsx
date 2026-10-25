@@ -20,7 +20,9 @@ export type FakeFolders = Record<string, string[]>;
 export type FakeFiles = Record<string, string>;
 
 type MockedPlatform = {
-  [Key in keyof Platform]-?: Platform[Key] extends (...args: infer A) => infer R
+  [Key in keyof Platform]-?: NonNullable<Platform[Key]> extends (
+    ...args: infer A
+  ) => infer R
     ? Mock<(...args: A) => R>
     : Platform[Key];
 };
@@ -68,6 +70,9 @@ export function createFakePlatform(
         throw new Error(`ENOENT: ${path}`);
       }
       return contents;
+    }),
+    writeFile: vi.fn(async (path: string, contents: string) => {
+      files[path] = contents;
     }),
     watchFile: vi.fn((path: string, onChange: () => void) => {
       const set = watchers.get(path) ?? new Set();

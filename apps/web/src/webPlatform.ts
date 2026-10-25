@@ -186,6 +186,24 @@ export function createWebPlatform(): Platform {
       return (await (await fileAt(path)).getFile()).text();
     },
 
+    async writeFile(path, contents) {
+      if (isHttpUrl(path)) {
+        throw new Error('A document opened by URL cannot be saved.');
+      }
+      const handle = await fileAt(path);
+      const options = { mode: 'readwrite' } as const;
+      // The folder was opened read-only, so the first save asks for more.
+      if (
+        (await handle.queryPermission(options)) !== 'granted' &&
+        (await handle.requestPermission(options)) !== 'granted'
+      ) {
+        throw new Error('Permission to save was refused.');
+      }
+      const writable = await handle.createWritable();
+      await writable.write(contents);
+      await writable.close();
+    },
+
     watchFile(path, onChange) {
       if (isHttpUrl(path)) {
         return () => {};

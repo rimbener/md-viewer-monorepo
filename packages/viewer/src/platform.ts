@@ -34,6 +34,8 @@ export interface Platform {
   folderExists(path: string): Promise<boolean>;
   readDir(path: string): Promise<DirectoryEntry[]>;
   readFile(path: string): Promise<string>;
+  /** Writes text over the file at `path`. Absent where nothing can be written. */
+  writeFile?: (path: string, contents: string) => Promise<void>;
   /** Calls `onChange` when the file at `path` changes. Returns the stop. */
   watchFile(path: string, onChange: () => void): () => void;
   /** A file handed to the app from outside — Finder, a link — or null. */
