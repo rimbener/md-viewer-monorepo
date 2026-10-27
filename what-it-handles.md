@@ -155,7 +155,10 @@ The sidebar keeps a menu of the last 10 folders, above Change Folder. The
 newest folder is first. A choice in the menu opens that folder again. The menu
 shows the folder name. When two folders have the same name, it also shows the
 parent folder. A file opened from outside is not added. A folder that can no
-longer be opened stays in the menu until a newer folder takes its place.
+longer be opened stays in the menu until a newer folder takes its place, or
+until the person removes it: a right-click on a folder in the menu shows
+"Remove from Recent Folders". This removes only the menu entry; the folder
+stays open if it is open.
 
 The files opened in a folder are kept as a list for that folder alone. Back and
 Next in the document header move through the list. Opening a file adds it and

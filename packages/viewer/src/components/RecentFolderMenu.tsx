@@ -9,7 +9,10 @@ type RecentFolderMenuProps = {
   currentPath: string | null;
   disabled: boolean;
   onSelect: (folder: RecentFolder) => void;
+  onRemove: (folder: RecentFolder) => void;
 };
+
+type ContextMenu = { folder: RecentFolder; x: number; y: number };
 
 /** The last folders opened, so one of them can be opened again. */
 export function RecentFolderMenu({
@@ -17,15 +20,38 @@ export function RecentFolderMenu({
   currentPath,
   disabled,
   onSelect,
+  onRemove,
 }: RecentFolderMenuProps) {
   const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
 
   useEffect(() => {
     if (disabled) {
       setIsOpen(false);
+      setContextMenu(null);
     }
   }, [disabled]);
+
+  useEffect(() => {
+    if (contextMenu === null) {
+      return;
+    }
+    const close = () => setContextMenu(null);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        close();
+      }
+    };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', closeOnEscape);
+    window.addEventListener('blur', close);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('blur', close);
+    };
+  }, [contextMenu]);
 
   if (folders.length === 0) {
     return null;
@@ -89,6 +115,14 @@ export function RecentFolderMenu({
                   setIsOpen(false);
                   onSelect(folder);
                 }}
+                onContextMenu={event => {
+                  event.preventDefault();
+                  setContextMenu({
+                    folder,
+                    x: event.clientX,
+                    y: event.clientY,
+                  });
+                }}
                 style={{
                   ...oneLine,
                   display: 'block',
@@ -107,6 +141,46 @@ export function RecentFolderMenu({
               </button>
             );
           })}
+        </div>
+      ) : null}
+      {contextMenu !== null ? (
+        <div
+          role="menu"
+          aria-label="Recent folder actions"
+          onMouseDown={event => event.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            zIndex: 10,
+            border: `1px solid ${theme.border}`,
+            borderRadius: 6,
+            overflow: 'hidden',
+            backgroundColor: theme.background,
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="pressable"
+            autoFocus
+            onClick={() => {
+              setContextMenu(null);
+              onRemove(contextMenu.folder);
+            }}
+            style={{
+              display: 'block',
+              padding: '6px 10px',
+              border: 'none',
+              textAlign: 'left',
+              fontSize: 13,
+              whiteSpace: 'nowrap',
+              backgroundColor: 'transparent',
+              color: theme.text,
+            }}
+          >
+            Remove from Recent Folders
+          </button>
         </div>
       ) : null}
     </div>

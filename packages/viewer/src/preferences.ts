@@ -232,13 +232,24 @@ export function rememberRecentFolder(
   bookmark: string | null,
   replacedPath: string | null = null,
 ): Promise<RecentFolder[]> {
+  return updateRecentFolders(folders =>
+    rememberFolder(folders, { path, bookmark }, replacedPath),
+  );
+}
+
+/** Drops `path` from the list. Returns the list that was stored. */
+export function forgetRecentFolder(path: string): Promise<RecentFolder[]> {
+  return updateRecentFolders(folders =>
+    folders.filter(folder => folder.path !== path),
+  );
+}
+
+function updateRecentFolders(
+  change: (folders: RecentFolder[]) => RecentFolder[],
+): Promise<RecentFolder[]> {
   let result: RecentFolder[] = [];
   const run = recentQueue.then(async () => {
-    const folders = rememberFolder(
-      decodeRecentFolders(await read(RECENT_FOLDERS_KEY)),
-      { path, bookmark },
-      replacedPath,
-    );
+    const folders = change(decodeRecentFolders(await read(RECENT_FOLDERS_KEY)));
     await put(RECENT_FOLDERS_KEY, encodeRecentFolders(folders));
     result = folders;
   });

@@ -33,6 +33,7 @@ import {
   loadFolderBookmark,
   loadLastFile,
   loadLastFolder,
+  forgetRecentFolder,
   loadRecentFolders,
   loadSidebarVisible,
   moveFileHistory,
@@ -124,6 +125,15 @@ function Session() {
     },
     [],
   );
+
+  const removeRecentFolder = useCallback((folder: RecentFolder) => {
+    const ticket = (recentTicket.current += 1);
+    forgetRecentFolder(folder.path).then(folders => {
+      if (isMounted.current && ticket === recentTicket.current) {
+        setRecentFolders(folders);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const ticket = (recentTicket.current += 1);
@@ -493,6 +503,7 @@ function Session() {
           fileCount={fileCount}
           onChooseFolder={chooseFolder}
           onSelectRecentFolder={selectRecentFolder}
+          onRemoveRecentFolder={removeRecentFolder}
           onReloadFolder={reloadFolder}
           onSelectFile={selectFile}
           onSelectDirectory={selectDirectory}

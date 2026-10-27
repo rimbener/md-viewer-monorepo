@@ -3,7 +3,7 @@
  * the chosen folder with the bookmark stored for it.
  */
 
-import { screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 
 import {
   createFakePlatform,
@@ -191,4 +191,47 @@ it('hides the menu until a folder has been opened', async () => {
     screen.queryByRole('button', { name: 'Recent folders' }),
   ).not.toBeInTheDocument();
   expect(platform.askForFolder).toHaveBeenCalled();
+});
+
+it('removes a folder from the menu on right-click', async () => {
+  const platform = folderPlatform();
+  storeNotesAndDocs(platform);
+
+  await renderViewer(platform);
+  await openMenu();
+  await act(async () => {
+    fireEvent.contextMenu(screen.getByRole('menuitem', { name: '/docs' }));
+  });
+  await press(
+    screen.getByRole('menuitem', { name: 'Remove from Recent Folders' }),
+  );
+
+  expect(
+    screen.queryByRole('menuitem', { name: '/docs' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('menuitem', { name: '/notes' })).toBeInTheDocument();
+  expect(window.localStorage.getItem('mdviewer.recentFolders')).not.toContain(
+    '/docs',
+  );
+  expect(platform.openFolder).not.toHaveBeenCalledWith('DOCS');
+  expect(treeItem('a.md')).toBeInTheDocument();
+});
+
+it('closes the right-click menu on Escape', async () => {
+  const platform = folderPlatform();
+  storeNotesAndDocs(platform);
+
+  await renderViewer(platform);
+  await openMenu();
+  await act(async () => {
+    fireEvent.contextMenu(screen.getByRole('menuitem', { name: '/docs' }));
+  });
+  await act(async () => {
+    fireEvent.keyDown(document, { key: 'Escape' });
+  });
+
+  expect(
+    screen.queryByRole('menuitem', { name: 'Remove from Recent Folders' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('menuitem', { name: '/docs' })).toBeInTheDocument();
 });

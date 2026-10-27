@@ -2,6 +2,7 @@ import type { Mocked } from 'vitest';
 
 import { emptyFileHistory, recordVisit } from '../src/fileHistory';
 import {
+  forgetRecentFolder,
   loadCharacters,
   loadColorScheme,
   loadFileHistory,
@@ -172,6 +173,19 @@ describe('recent folder persistence', () => {
   it('round-trips the last folders and their bookmarks', async () => {
     await rememberRecentFolder('/docs', 'DOCS');
     await rememberRecentFolder('/notes', 'NOTES');
+
+    await expect(loadRecentFolders()).resolves.toEqual([
+      { path: '/notes', bookmark: 'NOTES' },
+      { path: '/docs', bookmark: 'DOCS' },
+    ]);
+  });
+
+  it('forgets one folder and keeps the others in order', async () => {
+    await rememberRecentFolder('/docs', 'DOCS');
+    await rememberRecentFolder('/work', 'WORK');
+    await rememberRecentFolder('/notes', 'NOTES');
+
+    await forgetRecentFolder('/work');
 
     await expect(loadRecentFolders()).resolves.toEqual([
       { path: '/notes', bookmark: 'NOTES' },

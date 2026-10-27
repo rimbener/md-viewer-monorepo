@@ -20,6 +20,7 @@ interface SidebarProps {
   fileCount: number;
   onChooseFolder: () => void;
   onSelectRecentFolder: (folder: RecentFolder) => void;
+  onRemoveRecentFolder: (folder: RecentFolder) => void;
   onReloadFolder: () => void;
   onSelectFile: (file: FileNode) => void;
   onSelectDirectory: (directory: DirectoryNode) => void;
@@ -35,6 +36,7 @@ export function Sidebar({
   fileCount,
   onChooseFolder,
   onSelectRecentFolder,
+  onRemoveRecentFolder,
   onReloadFolder,
   onSelectFile,
   onSelectDirectory,
@@ -70,6 +72,7 @@ export function Sidebar({
               currentPath={currentFolderPath}
               disabled={isScanning}
               onSelect={onSelectRecentFolder}
+              onRemove={onRemoveRecentFolder}
             />
             <div style={{ display: 'flex', gap: 8 }}>
               <button
