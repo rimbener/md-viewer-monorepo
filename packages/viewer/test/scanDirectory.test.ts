@@ -261,3 +261,49 @@ describe('ancestorPaths', () => {
     expect(ancestorPaths('/elsewhere/c.md', '/notes')).toEqual([]);
   });
 });
+
+test('reads no folder after the signal aborts', async () => {
+  mockFs({
+    '/docs': ['a/', 'b/', 'top.md'],
+    '/docs/a': ['a.md'],
+    '/docs/b': ['b.md'],
+  });
+  const abort = new AbortController();
+  const read = readDir.getMockImplementation()!;
+  readDir.mockImplementation(async path => {
+    const entries = await read(path);
+    if (path === '/docs') {
+      abort.abort();
+    }
+    return entries;
+  });
+
+  const tree = await scanDirectory(readDir, '/docs', abort.signal);
+
+  expect(readDir.mock.calls.map(([path]) => path)).toEqual(['/docs']);
+  expect(outline(tree)).toEqual(['docs/', '  top.md']);
+});
+
+test('keeps at most 16 reads in flight', async () => {
+  const fs: FakeFs = { '/docs': [] };
+  for (let index = 0; index < 50; index += 1) {
+    fs['/docs'].push(`d${index}/`);
+    fs[`/docs/d${index}`] = [`f${index}.md`];
+  }
+  mockFs(fs);
+  const read = readDir.getMockImplementation()!;
+  let active = 0;
+  let peak = 0;
+  readDir.mockImplementation(async path => {
+    active += 1;
+    peak = Math.max(peak, active);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    active -= 1;
+    return read(path);
+  });
+
+  const tree = await scanDirectory(readDir, '/docs');
+
+  expect(peak).toBe(16);
+  expect(countFiles(tree)).toBe(50);
+});

@@ -9,6 +9,38 @@ const MARKDOWN_EXTENSIONS = ['.md', '.mdc'];
 /** Each walk is shallow; a deeper folder is read when selected. */
 const MAX_DEPTH = 3;
 
+/**
+ * Reads in flight at once. A home folder holds over 100,000 folders within
+ * the depth cap; reading all at once floods the page, so clicks (and Cancel)
+ * wait behind the replies, and an abort finds every read already started.
+ */
+const MAX_CONCURRENT_READS = 16;
+
+type Limit = <T>(task: () => Promise<T>) => Promise<T>;
+
+function createLimit(max: number): Limit {
+  let active = 0;
+  const waiting: (() => void)[] = [];
+  return async task => {
+    if (active >= max) {
+      // The slot is handed over by the task that ends, so active stays put.
+      await new Promise<void>(resolve => waiting.push(resolve));
+    } else {
+      active += 1;
+    }
+    try {
+      return await task();
+    } finally {
+      const next = waiting.shift();
+      if (next === undefined) {
+        active -= 1;
+      } else {
+        next();
+      }
+    }
+  };
+}
+
 function isMarkdown(name: string): boolean {
   const lower = name.toLowerCase();
   return MARKDOWN_EXTENSIONS.some(extension => lower.endsWith(extension));
@@ -48,13 +80,17 @@ async function scan(
   path: string,
   name: string,
   depth: number,
+  signal: AbortSignal | undefined,
+  limit: Limit,
 ): Promise<DirectoryNode> {
   const children: TreeNode[] = [];
 
   // A directory we lack permission to read should not sink the whole scan.
   let entries: DirectoryEntry[];
   try {
-    entries = await readDir(path);
+    entries = await limit(async () =>
+      signal?.aborted ? [] : await readDir(path),
+    );
   } catch {
     entries = [];
   }
@@ -66,7 +102,7 @@ async function scan(
   if (depth + 1 < MAX_DEPTH) {
     const subdirectories = await Promise.all(
       directories.map(entry =>
-        scan(readDir, entry.path, entry.name, depth + 1),
+        scan(readDir, entry.path, entry.name, depth + 1, signal, limit),
       ),
     );
 
@@ -101,14 +137,23 @@ async function scan(
 
 /**
  * Walks `rootPath` and returns a tree containing only markdown files and the
- * directories leading to them.
+ * directories leading to them. After `signal` aborts, no folder is read and
+ * the tree that comes back is partial.
  */
 export async function scanDirectory(
   readDir: ReadDir,
   rootPath: string,
+  signal?: AbortSignal,
 ): Promise<DirectoryNode> {
   const name = rootPath.split('/').filter(Boolean).pop() ?? rootPath;
-  return scan(readDir, rootPath, name, 0);
+  return scan(
+    readDir,
+    rootPath,
+    name,
+    0,
+    signal,
+    createLimit(MAX_CONCURRENT_READS),
+  );
 }
 
 /** Replaces the directory at `replacement.path` and leaves every other branch. */
@@ -143,17 +188,24 @@ export async function scanToFile(
   readDir: ReadDir,
   rootPath: string,
   filePath: string,
+  signal?: AbortSignal,
 ): Promise<DirectoryNode> {
-  let tree = await scanDirectory(readDir, rootPath);
+  let tree = await scanDirectory(readDir, rootPath, signal);
   if (findFile(tree, filePath) !== null) {
     return tree;
   }
 
   for (const ancestor of ancestorPaths(filePath, rootPath).reverse()) {
+    if (signal?.aborted) {
+      return tree;
+    }
     if (ancestor === rootPath) {
       continue;
     }
-    tree = replaceDirectory(tree, await scanDirectory(readDir, ancestor));
+    tree = replaceDirectory(
+      tree,
+      await scanDirectory(readDir, ancestor, signal),
+    );
     if (findFile(tree, filePath) !== null) {
       return tree;
     }

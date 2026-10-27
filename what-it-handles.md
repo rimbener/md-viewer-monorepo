@@ -151,6 +151,11 @@ when the person chose "Allow on every visit". Otherwise the permission must be
 given again, and the browser asks only after a click: choose the folder in the
 recent folder menu to open it again.
 
+While a folder is read for the first time, the sidebar shows a spinner and a
+Cancel button. Cancel stops the read, forgets the folder so the next launch
+does not try it again, and shows the folder dialog. A dismissed dialog leaves
+no folder open.
+
 The sidebar keeps a menu of the last 10 folders, above Change Folder. The
 newest folder is first. A choice in the menu opens that folder again. The menu
 shows the folder name. When two folders have the same name, it also shows the

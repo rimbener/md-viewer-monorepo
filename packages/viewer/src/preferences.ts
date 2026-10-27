@@ -166,7 +166,8 @@ export async function loadLastFolder(): Promise<string | null> {
   return asPath(await read(FOLDER_KEY));
 }
 
-export function saveLastFolder(path: string): void {
+/** Passing null forgets the folder, so the next launch does not reopen it. */
+export function saveLastFolder(path: string | null): void {
   write(FOLDER_KEY, path);
 }
 

@@ -22,6 +22,8 @@ interface SidebarProps {
   onSelectRecentFolder: (folder: RecentFolder) => void;
   onRemoveRecentFolder: (folder: RecentFolder) => void;
   onReloadFolder: () => void;
+  /** Null when no walk is running that could be stopped. */
+  onCancelScan: (() => void) | null;
   onSelectFile: (file: FileNode) => void;
   onSelectDirectory: (directory: DirectoryNode) => void;
 }
@@ -38,6 +40,7 @@ export function Sidebar({
   onSelectRecentFolder,
   onRemoveRecentFolder,
   onReloadFolder,
+  onCancelScan,
   onSelectFile,
   onSelectDirectory,
 }: SidebarProps) {
@@ -135,6 +138,17 @@ export function Sidebar({
           <span style={{ fontSize: 12, color: theme.mutedText }}>
             {isScanning ? 'Scanning…' : (error ?? 'No folder selected yet.')}
           </span>
+          {onCancelScan ? (
+            <button
+              type="button"
+              className="pressable"
+              title="Stops reading this folder and asks for another"
+              onClick={onCancelScan}
+              style={{ ...actionStyle(theme, false), flex: 'none' }}
+            >
+              Cancel
+            </button>
+          ) : null}
         </div>
       )}
 

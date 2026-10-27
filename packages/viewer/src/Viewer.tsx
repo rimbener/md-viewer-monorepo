@@ -173,6 +173,10 @@ function Session() {
         platform.forgetOpenedFile();
       }
       setError(null);
+      // The old tree would hide the spinner, and with it Cancel.
+      if (directory !== currentRoot) {
+        setRoot(null);
+      }
       setRootPath(directory);
       saveLastFolder(directory);
       setScanNonce(previous => previous + 1);
@@ -377,14 +381,15 @@ function Session() {
     }
 
     let cancelled = false;
+    const abort = new AbortController();
     setIsScanning(true);
     setError(null);
 
     const target = pendingFilePath.current;
     const walk =
       target === null
-        ? scanDirectory(platform.readDir, rootPath)
-        : scanToFile(platform.readDir, rootPath, target);
+        ? scanDirectory(platform.readDir, rootPath, abort.signal)
+        : scanToFile(platform.readDir, rootPath, target, abort.signal);
 
     walk
       .then(tree => {
@@ -419,8 +424,24 @@ function Session() {
 
     return () => {
       cancelled = true;
+      abort.abort();
     };
   }, [platform, rootPath, scanNonce]);
+
+  // Leaving rootPath stops the walk. The folder is forgotten so a folder too
+  // large to read does not hang the next launch too.
+  const cancelScan = useCallback(() => {
+    pendingFilePath.current = null;
+    platform.closeFolder();
+    saveLastFolder(null);
+    saveFolderBookmark(null);
+    saveLastFile(null);
+    setIsScanning(false);
+    setRootPath(null);
+    setRoot(null);
+    setSelectedFile(null);
+    chooseFolder();
+  }, [chooseFolder, platform]);
 
   const fileCount = useMemo(() => (root ? countFiles(root) : 0), [root]);
 
@@ -505,6 +526,7 @@ function Session() {
           onSelectRecentFolder={selectRecentFolder}
           onRemoveRecentFolder={removeRecentFolder}
           onReloadFolder={reloadFolder}
+          onCancelScan={isScanning ? cancelScan : null}
           onSelectFile={selectFile}
           onSelectDirectory={selectDirectory}
         />
