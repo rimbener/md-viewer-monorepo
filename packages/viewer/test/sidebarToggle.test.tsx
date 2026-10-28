@@ -43,6 +43,20 @@ it('hides the tree and brings it back', async () => {
   expect(showsTree()).toBe(true);
 });
 
+it.each([
+  ['Command', { metaKey: true }],
+  ['Control', { ctrlKey: true }],
+])('toggles the tree on %s-B', async (_name, modifier) => {
+  await renderApp();
+
+  const isDefault = fireEvent.keyDown(window, { key: 'b', ...modifier });
+  expect(isDefault).toBe(false);
+  expect(showsTree()).toBe(false);
+
+  fireEvent.keyDown(window, { key: 'b', ...modifier });
+  expect(showsTree()).toBe(true);
+});
+
 it('points the way the sidebar will move', async () => {
   await renderApp();
   expect(toggle()).toHaveTextContent('←');

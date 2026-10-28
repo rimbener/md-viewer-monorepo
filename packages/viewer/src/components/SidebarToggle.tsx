@@ -26,7 +26,7 @@ export function SidebarToggle({ isVisible, onToggle }: SidebarToggleProps) {
       type="button"
       className="pressable"
       aria-label={isVisible ? 'Hide sidebar' : 'Show sidebar'}
-      title="Shows or hides the list of markdown files"
+      title="Shows or hides the list of markdown files (⌘B, Ctrl+B)"
       onClick={onToggle}
       style={{
         position: 'absolute',

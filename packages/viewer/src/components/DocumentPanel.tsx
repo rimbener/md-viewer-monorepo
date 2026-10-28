@@ -423,16 +423,20 @@ export function DocumentPanel({
   const saveShortcut = useRef<(() => void) | null>(null);
   /** What Command-E does now, or null while the editor button is disabled. */
   const editorShortcut = useRef<(() => void) | null>(null);
+  const sidebarShortcut = useRef(onToggleSidebar);
+  sidebarShortcut.current = onToggleSidebar;
 
   useEffect(() => {
-    // Control stands in for Command off the Mac; the page's own S and E give way.
+    // Control stands in for Command off the Mac; the page's own S, E and B give way.
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
         return;
       }
-      const shortcut = { s: saveShortcut, e: editorShortcut }[
-        event.key.toLowerCase()
-      ];
+      const shortcut = {
+        s: saveShortcut,
+        e: editorShortcut,
+        b: sidebarShortcut,
+      }[event.key.toLowerCase()];
       if (shortcut !== undefined) {
         event.preventDefault();
         shortcut.current?.();
