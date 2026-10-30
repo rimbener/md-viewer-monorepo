@@ -40,3 +40,5 @@ must allow cross-origin reads, as `raw.githubusercontent.com` does.
 
 `.github/workflows/pages.yml` tests and builds the web app on every push to
 `main`, and deploys `apps/web/dist` to GitHub Pages.
+
+Testing the zaps app
