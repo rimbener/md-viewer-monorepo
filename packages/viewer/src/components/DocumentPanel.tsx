@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { parseMarkdown } from '@md-viewer/markdown/parseBlocks';
+import { hasBareFeature, parseMarkdown } from '@md-viewer/markdown/parseBlocks';
 
 import { DEFAULT_CHARACTERS } from '../column';
 import {
@@ -56,6 +56,7 @@ import { EditorToggle } from './EditorToggle';
 import { FontControl } from './FontControl';
 import { HistoryNav } from './HistoryNav';
 import { Markdown } from './Markdown';
+import { GherkinToggle } from './GherkinToggle';
 import { SaveButton } from './SaveButton';
 import { SidebarToggle, SIDEBAR_TOGGLE_CLEARANCE } from './SidebarToggle';
 import { Spinner } from './Spinner';
@@ -132,6 +133,8 @@ export function DocumentPanel({
   const theme = useTheme();
   const platform = usePlatform();
   const [source, setSource] = useState<string | null>(null);
+  /** The path read with unfenced features laid out; any other path is not. */
+  const [gherkinPath, setGherkinPath] = useState<string | null>(null);
   /** Edits made in this session, or null while the file is as it is on disk. */
   const [draft, setDraft] = useState<string | null>(null);
   /**
@@ -509,12 +512,24 @@ export function DocumentPanel({
   const isTruncated =
     rendered !== null && rendered.length > MAX_RENDERED_CHARACTERS;
 
+  const isGherkin = path !== null && gherkinPath === path;
+
   const blocks = useMemo(
     () =>
       rendered === null || rendered.length > MAX_RENDERED_CHARACTERS
         ? []
-        : parseMarkdown(rendered),
-    [rendered],
+        : parseMarkdown(rendered, { bareFeatures: isGherkin }),
+    [rendered, isGherkin],
+  );
+
+  const canRenderGherkin = useMemo(
+    () =>
+      isGherkin
+        ? blocks.some(block => block.kind === 'codeBlock' && block.bare)
+        : rendered !== null &&
+          rendered.length <= MAX_RENDERED_CHARACTERS &&
+          hasBareFeature(rendered),
+    [isGherkin, blocks, rendered],
   );
 
   // Prose is read most comfortably at a bounded line length, so the column is
@@ -691,6 +706,14 @@ export function DocumentPanel({
         </TitleRow>
         <div style={styles.tools}>
           {historyTool}
+          {canRenderGherkin ? (
+            <Tool title="Gherkin">
+              <GherkinToggle
+                isActive={isGherkin}
+                onToggle={() => setGherkinPath(isGherkin ? null : path)}
+              />
+            </Tool>
+          ) : null}
           <Tool title="Editor">
             <div style={styles.toolRow}>
               <EditorToggle

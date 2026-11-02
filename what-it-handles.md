@@ -112,6 +112,13 @@ Sections close by rank, so a `Scenario:` ends at the next `Scenario:` or `Rule:`
 without needing a blank line, and an `Examples:` block belongs to the scenario
 above it.
 
+A feature written straight into the document, with no fence, reads as markdown
+by default. When a top-level line starts with `Feature:`, `Business Need:` or
+`Ability:`, a "Render as gherkin" button shows in the tools row. It lays the
+feature out as if it were fenced, from that line to the next column-0 `#`,
+fence or rule. The choice holds for the open document only, and resets when
+another document opens.
+
 ## Mermaid
 
 A fenced block tagged `mermaid` is drawn as a diagram instead of being printed

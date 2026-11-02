@@ -42,8 +42,11 @@ Only the English keywords are known, and only as Gherkin capitalises them. A
 and a lowercase `given` stays prose, because description lines that open with
 an ordinary "and" or "given" are far more common than uncapitalised steps.
 
-Gherkin is also only reached through a fenced block inside a markdown document.
-A standalone `.feature` file is not shown at all, because the folder scan only
+Gherkin is also only reached through a markdown document: a fenced block, or
+an unfenced feature that the person asks to lay out. An unfenced feature is not
+laid out by itself, because `Feature:` at the start of a line is also ordinary
+prose. It ends at a column-0 `#`, so a column-0 Gherkin comment ends it too:
+that is the same character as a markdown heading. A standalone `.feature` file is not shown at all, because the folder scan only
 collects `.md` and `.mdc` files.
 
 ## Mermaid runs in the page

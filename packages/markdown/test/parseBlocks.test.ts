@@ -1,4 +1,4 @@
-import { parseMarkdown } from '../src/parseBlocks';
+import { hasBareFeature, parseMarkdown } from '../src/parseBlocks';
 import type { Block, InlineNode } from '../src/types';
 
 function text(nodes: InlineNode[]): string {
@@ -50,6 +50,8 @@ function outline(blocks: Block[], depth = 0): string[] {
   });
 }
 
+const BARE = { bareFeatures: true };
+
 describe('parseMarkdown', () => {
   it('parses headings in both syntaxes', () => {
     expect(
@@ -72,6 +74,49 @@ describe('parseMarkdown', () => {
   it('parses an unclosed fence to the end of the document', () => {
     expect(outline(parseMarkdown('```\nstill code'))).toEqual([
       'code[]: still code',
+    ]);
+  });
+
+  it('reads an unfenced feature as text unless asked', () => {
+    expect(outline(parseMarkdown('Feature: A\n  Scenario: B'))).toEqual([
+      'p: Feature: A Scenario: B',
+    ]);
+  });
+
+  it('tells whether a document holds an unfenced feature', () => {
+    expect(hasBareFeature('# AC\n\nFeature: A')).toBe(true);
+    expect(hasBareFeature('```gherkin\nFeature: A\n```')).toBe(false);
+    expect(hasBareFeature('> Feature: A')).toBe(false);
+    expect(hasBareFeature('no feature')).toBe(false);
+  });
+
+  it('reads an unfenced feature as a gherkin block', () => {
+    const source =
+      '# AC\n\nFeature: Rounds\n\n  # note\n  Scenario: One\n    Given a\n\n## Next\n\nafter';
+    expect(outline(parseMarkdown(source, BARE))).toEqual([
+      'h1: AC',
+      'code[gherkin]: Feature: Rounds\n\n  # note\n  Scenario: One\n    Given a',
+      'h2: Next',
+      'p: after',
+    ]);
+  });
+
+  it('ends an unfenced feature at a column-0 fence or rule', () => {
+    expect(outline(parseMarkdown('Feature: A\n---\nafter', BARE))).toEqual([
+      'code[gherkin]: Feature: A',
+      'rule',
+      'p: after',
+    ]);
+    expect(outline(parseMarkdown('Feature: A\n```\nx\n```', BARE))).toEqual([
+      'code[gherkin]: Feature: A',
+      'code[]: x',
+    ]);
+  });
+
+  it('reads a feature line inside a list or quote as text', () => {
+    expect(outline(parseMarkdown('> Feature: A', BARE))).toEqual([
+      'quote',
+      '  p: Feature: A',
     ]);
   });
 
