@@ -22,7 +22,13 @@ export interface ListItem {
 export type Block =
   | { kind: 'heading'; level: HeadingLevel; content: InlineNode[] }
   | { kind: 'paragraph'; content: InlineNode[] }
-  | { kind: 'codeBlock'; language: string | null; text: string }
+  | {
+      kind: 'codeBlock';
+      language: string | null;
+      text: string;
+      /** Read from an unfenced `Feature:`, not from a fence. */
+      bare?: true;
+    }
   | { kind: 'quote'; blocks: Block[] }
   | {
       kind: 'list';

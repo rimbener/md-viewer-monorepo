@@ -33,13 +33,32 @@ const TABLE_DELIMITER = /^[ \t]*:?-+:?[ \t]*$/;
 const LINK_DEFINITION =
   /^ {0,3}\[([^\]]+)\]:[ \t]*(<[^>]*>|\S+)(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*$/;
 const INDENTED_CODE = /^(?: {4}|\t)/;
+const BARE_FEATURE = /^(?:Feature|Business Need|Ability):/;
+
+export interface ParseOptions {
+  /** Reads a top-level, unfenced `Feature:` as a `gherkin` block. */
+  bareFeatures?: boolean;
+}
 
 /** Parses a whole markdown document. */
-export function parseMarkdown(source: string): Block[] {
+export function parseMarkdown(
+  source: string,
+  options: ParseOptions = {},
+): Block[] {
   const lines = stripFrontMatter(normalize(source));
   const definitions: LinkDefinitions = new Map();
   const body = extractDefinitions(lines, definitions);
-  return parseBlocks(body, definitions);
+  return parseBlocks(body, definitions, options.bareFeatures === true);
+}
+
+/** True when the document holds a feature that `bareFeatures` would read. */
+export function hasBareFeature(source: string): boolean {
+  return (
+    /^(?:Feature|Business Need|Ability):/m.test(source) &&
+    parseMarkdown(source, { bareFeatures: true }).some(
+      block => block.kind === 'codeBlock' && block.bare === true,
+    )
+  );
 }
 
 /** Line endings, tabs and a trailing newline all made predictable. */
@@ -95,7 +114,11 @@ function extractDefinitions(
   return body;
 }
 
-function parseBlocks(lines: string[], definitions: LinkDefinitions): Block[] {
+function parseBlocks(
+  lines: string[],
+  definitions: LinkDefinitions,
+  bareFeatures = false,
+): Block[] {
   const blocks: Block[] = [];
   let index = 0;
 
@@ -110,6 +133,13 @@ function parseBlocks(lines: string[], definitions: LinkDefinitions): Block[] {
     const fence = FENCE.exec(line);
     if (fence !== null) {
       const result = readFencedCode(lines, index, fence);
+      blocks.push(result.block);
+      index = result.next;
+      continue;
+    }
+
+    if (bareFeatures && BARE_FEATURE.test(line)) {
+      const result = readBareFeature(lines, index);
       blocks.push(result.block);
       index = result.next;
       continue;
@@ -218,6 +248,37 @@ function readFencedCode(
 
   return {
     block: { kind: 'codeBlock', language, text: body.join('\n') },
+    next: index,
+  };
+}
+
+/**
+ * An unfenced feature, read as a `gherkin` fence. It runs to a column-0
+ * heading, fence or rule, so a column-0 `#` comment ends it.
+ */
+function readBareFeature(
+  lines: string[],
+  start: number,
+): { block: Block; next: number } {
+  let index = start + 1;
+  while (
+    index < lines.length &&
+    !/^[#`~]/.test(lines[index]) &&
+    !(/^\S/.test(lines[index]) && THEMATIC_BREAK.test(lines[index]))
+  ) {
+    index += 1;
+  }
+  let end = index;
+  while (end > start && lines[end - 1].trim() === '') {
+    end -= 1;
+  }
+  return {
+    block: {
+      kind: 'codeBlock',
+      language: 'gherkin',
+      text: lines.slice(start, end).join('\n'),
+      bare: true,
+    },
     next: index,
   };
 }
