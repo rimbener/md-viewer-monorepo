@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) or to other AI agent
 
 In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision. Always use ASD-STE100 (Simplified Technical English) for explanations, documentation, etc.
 
-NEVER TRY TO CONTROL THE COMPUTER TO TEST THE APP.
+NEVER TRY TO CONTROL THE COMPUTER TO TEST THE APP. Exception: when Claude in
+Chrome is enabled, you may use it to open and check the web app
+(`pnpm dev:web`) in that browser.
 
 ## What this is
 
