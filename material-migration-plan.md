@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate), step 9 (cleanup).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 9 (cleanup).
+- **Next:** step 10 (project docs).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -448,7 +448,15 @@ web app (a `package.json` `exports` change, no dependency change).
 - `apps/web/Unsupported.tsx` → `m3e-card` + typescale tokens, inside
   `ThemeRoot`.
 
-### 9. Cleanup
+### 9. Cleanup (done)
+
+Result: deleted `selected*`, `hairline`, `floatShadow`, `backdrop` and their
+fallback roles. The other keys stay: the rendered document, Gherkin, Mermaid
+and the editor still read them, and each one points at an M3 role. The code
+fence Copy / View Text button (missed in the plan) is now an `m3e-button`.
+`styles.css` keeps the reset, Roboto Flex (now the body font) and
+`.mermaid-diagram`. The editor textarea sets `outline: none` inline. Bundle:
+240.7 kB gzip for the web main entry, 0.7 kB over the 240.0 kB budget.
 
 - Delete the theme keys that no code uses any more (`background`, `sidebar`,
   `border`, `hairline`, `selected*`, `accent`, `floatShadow`, `backdrop`, …).

@@ -597,9 +597,6 @@ function Session() {
             'var(--safe-area-top, 0px) var(--safe-area-right, 0px) var(--safe-area-bottom, 0px) var(--safe-area-left, 0px)',
           backgroundColor: theme.background,
           color: theme.text,
-          // Pressed buttons and focus rings read the palette through these.
-          '--md-pressed': theme.hairline,
-          '--md-focus': theme.accent,
         } as CSSProperties
       }
     >

@@ -8,13 +8,8 @@ const theme = {
   border: '#444444',
   text: '#222222',
   mutedText: '#555555',
-  selectedBackground: '#000000',
-  selectedText: '#000000',
-  hairline: '#000000',
   accent: '#777777',
   error: '#000000',
-  floatShadow: '#000000',
-  backdrop: '#000000',
   code: '#333333',
   inlineCode: '#000000',
   codeBorder: '#000000',
@@ -76,9 +71,6 @@ describe('resolvedPalette', () => {
     expect(result.current.background).toBe('var(--md-sys-color-surface)');
     expect(palette.background).toBe('#131313');
     expect(palette.text).toBe('#e2e2e2');
-    expect(palette.backdrop).toBe(
-      'color-mix(in srgb, #000000 32%, transparent)',
-    );
     expect(palette.link).toBe(result.current.link);
   });
 

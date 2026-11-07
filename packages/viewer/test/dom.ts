@@ -7,7 +7,7 @@ export function strings(root: Element): string[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const out: string[] = [];
   for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
-    if (node.parentElement?.closest('button') === null) {
+    if (node.parentElement?.closest('button, m3e-button') === null) {
       out.push(node.nodeValue ?? '');
     }
   }

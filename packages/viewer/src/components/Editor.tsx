@@ -213,7 +213,6 @@ export function Editor({
           }
           onScroll?.();
         }}
-        className="field"
         aria-label="Markdown source"
         autoComplete="off"
         autoCorrect="off"
@@ -247,6 +246,8 @@ export function Editor({
           flex: 1,
           minWidth: 0,
           resize: 'none',
+          // The caret marks the focus; a ring around the whole pane adds nothing.
+          outline: 'none',
           backgroundColor: marks === null ? theme.sidebar : 'transparent',
           color: theme.text,
         }}

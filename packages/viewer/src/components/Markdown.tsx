@@ -33,6 +33,7 @@ import { copyText } from '../clipboard';
 import { useShowText } from '../find';
 import { isMermaid, MERMAID_TEXT_CAP } from '../mermaid';
 import { usePlatform } from '../platform';
+import { M3eButton } from '../m3e';
 import { useTheme, type Theme } from '../theme';
 import { BODY_SIZE, schemeById, type FontScheme } from '../typography';
 import { Gherkin } from './Gherkin';
@@ -138,14 +139,6 @@ function createStyles(scale: number, scheme: FontScheme) {
         justifyContent: 'flex-end',
         gap: size(6),
         marginBottom: size(6),
-      },
-      smallButton: {
-        border: '1px solid',
-        borderRadius: 6,
-        padding: `${size(2)}px ${size(8)}px`,
-        fontFamily: scheme.body.family,
-        fontSize: size(9),
-        lineHeight: `${size(12)}px`,
       },
     } satisfies Record<string, CSSProperties>,
   };
@@ -507,24 +500,15 @@ type SmallButtonProps = {
 };
 
 function SmallButton({ label, onPress }: SmallButtonProps) {
-  const theme = useTheme();
-  const { sheet } = useStyles();
-
   return (
-    <button
-      type="button"
-      className="pressable"
+    <M3eButton
+      variant="text"
+      size="extra-small"
       aria-label={label}
       onClick={onPress}
-      style={{
-        ...sheet.smallButton,
-        borderColor: theme.border,
-        backgroundColor: theme.background,
-        color: theme.mutedText,
-      }}
     >
       {label}
-    </button>
+    </M3eButton>
   );
 }
 

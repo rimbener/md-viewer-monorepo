@@ -13,16 +13,9 @@ export interface Theme {
   border: string;
   text: string;
   mutedText: string;
-  selectedBackground: string;
-  selectedText: string;
-  hairline: string;
   accent: string;
   /** Status text for a problem: unsaved edits, a bad file name. */
   error: string;
-  /** The `box-shadow` under a control that floats over the page. */
-  floatShadow: string;
-  /** The veil over the page behind a dialog. */
-  backdrop: string;
   /** Backdrop for code spans and fenced code blocks. */
   code: string;
   /** Text of a `code` span. */
@@ -77,11 +70,7 @@ const monochromeLight = {
   'on-surface-variant': '#474747',
   'outline-variant': '#c6c6c6',
   primary: '#000000',
-  'secondary-container': '#d4d4d4',
-  'on-secondary-container': '#1b1b1b',
   error: '#ba1a1a',
-  shadow: '#000000',
-  scrim: '#000000',
 };
 
 const monochromeDark: Record<M3Role, string> = {
@@ -93,16 +82,8 @@ const monochromeDark: Record<M3Role, string> = {
   'on-surface-variant': '#c6c6c6',
   'outline-variant': '#474747',
   primary: '#ffffff',
-  'secondary-container': '#474747',
-  'on-secondary-container': '#e2e2e2',
   error: '#ffb4ab',
-  shadow: '#000000',
-  scrim: '#000000',
 };
-
-function shadowMix(percent: number): string {
-  return `color-mix(in srgb, ${role('shadow')} ${percent}%, transparent)`;
-}
 
 /** The roles every scheme shares; m3e picks the light or dark value. */
 const roles = {
@@ -111,14 +92,8 @@ const roles = {
   border: role('outline-variant'),
   text: role('on-surface'),
   mutedText: role('on-surface-variant'),
-  selectedBackground: role('secondary-container'),
-  selectedText: role('on-secondary-container'),
-  hairline: role('outline-variant'),
   accent: role('primary'),
   error: role('error'),
-  // M3 elevation level 2, as m3e draws it.
-  floatShadow: `${shadowMix(20)} 0px 3px 3px -2px, ${shadowMix(14)} 0px 3px 4px 0px, ${shadowMix(12)} 0px 1px 8px 0px`,
-  backdrop: `color-mix(in srgb, ${role('scrim')} 32%, transparent)`,
   code: role('surface-container-highest'),
   inlineCode: role('on-surface'),
   codeBorder: role('outline-variant'),

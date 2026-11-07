@@ -15,6 +15,7 @@ body,
 
 body {
   font-family:
+    'Roboto Flex Variable',
     system-ui,
     -apple-system,
     'Segoe UI',
@@ -23,31 +24,6 @@ body {
     Cantarell,
     sans-serif;
   -webkit-font-smoothing: antialiased;
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  margin: 0;
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: default;
-}
-
-.pressable:active:not(:disabled) {
-  background-color: var(--md-pressed) !important;
-}
-
-.pressable:focus-visible,
-.field:focus-visible {
-  outline: 2px solid var(--md-focus);
-  outline-offset: -2px;
-}
-
-.field:focus {
-  outline: none;
 }
 
 .mermaid-diagram svg {
