@@ -30,6 +30,21 @@ earns that by not being code: a `gherkin` fence is a document about behaviour,
 its grammar is a dozen keywords, and the payoff is a feature rather than tinted
 source.
 
+## The chrome takes a dependency; the readers do not
+
+The buttons, fields, menus, tree, drawer and dialog come from m3e, a library
+of Material 3 web components. The markdown, Gherkin and code readers stay
+hand-written. The two halves have different needs. A reader must reject
+nothing, stop on any input and give back its input exactly, and those are
+promises that we can keep only in our own code. A control must be accessible,
+work from the keyboard and look like the platform around it, and a maintained
+component library does that better than code written once for this app.
+
+The cost is about 140 kB gzip in the web bundle, and a library that mostly one
+person maintains. It is MIT licensed and built on Lit, so a fork stays
+possible. Where m3e has no part, the app keeps its own small code (the split
+reset on double click), and that code reads only M3 tokens.
+
 ## Gherkin is read, not checked
 
 The Gherkin reader never rejects anything. A line it does not recognise becomes

@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate), step 9 (cleanup).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate), step 9 (cleanup), step 10 (docs).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 10 (project docs).
+- **Next:** owner browser check (light, dark, narrow width), then PR.
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -456,7 +456,7 @@ and the editor still read them, and each one points at an M3 role. The code
 fence Copy / View Text button (missed in the plan) is now an `m3e-button`.
 `styles.css` keeps the reset, Roboto Flex (now the body font) and
 `.mermaid-diagram`. The editor textarea sets `outline: none` inline. Bundle:
-240.7 kB gzip for the web main entry, 0.7 kB over the 240.0 kB budget.
+240.4 kB gzip for the web main entry, 0.4 kB over the 240.0 kB budget.
 
 - Delete the theme keys that no code uses any more (`background`, `sidebar`,
   `border`, `hairline`, `selected*`, `accent`, `floatShadow`, `backdrop`, …).
@@ -465,7 +465,10 @@ fence Copy / View Text button (missed in the plan) is now an `m3e-button`.
   `button` reset.
 - Check the bundle against the step 0 budget.
 
-### 10. Project docs
+### 10. Project docs (done)
+
+Result: `CLAUDE.md` and `AGENTS.md` (still a copy) rewritten as planned, plus
+the m3e traps learned in steps 3–7. New section in `deliberate-limits.md`.
 
 The chrome changes in `what-it-handles.md` happen in each step. This step
 updates the rules:

@@ -13,9 +13,10 @@ Chrome is enabled, you may use it to open and check the web app
 A markdown folder viewer: a tree of `.md` files on the left, the rendered
 document on the right. A pnpm monorepo with one viewer and two thin apps — a
 static web app and a Tauri desktop app. The markdown parser, the Gherkin reader
-and the syntax highlighter are all hand-written — there is no markdown,
-highlighting or styling dependency, and adding one is a real decision rather
-than a detail.
+and the syntax highlighter are all hand-written — there is no markdown or
+highlighting dependency, and adding one is a real decision rather than a
+detail. The chrome (buttons, fields, menus, tree, drawer) is Material 3 from
+`@m3e/web` through `@m3e/react`.
 
 ## Commands
 
@@ -79,21 +80,39 @@ tinted token by token, and anything else stays uniform monospace.
 
 ## Styling
 
-There is no style library. Components use inline style objects, and
-`packages/viewer/src/styles.css` holds only resets, `:active` and focus states.
-There are no inline color literals outside `src/theme.ts`: `useTheme()` returns
-the light or dark palette, and every component reads its colors from that
-object. CSS reads the palette through `--md-*` variables set in `Viewer.tsx`.
-New rendering features add named palette entries rather than hardcoding a
-color.
+The chrome uses m3e components (`src/m3e.ts` re-exports the ones in use) and
+never a hand-made control. Icons come from `@m3e/icons/outlined/<name>`, one
+side-effect import per icon. `ThemeRoot` renders `m3e-theme` (monochrome,
+standard motion, density -2) around every screen.
 
-`src/typography.ts` is why sizes look the way they do: each font scheme carries
-a `scale` measured from the macOS face's x-height and an `advance` (average
-character width in ems) that turns a line length in characters into a column
-width in pixels. Families are CSS stacks: the measured macOS face, then close
-Windows and Linux faces. `Markdown.tsx` derives every size from
-`zoom * scheme.<role>.scale` inside one memoized `createStyles`, handed down
-through a context.
+Colors come from `--md-sys-color-*` roles, or from the fixed colors in
+`src/theme.ts`: syntax, Gherkin, link, find hits, and the monochrome fallback
+that Mermaid and jsdom use. There are no color literals outside `theme.ts`.
+`useTheme()` returns the light or dark palette, whose shared keys are `var()`
+roles; `useResolvedTheme()` gives plain colors for Mermaid. Text sizes in the
+chrome come from `src/typescale.ts` (`--md-sys-typescale-*`).
+`packages/viewer/src/styles.css` holds only the reset, Roboto Flex and the
+Mermaid svg rule.
+
+m3e details that bite:
+
+- **@lit/react sets every prop again on each render.** A prop that m3e also
+  changes by itself (`open` on a tree item) is reset by any render; set it
+  imperatively. For controlled state (`checked`, `selected`), cancel
+  `beforeinput` and let React own the value.
+- Events bubble out of m3e containers: act only when
+  `event.target === event.currentTarget`.
+- `htmlFor` (tooltip, menu trigger) is a property. Make control ids with
+  `useControlId()` (`components/Tooltip.tsx`): m3e finds them with
+  `querySelector`.
+
+`src/typography.ts` is why document sizes look the way they do: each font
+scheme carries a `scale` measured from the macOS face's x-height and an
+`advance` (average character width in ems) that turns a line length in
+characters into a column width in pixels. Families are CSS stacks: the measured
+macOS face, then close Windows and Linux faces. `Markdown.tsx` derives every
+size from `zoom * scheme.<role>.scale` inside one memoized `createStyles`,
+handed down through a context.
 
 ## Persistence and editing
 
@@ -142,7 +161,16 @@ than deep object literals — see the `outline()` helpers in
 `parseBlocks.test.ts` and `gherkin.test.ts`, and `marks()` in
 `highlight.test.ts`. Readers also get an invariant test over fuzzed input. View
 tests use Testing Library on jsdom with the in-memory platform in
-`packages/viewer/test/fakePlatform.tsx`, and assert colors and sizes through
-`element.style`.
+`packages/viewer/test/fakePlatform.tsx`. Document rendering is asserted through
+`element.style`; controls are asserted by state (`disabled`, `checked`,
+`selected`, `aria-*`), never by style.
+
+jsdom runs m3e through `test/m3ePolyfills.ts` and the `@lit/react` alias in
+`packages/viewer/m3eTestConfig.ts`. m3e reflects attributes on its async
+update: `await settle()` before `toBeDisabled()`, or read the property
+(`.checked`). Roles inside shadow roots (`dialog`, the split `separator`) are
+reached through `shadowRoot`. A tree item takes clicks on its row: use
+`press()` or `clickTarget()`. m3e submits a form one `setTimeout` after the
+click.
 
 REMEMBER: In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision. ALWAYS use ASD-STE100 (Simplified Technical English) for explanations, documentation, etc.
