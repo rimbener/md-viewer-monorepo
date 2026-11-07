@@ -91,3 +91,23 @@ export function findMatches(
   }
   return { starts, more };
 }
+
+/** `text` with every hit of `query` swapped for `replacement`, and how many. */
+export function replaceAll(
+  text: string,
+  query: string,
+  replacement: string,
+): { text: string; count: number } {
+  const { parts } = splitMatches(text, query, Number.POSITIVE_INFINITY);
+  let count = 0;
+  const next = parts
+    .map(part => {
+      if (!part.match) {
+        return part.text;
+      }
+      count += 1;
+      return replacement;
+    })
+    .join('');
+  return { text: next, count };
+}

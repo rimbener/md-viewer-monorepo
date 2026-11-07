@@ -1,4 +1,4 @@
-import { findMatches, splitMatches } from '../src/search';
+import { findMatches, replaceAll, splitMatches } from '../src/search';
 
 function joined(text: string, query: string, limit = 50): string {
   return splitMatches(text, query, limit)
@@ -82,5 +82,22 @@ describe('findMatches', () => {
 
   it('finds nothing for an empty query', () => {
     expect(findMatches('alpha', '', 10)).toEqual({ starts: [], more: false });
+  });
+});
+
+describe('replaceAll', () => {
+  it('swaps every hit, ignoring case, and counts them', () => {
+    expect(replaceAll('Alpha and alpha', 'alpha', 'beta')).toEqual({
+      text: 'beta and beta',
+      count: 2,
+    });
+  });
+
+  it('does not search the text it puts in', () => {
+    expect(replaceAll('a a', 'a', 'aa')).toEqual({ text: 'aa aa', count: 2 });
+  });
+
+  it('leaves the text alone for an empty query', () => {
+    expect(replaceAll('alpha', '', 'x')).toEqual({ text: 'alpha', count: 0 });
   });
 });

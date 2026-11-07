@@ -218,6 +218,11 @@ hit can include markdown marks such as `#` or `**`. The preview beside the
 editor is not marked. The source is searched as plain text, so a hit can
 cross any formatting. It also marks at most 500 hits.
 
+Replace works on the source only, because the preview is built from the
+source. A replace changes the editor buffer, not the file, until Save. Replace
+all changes every hit, also hits past the 500 that Find marks. There is no
+regular expression and no match-case option.
+
 ## No export
 
 The viewer does not write the document out as a PDF, as HTML, or as any other

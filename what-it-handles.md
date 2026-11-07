@@ -248,6 +248,13 @@ The field marks hits in the open document. Letter case does not matter.
 While the editor shows, alone or beside the preview, Find searches the
 markdown source in the editor. The preview is searched only when the editor is
 hidden.
+A Replace field sits under Find, with Replace one and Replace all. It is
+enabled only while the editor shows. Command-R, or Control-R off the Mac,
+focuses the Replace field instead of reloading the page. If the editor is
+hidden, it opens the editor beside the preview first. Replace one changes the
+current hit and moves to the next one. Return in the Replace field does the
+same. Replace all changes every hit in the source. Each replace is one Undo
+step.
 Command-F, or Control-F off the Mac, focuses the field instead of the browser's
 own find.
 Previous and Next move through the hits, and the view scrolls to the current

@@ -22,7 +22,7 @@ import {
   type HistoryStep,
 } from '../editHistory';
 import { FindProvider, useShowText } from '../find';
-import { findMatches, MAX_MATCHES } from '../search';
+import { findMatches, MAX_MATCHES, replaceAll } from '../search';
 import { usePlatform } from '../platform';
 import {
   loadCharacters,
@@ -170,6 +170,10 @@ export function DocumentPanel({
   const [scale, setScale] = useState(DEFAULT_ZOOM);
   const [characters, setCharacters] = useState(DEFAULT_CHARACTERS);
   const [query, setQuery] = useState('');
+  const [replacement, setReplacement] = useState('');
+  const [replaceFocusKey, setReplaceFocusKey] = useState(0);
+  /** After a replace, the next current hit is the first one from here. */
+  const resumeAt = useRef<number | null>(null);
   const [active, setActive] = useState(0);
   const [matchCount, setMatchCount] = useState(0);
   const [capped, setCapped] = useState(false);
@@ -415,6 +419,20 @@ export function DocumentPanel({
     [path, applyText],
   );
 
+  // A replace is one undo step of its own, never merged with the typing around it.
+  const replaceText = useCallback(
+    (next: string) => {
+      const before = currentText();
+      if (path === null || next === before) {
+        return;
+      }
+      const stored = histories.current.get(path) ?? emptyEditHistory();
+      const recorded = recordEdit({ ...stored, lastAt: null }, before, 0);
+      applyText(next, { ...recorded, lastAt: null });
+    },
+    [path, applyText],
+  );
+
   const step = useCallback(
     (move: (history: EditHistory, current: string) => HistoryStep | null) => {
       if (path === null) {
@@ -433,6 +451,8 @@ export function DocumentPanel({
   /** What Command-E does now, or null while the editor button is disabled. */
   const editorShortcut = useRef<(() => void) | null>(null);
   const sidebarShortcut = useRef(onToggleSidebar);
+  /** What Command-R does now, or null while nothing can be replaced. */
+  const replaceShortcut = useRef<(() => void) | null>(null);
   sidebarShortcut.current = onToggleSidebar;
 
   useEffect(() => {
@@ -445,6 +465,7 @@ export function DocumentPanel({
         s: saveShortcut,
         e: editorShortcut,
         b: sidebarShortcut,
+        r: replaceShortcut,
       }[event.key.toLowerCase()];
       if (shortcut !== undefined) {
         event.preventDefault();
@@ -530,10 +551,44 @@ export function DocumentPanel({
     [findsInSource, text, query],
   );
   useEffect(() => {
-    if (sourceMatches !== null) {
-      handleCount(sourceMatches.starts.length, sourceMatches.more);
+    if (sourceMatches === null) {
+      return;
+    }
+    handleCount(sourceMatches.starts.length, sourceMatches.more);
+    const from = resumeAt.current;
+    if (from !== null) {
+      resumeAt.current = null;
+      const next = sourceMatches.starts.findIndex(start => start >= from);
+      setActive(next === -1 ? 0 : next);
     }
   }, [sourceMatches, handleCount]);
+
+  const replaceOne = useCallback(() => {
+    const start = sourceMatches?.starts[active];
+    if (start === undefined || text === null) {
+      return;
+    }
+    resumeAt.current = start + replacement.length;
+    replaceText(
+      text.slice(0, start) + replacement + text.slice(start + query.length),
+    );
+  }, [sourceMatches, active, text, replacement, query, replaceText]);
+
+  const replaceEvery = useCallback(() => {
+    if (text !== null) {
+      replaceText(replaceAll(text, query, replacement).text);
+    }
+  }, [text, query, replacement, replaceText]);
+
+  // Replace works on the source, so asking for it from the preview opens the split.
+  const openReplace = useCallback(() => {
+    if (editorMode === 'preview') {
+      hasChosenEditor.current = true;
+      setEditorMode('split');
+      saveEditorMode('split');
+    }
+    setReplaceFocusKey(key => key + 1);
+  }, [editorMode]);
 
   const isGherkin = path !== null && gherkinPath === path;
 
@@ -622,6 +677,7 @@ export function DocumentPanel({
 
   saveShortcut.current = null;
   editorShortcut.current = null;
+  replaceShortcut.current = null;
 
   if (file === null) {
     return (
@@ -652,6 +708,7 @@ export function DocumentPanel({
     !isHttpUrl(file.path);
   if (canEdit) {
     editorShortcut.current = toggleEditor;
+    replaceShortcut.current = openReplace;
   }
   const isEditing = editorMode !== 'preview' && canEdit;
   if (isEditing && canSave) {
@@ -779,6 +836,18 @@ export function DocumentPanel({
               capped={capped}
               onQuery={changeQuery}
               onActive={setActive}
+              replace={
+                canEdit
+                  ? {
+                      isEnabled: findsInSource,
+                      focusKey: replaceFocusKey,
+                      value: replacement,
+                      onValue: setReplacement,
+                      onReplaceOne: replaceOne,
+                      onReplaceAll: replaceEvery,
+                    }
+                  : null
+              }
             />
           </Tool>
         </div>
