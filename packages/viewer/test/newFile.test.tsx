@@ -2,12 +2,13 @@
  * Making a new markdown file in the open folder from the sidebar.
  */
 
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 
 import {
   createFakePlatform,
   press,
   renderViewer,
+  settle,
   storeSession,
   type FakeFolders,
 } from './fakePlatform';
@@ -27,8 +28,16 @@ async function renderNotes() {
   return platform;
 }
 
-function dialog() {
-  return screen.queryByRole('dialog', { name: 'New file' });
+/** The `dialog` role lives in the m3e shadow root. */
+function dialog(): HTMLElement | null {
+  return document.querySelector('m3e-dialog');
+}
+
+/** OK submits through the form, a timer tick after the click. */
+async function pressOk(): Promise<void> {
+  await press(screen.getByRole('button', { name: 'OK' }));
+  await act(() => new Promise(resolve => setTimeout(resolve, 0)));
+  await settle();
 }
 
 async function askForName(): Promise<void> {
@@ -55,7 +64,7 @@ it('makes the file, shows it in the tree and opens it', async () => {
   await askForName();
 
   typeName('ideas');
-  await press(screen.getByRole('button', { name: 'OK' }));
+  await pressOk();
 
   expect(platform.createFile).toHaveBeenCalledWith('/notes/ideas.md', '');
   expect(dialog()).not.toBeInTheDocument();
@@ -77,7 +86,7 @@ it('makes the file in the folder of the selected file', async () => {
   expect(dialog()).toHaveTextContent('In /notes/specs');
 
   typeName('b');
-  await press(screen.getByRole('button', { name: 'OK' }));
+  await pressOk();
 
   expect(platform.createFile).toHaveBeenCalledWith('/notes/specs/b.md', '');
   expect(
@@ -96,6 +105,18 @@ it('makes nothing on Cancel', async () => {
   expect(platform.createFile).not.toHaveBeenCalled();
 });
 
+it('gives the focus back to Add new file after it closes', async () => {
+  await renderNotes();
+  const add = screen.getByRole('button', { name: 'Add new file' });
+  add.focus();
+  await askForName();
+
+  await press(screen.getByRole('button', { name: 'Cancel' }));
+
+  expect(dialog()).not.toBeInTheDocument();
+  expect(document.activeElement).toBe(add);
+});
+
 it('closes on Escape', async () => {
   await renderNotes();
   await askForName();
@@ -103,6 +124,7 @@ it('closes on Escape', async () => {
   fireEvent.keyDown(screen.getByRole('textbox', { name: 'File name' }), {
     key: 'Escape',
   });
+  await settle();
 
   expect(dialog()).not.toBeInTheDocument();
 });
@@ -112,7 +134,7 @@ it('keeps the dialog open and says why when the name is taken', async () => {
   await askForName();
 
   typeName('notes.md');
-  await press(screen.getByRole('button', { name: 'OK' }));
+  await pressOk();
 
   expect(dialog()).toBeInTheDocument();
   expect(screen.getByRole('alert')).toHaveTextContent(
@@ -124,7 +146,7 @@ it('refuses an empty name without asking the platform', async () => {
   const platform = await renderNotes();
   await askForName();
 
-  await press(screen.getByRole('button', { name: 'OK' }));
+  await pressOk();
 
   expect(screen.getByRole('alert')).toHaveTextContent('Type a file name.');
   expect(platform.createFile).not.toHaveBeenCalled();

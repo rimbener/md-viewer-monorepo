@@ -1,5 +1,6 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 
+import { M3eButton, M3eDialog, M3eFormField } from '../m3e';
 import { newFileName } from '../newFileName';
 import { useTheme } from '../theme';
 import { oneLine } from './text';
@@ -22,6 +23,18 @@ export function NewFileDialog({
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
+  // Read on the first render, before `autoFocus` moves the focus.
+  const [opener] = useState(() => document.activeElement);
+
+  useEffect(() => {
+    // The dialog unmounts rather than closes, so the browser gives no focus back.
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) {
+        opener.focus();
+      }
+    };
+  }, [opener]);
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (isCreating) {
@@ -42,117 +55,66 @@ export function NewFileDialog({
     });
   };
 
-  const keyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      event.stopPropagation();
-      onCancel();
-    }
-  };
-
-  const button = {
-    padding: '6px 14px',
-    border: `1px solid ${theme.border}`,
-    borderRadius: 6,
-    backgroundColor: theme.background,
-    fontSize: 13,
-    fontWeight: 600,
-  } as const;
-
   return (
-    <div
-      onKeyDown={keyDown}
-      onMouseDown={event => {
-        if (event.target === event.currentTarget) {
-          onCancel();
+    <M3eDialog
+      open
+      aria-label="New file"
+      onClosed={onCancel}
+      onKeyDown={event => {
+        // Escape belongs to the dialog, not to the shortcuts of the page.
+        if (event.key === 'Escape') {
+          event.stopPropagation();
         }
       }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        backgroundColor: theme.backdrop,
-      }}
     >
-      <form
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-file-title"
-        onSubmit={submit}
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          width: 360,
-          maxWidth: '100%',
-          padding: 16,
-          border: `1px solid ${theme.border}`,
-          borderRadius: 10,
-          backgroundColor: theme.sidebar,
-          boxShadow: theme.floatShadow,
-          color: theme.text,
-        }}
-      >
-        <span id="new-file-title" style={{ fontSize: 14, fontWeight: 600 }}>
-          New file
-        </span>
-        <span
-          title={folderPath}
-          style={{ ...oneLine, fontSize: 12, color: theme.mutedText }}
-        >
+      <span slot="header">New file</span>
+      <form onSubmit={submit} style={styles.form}>
+        <span title={folderPath} style={{ ...oneLine, color: theme.mutedText }}>
           In {folderPath}
         </span>
-        <input
-          className="field"
-          aria-label="File name"
-          placeholder="notes.md"
-          autoFocus
-          value={typed}
-          onChange={event => {
-            setTyped(event.target.value);
-            setError(null);
-          }}
-          spellCheck={false}
-          style={{
-            fontSize: 13,
-            padding: '6px 8px',
-            border: `1px solid ${theme.border}`,
-            borderRadius: 6,
-            backgroundColor: theme.background,
-            color: theme.text,
-          }}
-        />
-        {error !== null ? (
-          <span role="alert" style={{ fontSize: 12, color: theme.error }}>
-            {error}
-          </span>
-        ) : null}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <button
-            type="button"
-            className="pressable"
-            onClick={onCancel}
-            style={{ ...button, color: theme.text }}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="pressable"
-            disabled={isCreating}
-            style={{
-              ...button,
-              color: theme.accent,
-              opacity: isCreating ? 0.5 : 1,
+        <M3eFormField variant="outlined" error={error !== null}>
+          <input
+            aria-label="File name"
+            placeholder="notes.md"
+            autoFocus
+            value={typed}
+            onChange={event => {
+              setTyped(event.target.value);
+              setError(null);
             }}
-          >
+            spellCheck={false}
+          />
+          {/* The error slot is not a live region. */}
+          {error !== null ? (
+            <span slot="error" role="alert">
+              {error}
+            </span>
+          ) : null}
+        </M3eFormField>
+        <div style={styles.actions}>
+          <M3eButton variant="text" onClick={onCancel}>
+            Cancel
+          </M3eButton>
+          <M3eButton variant="filled" type="submit" disabled={isCreating}>
             OK
-          </button>
+          </M3eButton>
         </div>
       </form>
-    </div>
+    </M3eDialog>
   );
 }
+
+const styles = {
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    width: 360,
+    maxWidth: '100%',
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+} as const;

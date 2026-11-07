@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 6 (dialog and menus).
+- **Next:** step 7 (sidebar and tree).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -352,7 +352,19 @@ Planned:
 - `OpenUrlForm` → `m3e-form-field` + `m3e-button variant="filled"`.
 - Delete `Segmented.tsx`.
 
-### 6. Dialog and menus
+### 6. Dialog and menus (done)
+
+Result: `NewFileDialog` is an `m3e-dialog`, rendered by the Viewer (state
+`newFileFolder`; `Sidebar` gets `onAddFile(folder)`). It unmounts rather than
+closes, so it reads the opener on its first render (before `autoFocus`) and
+focuses it on unmount. `closed` maps to `onCancel`. Recent folders: radio
+items, then a divider, then "Remove from Recent Folders" with a nested menu
+(items named `Remove <path>`). The menu remounts after each pick (`key`),
+because a radio item checks itself on click. `arrow_drop_down` replaces ▾
+(`expand_more` is not in `@m3e/icons`). Polyfills: `window.scrollTo` (dialog
+scroll lock).
+
+Planned:
 
 - `NewFileDialog` → `m3e-dialog`. Keep the current contract:
   - Escape and a backdrop click cancel: map `cancel`/`closed` to

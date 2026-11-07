@@ -14,6 +14,7 @@ import {
 
 import { ThemeRoot } from './components/ThemeRoot';
 import { DocumentPanel } from './components/DocumentPanel';
+import { NewFileDialog } from './components/NewFileDialog';
 import { Sidebar } from './components/Sidebar';
 import {
   applyLoadedHistory,
@@ -61,6 +62,7 @@ function Session() {
 
   const [root, setRoot] = useState<DirectoryNode | null>(null);
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
+  const [newFileFolder, setNewFileFolder] = useState<string | null>(null);
   const [rootPath, setRootPath] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -550,7 +552,7 @@ function Session() {
           onSelectRecentFolder={selectRecentFolder}
           onRemoveRecentFolder={removeRecentFolder}
           onReloadFolder={reloadFolder}
-          onCreateFile={platform.createFile ? createFile : null}
+          onAddFile={platform.createFile ? setNewFileFolder : null}
           onCancelScan={isScanning ? cancelScan : null}
           onSelectFile={selectFile}
           onSelectDirectory={selectDirectory}
@@ -565,6 +567,15 @@ function Session() {
         onBack={goBack}
         onNext={goNext}
       />
+      {newFileFolder !== null ? (
+        <NewFileDialog
+          folderPath={newFileFolder}
+          onCreate={name =>
+            createFile(newFileFolder, name).then(() => setNewFileFolder(null))
+          }
+          onCancel={() => setNewFileFolder(null)}
+        />
+      ) : null}
     </div>
   );
 }

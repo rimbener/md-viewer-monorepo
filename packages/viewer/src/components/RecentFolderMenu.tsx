@@ -1,8 +1,19 @@
-import { useEffect, useState } from 'react';
+import '@m3e/icons/outlined/arrow_drop_down';
 
+import { useState } from 'react';
+
+import {
+  M3eButton,
+  M3eDivider,
+  M3eIcon,
+  M3eMenu,
+  M3eMenuItem,
+  M3eMenuItemRadio,
+  M3eMenuTrigger,
+} from '../m3e';
 import { recentFolderLabel, type RecentFolder } from '../recentFolders';
-import { useTheme } from '../theme';
 import { oneLine } from './text';
+import { Tooltip, useControlId } from './Tooltip';
 
 type RecentFolderMenuProps = {
   folders: readonly RecentFolder[];
@@ -12,8 +23,6 @@ type RecentFolderMenuProps = {
   onRemove: (folder: RecentFolder) => void;
 };
 
-type ContextMenu = { folder: RecentFolder; x: number; y: number };
-
 /** The last folders opened, so one of them can be opened again. */
 export function RecentFolderMenu({
   folders,
@@ -22,36 +31,12 @@ export function RecentFolderMenu({
   onSelect,
   onRemove,
 }: RecentFolderMenuProps) {
-  const theme = useTheme();
-  const [isOpen, setIsOpen] = useState(false);
-  const [contextMenu, setContextMenu] = useState<ContextMenu | null>(null);
-
-  useEffect(() => {
-    if (disabled) {
-      setIsOpen(false);
-      setContextMenu(null);
-    }
-  }, [disabled]);
-
-  useEffect(() => {
-    if (contextMenu === null) {
-      return;
-    }
-    const close = () => setContextMenu(null);
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        close();
-      }
-    };
-    document.addEventListener('mousedown', close);
-    document.addEventListener('keydown', closeOnEscape);
-    window.addEventListener('blur', close);
-    return () => {
-      document.removeEventListener('mousedown', close);
-      document.removeEventListener('keydown', closeOnEscape);
-      window.removeEventListener('blur', close);
-    };
-  }, [contextMenu]);
+  const buttonId = useControlId();
+  const menuId = useControlId();
+  const removeMenuId = useControlId();
+  // A radio item checks itself on click; a new menu takes `checked` from React
+  // again when the folder could not be opened.
+  const [picks, setPicks] = useState(0);
 
   if (folders.length === 0) {
     return null;
@@ -64,125 +49,51 @@ export function RecentFolderMenu({
 
   return (
     <div style={{ marginBottom: 8 }}>
-      <button
-        type="button"
-        className="pressable"
+      <M3eButton
+        id={buttonId}
+        variant="outlined"
         aria-label="Recent folders"
-        title="Shows the last folders you opened"
-        aria-expanded={isOpen}
         disabled={disabled}
-        onClick={() => setIsOpen(open => !open)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          width: '100%',
-          padding: '6px 10px',
-          border: `1px solid ${theme.border}`,
-          borderRadius: 6,
-          backgroundColor: theme.background,
-          opacity: disabled ? 0.5 : 1,
-          textAlign: 'left',
-        }}
+        style={{ width: '100%' }}
       >
-        <span style={{ ...oneLine, flex: 1, fontSize: 13, color: theme.text }}>
-          {label}
-        </span>
-        <span style={{ fontSize: 11, color: theme.mutedText }}>▾</span>
-      </button>
-      {isOpen ? (
-        <div
-          role="menu"
-          style={{
-            marginTop: 4,
-            border: `1px solid ${theme.border}`,
-            borderRadius: 6,
-            overflow: 'hidden',
-            backgroundColor: theme.background,
-          }}
-        >
-          {folders.map(folder => {
-            const isCurrent = folder.path === currentPath;
-            return (
-              <button
-                key={folder.path}
-                type="button"
-                role="menuitem"
-                className="pressable"
-                aria-label={folder.path}
-                disabled={disabled}
-                onClick={() => {
-                  setIsOpen(false);
-                  onSelect(folder);
-                }}
-                onContextMenu={event => {
-                  event.preventDefault();
-                  setContextMenu({
-                    folder,
-                    x: event.clientX,
-                    y: event.clientY,
-                  });
-                }}
-                style={{
-                  ...oneLine,
-                  display: 'block',
-                  width: '100%',
-                  padding: '6px 10px',
-                  border: 'none',
-                  textAlign: 'left',
-                  fontSize: 13,
-                  backgroundColor: isCurrent
-                    ? theme.selectedBackground
-                    : 'transparent',
-                  color: isCurrent ? theme.selectedText : theme.text,
-                }}
-              >
-                {recentFolderLabel(folder.path, folders)}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
-      {contextMenu !== null ? (
-        <div
-          role="menu"
-          aria-label="Recent folder actions"
-          onMouseDown={event => event.stopPropagation()}
-          style={{
-            position: 'fixed',
-            left: contextMenu.x,
-            top: contextMenu.y,
-            zIndex: 10,
-            border: `1px solid ${theme.border}`,
-            borderRadius: 6,
-            overflow: 'hidden',
-            backgroundColor: theme.background,
-          }}
-        >
-          <button
-            type="button"
-            role="menuitem"
-            className="pressable"
-            autoFocus
+        <M3eMenuTrigger htmlFor={menuId}>
+          <span style={oneLine}>{label}</span>
+        </M3eMenuTrigger>
+        <M3eIcon slot="trailing-icon" name="arrow_drop_down" />
+      </M3eButton>
+      <Tooltip controlId={buttonId} text="Shows the last folders you opened" />
+      <M3eMenu key={picks} id={menuId}>
+        {folders.map(folder => (
+          <M3eMenuItemRadio
+            key={folder.path}
+            aria-label={folder.path}
+            checked={folder.path === currentPath}
             onClick={() => {
-              setContextMenu(null);
-              onRemove(contextMenu.folder);
-            }}
-            style={{
-              display: 'block',
-              padding: '6px 10px',
-              border: 'none',
-              textAlign: 'left',
-              fontSize: 13,
-              whiteSpace: 'nowrap',
-              backgroundColor: 'transparent',
-              color: theme.text,
+              setPicks(count => count + 1);
+              onSelect(folder);
             }}
           >
+            {recentFolderLabel(folder.path, folders)}
+          </M3eMenuItemRadio>
+        ))}
+        <M3eDivider />
+        <M3eMenuItem>
+          <M3eMenuTrigger htmlFor={removeMenuId}>
             Remove from Recent Folders
-          </button>
-        </div>
-      ) : null}
+          </M3eMenuTrigger>
+        </M3eMenuItem>
+      </M3eMenu>
+      <M3eMenu id={removeMenuId}>
+        {folders.map(folder => (
+          <M3eMenuItem
+            key={folder.path}
+            aria-label={`Remove ${folder.path}`}
+            onClick={() => onRemove(folder)}
+          >
+            {recentFolderLabel(folder.path, folders)}
+          </M3eMenuItem>
+        ))}
+      </M3eMenu>
     </div>
   );
 }

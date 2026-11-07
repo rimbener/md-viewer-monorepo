@@ -3,6 +3,7 @@ export { M3eButton } from '@m3e/react/button';
 export { M3eButtonGroup } from '@m3e/react/button-group';
 export { M3eCard } from '@m3e/react/card';
 export { M3eDialog } from '@m3e/react/dialog';
+export { M3eDivider } from '@m3e/react/divider';
 export { M3eDrawerContainer } from '@m3e/react/drawer-container';
 export { M3eFormField } from '@m3e/react/form-field';
 export { M3eIcon } from '@m3e/react/icon';

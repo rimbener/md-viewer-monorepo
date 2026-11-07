@@ -1,11 +1,10 @@
-import { useState, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 import { usePlatform } from '../platform';
 import type { RecentFolder } from '../recentFolders';
 import { useTheme, type Theme } from '../theme';
 import type { DirectoryNode, FileNode } from '../types';
 import { FileTree } from './FileTree';
-import { NewFileDialog } from './NewFileDialog';
 import { OpenUrlForm } from './OpenUrlForm';
 import { RecentFolderMenu } from './RecentFolderMenu';
 import { Spinner } from './Spinner';
@@ -23,8 +22,8 @@ interface SidebarProps {
   onSelectRecentFolder: (folder: RecentFolder) => void;
   onRemoveRecentFolder: (folder: RecentFolder) => void;
   onReloadFolder: () => void;
-  /** Makes a markdown file in `folder`. Null where that is not offered. */
-  onCreateFile: ((folder: string, name: string) => Promise<void>) | null;
+  /** Asks for a new markdown file in `folder`. Null where that is not offered. */
+  onAddFile: ((folder: string) => void) | null;
   /** Null when no walk is running that could be stopped. */
   onCancelScan: (() => void) | null;
   onSelectFile: (file: FileNode) => void;
@@ -43,7 +42,7 @@ export function Sidebar({
   onSelectRecentFolder,
   onRemoveRecentFolder,
   onReloadFolder,
-  onCreateFile,
+  onAddFile,
   onCancelScan,
   onSelectFile,
   onSelectDirectory,
@@ -51,9 +50,8 @@ export function Sidebar({
   const theme = useTheme();
   const platform = usePlatform();
   const hairline = `1px solid ${theme.border}`;
-  const [isAskingName, setIsAskingName] = useState(false);
   const canCreate =
-    root !== null && currentFolderPath !== null && onCreateFile !== null;
+    root !== null && currentFolderPath !== null && onAddFile !== null;
   const newFileFolder =
     currentFolderPath === null
       ? null
@@ -117,7 +115,11 @@ export function Sidebar({
                 type="button"
                 className="pressable"
                 title="Makes a new markdown file in the folder of the selected file"
-                onClick={() => setIsAskingName(true)}
+                onClick={() => {
+                  if (newFileFolder !== null) {
+                    onAddFile?.(newFileFolder);
+                  }
+                }}
                 disabled={isScanning}
                 style={{
                   ...actionStyle(theme, isScanning),
@@ -185,15 +187,6 @@ export function Sidebar({
             {fileCount} markdown {fileCount === 1 ? 'file' : 'files'}
           </span>
         </div>
-      ) : null}
-      {isAskingName && canCreate && newFileFolder !== null ? (
-        <NewFileDialog
-          folderPath={newFileFolder}
-          onCreate={name =>
-            onCreateFile(newFileFolder, name).then(() => setIsAskingName(false))
-          }
-          onCancel={() => setIsAskingName(false)}
-        />
       ) : null}
     </aside>
   );

@@ -146,3 +146,6 @@ if (!('hasPointerCapture' in Element.prototype)) {
     },
   });
 }
+
+// The dialog's scroll lock puts the window scroll back on close.
+window.scrollTo = () => {};
