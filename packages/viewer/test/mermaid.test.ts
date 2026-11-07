@@ -1,5 +1,6 @@
 import { isMermaid, MERMAID_TEXT_CAP, mermaidConfig } from '../src/mermaid';
-import type { Theme } from '../src/theme';
+import { resolvedPalette, useTheme, type Theme } from '../src/theme';
+import { renderHook } from '@testing-library/react';
 
 const theme = {
   background: '#111111',
@@ -11,6 +12,7 @@ const theme = {
   selectedText: '#000000',
   hairline: '#000000',
   accent: '#777777',
+  error: '#000000',
   floatShadow: '#000000',
   backdrop: '#000000',
   code: '#333333',
@@ -63,6 +65,33 @@ describe('mermaidConfig', () => {
       textColor: '#222222',
       signalColor: '#777777',
     });
+  });
+});
+
+describe('resolvedPalette', () => {
+  it('swaps M3 roles for the monochrome fallback where nothing computes them', () => {
+    const { result } = renderHook(() => useTheme());
+    const palette = resolvedPalette(result.current, null, 'dark');
+
+    expect(result.current.background).toBe('var(--md-sys-color-surface)');
+    expect(palette.background).toBe('#131313');
+    expect(palette.text).toBe('#e2e2e2');
+    expect(palette.backdrop).toBe(
+      'color-mix(in srgb, #000000 32%, transparent)',
+    );
+    expect(palette.link).toBe(result.current.link);
+  });
+
+  it('reads the computed role from the theme host', () => {
+    const host = document.createElement('div');
+    host.style.setProperty('--md-sys-color-surface', '#123456');
+    document.body.append(host);
+    const { result } = renderHook(() => useTheme());
+
+    expect(resolvedPalette(result.current, host, 'light').background).toBe(
+      '#123456',
+    );
+    host.remove();
   });
 });
 

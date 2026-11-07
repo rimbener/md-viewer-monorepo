@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { mermaidConfig, renderMermaid } from '../mermaid';
-import { useTheme } from '../theme';
+import { useResolvedTheme } from '../theme';
 
 const RENDER_WAIT_MS = 8_000;
 
@@ -29,7 +29,7 @@ export function Mermaid({
   fontFamily,
   onFail,
 }: MermaidProps) {
-  const theme = useTheme();
+  const theme = useResolvedTheme();
   const [svg, setSvg] = useState<string | null>(null);
   const fail = useRef(onFail);
   fail.current = onFail;

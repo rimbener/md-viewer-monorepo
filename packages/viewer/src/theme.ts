@@ -1,4 +1,9 @@
-import { createContext, useContext, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+} from 'react';
 
 import { DEFAULT_COLOR_SCHEME_ID, type ColorSchemeId } from './colorScheme';
 
@@ -12,7 +17,9 @@ export interface Theme {
   selectedText: string;
   hairline: string;
   accent: string;
-  /** The shadow under a control that floats over the page. */
+  /** Status text for a problem: unsaved edits, a bad file name. */
+  error: string;
+  /** The `box-shadow` under a control that floats over the page. */
   floatShadow: string;
   /** The veil over the page behind a dialog. */
   backdrop: string;
@@ -53,24 +60,75 @@ export interface Theme {
   searchCurrent: string;
 }
 
+/** An M3 color role, as `m3e-theme` writes it on its host. */
+function role(name: M3Role): string {
+  return `var(--md-sys-color-${name})`;
+}
+
+type M3Role = keyof typeof monochromeLight;
+
+/** `m3e-theme` monochrome roles, for where no theme host computes them: jsdom. */
+const monochromeLight = {
+  surface: '#f9f9f9',
+  'surface-container-low': '#f3f3f3',
+  'surface-container': '#eeeeee',
+  'surface-container-highest': '#e2e2e2',
+  'on-surface': '#1b1b1b',
+  'on-surface-variant': '#474747',
+  'outline-variant': '#c6c6c6',
+  primary: '#000000',
+  'secondary-container': '#d4d4d4',
+  'on-secondary-container': '#1b1b1b',
+  error: '#ba1a1a',
+  shadow: '#000000',
+  scrim: '#000000',
+};
+
+const monochromeDark: Record<M3Role, string> = {
+  surface: '#131313',
+  'surface-container-low': '#1b1b1b',
+  'surface-container': '#1f1f1f',
+  'surface-container-highest': '#353535',
+  'on-surface': '#e2e2e2',
+  'on-surface-variant': '#c6c6c6',
+  'outline-variant': '#474747',
+  primary: '#ffffff',
+  'secondary-container': '#474747',
+  'on-secondary-container': '#e2e2e2',
+  error: '#ffb4ab',
+  shadow: '#000000',
+  scrim: '#000000',
+};
+
+function shadowMix(percent: number): string {
+  return `color-mix(in srgb, ${role('shadow')} ${percent}%, transparent)`;
+}
+
+/** The roles every scheme shares; m3e picks the light or dark value. */
+const roles = {
+  background: role('surface'),
+  sidebar: role('surface-container-low'),
+  border: role('outline-variant'),
+  text: role('on-surface'),
+  mutedText: role('on-surface-variant'),
+  selectedBackground: role('secondary-container'),
+  selectedText: role('on-secondary-container'),
+  hairline: role('outline-variant'),
+  accent: role('primary'),
+  error: role('error'),
+  // M3 elevation level 2, as m3e draws it.
+  floatShadow: `${shadowMix(20)} 0px 3px 3px -2px, ${shadowMix(14)} 0px 3px 4px 0px, ${shadowMix(12)} 0px 1px 8px 0px`,
+  backdrop: `color-mix(in srgb, ${role('scrim')} 32%, transparent)`,
+  code: role('surface-container-highest'),
+  inlineCode: role('on-surface'),
+  codeBorder: role('outline-variant'),
+  quoteBar: role('outline-variant'),
+  tableHeader: role('surface-container'),
+};
+
 const light: Theme = {
-  background: '#F0F4F8',
-  sidebar: '#f4f4f5',
-  border: '#e0e0e2',
-  text: '#1A2536',
-  mutedText: '#6e6e73',
-  selectedBackground: '#0a66d0',
-  selectedText: '#ffffff',
-  hairline: '#d8d8dc',
-  accent: '#0a66d0',
-  floatShadow: 'rgba(26, 37, 54, 0.18)',
-  backdrop: 'rgba(26, 37, 54, 0.25)',
-  code: '#f2f2f4',
-  inlineCode: '#d39039',
-  codeBorder: '#e0e0e2',
+  ...roles,
   link: '#0a66d0',
-  quoteBar: '#d0d0d4',
-  tableHeader: '#f7f7f8',
   gherkinKeyword: '#8250df',
   gherkinTag: '#1a7f37',
   gherkinParameter: '#bc4c00',
@@ -87,23 +145,8 @@ const light: Theme = {
 };
 
 const dark: Theme = {
-  background: '#252528',
-  sidebar: '#1e1e20',
-  border: '#37373a',
-  text: '#ececee',
-  mutedText: '#9a9aa0',
-  selectedBackground: '#2f6fd0',
-  selectedText: '#ffffff',
-  hairline: '#37373a',
-  accent: '#69a8f5',
-  floatShadow: 'rgba(0, 0, 0, 0.5)',
-  backdrop: 'rgba(0, 0, 0, 0.45)',
-  code: '#2a2a2e',
-  inlineCode: '#d39039',
-  codeBorder: '#37373a',
+  ...roles,
   link: '#69a8f5',
-  quoteBar: '#4a4a50',
-  tableHeader: '#2a2a2e',
   gherkinKeyword: '#d2a8ff',
   gherkinTag: '#7ee787',
   gherkinParameter: '#ffa657',
@@ -145,9 +188,56 @@ function systemScheme(): 'light' | 'dark' {
   return window.matchMedia?.(DARK_QUERY).matches ? 'dark' : 'light';
 }
 
-export function useTheme(): Theme {
+function useResolvedScheme(): 'light' | 'dark' {
   const system = useSyncExternalStore(subscribeToSystem, systemScheme);
   const { schemeId } = useColorSchemeChoice();
-  const resolved = schemeId === 'system' ? system : schemeId;
-  return resolved === 'dark' ? dark : light;
+  return schemeId === 'system' ? system : schemeId;
+}
+
+export function useTheme(): Theme {
+  return useResolvedScheme() === 'dark' ? dark : light;
+}
+
+export interface ThemeHost {
+  /** The `m3e-theme` element, which holds the computed `--md-sys-color-*`. */
+  element: HTMLElement | null;
+  /** Grows on each `change` of the host, so readers compute again. */
+  version: number;
+}
+
+export const ThemeHostContext = createContext<ThemeHost>({
+  element: null,
+  version: 0,
+});
+
+const ROLE_PATTERN = /var\(--md-sys-color-([a-z-]+)\)/g;
+
+/** `theme` with every M3 role swapped for its computed color. */
+export function resolvedPalette(
+  theme: Theme,
+  host: HTMLElement | null,
+  scheme: 'light' | 'dark',
+): Theme {
+  const computed = host === null ? null : getComputedStyle(host);
+  const fallback = scheme === 'dark' ? monochromeDark : monochromeLight;
+  const resolve = (value: string): string =>
+    value.replace(ROLE_PATTERN, (match, name: string) => {
+      const live = computed?.getPropertyValue(`--md-sys-color-${name}`).trim();
+      return live || (fallback[name as M3Role] ?? match);
+    });
+  return Object.fromEntries(
+    Object.entries(theme).map(([key, value]) => [key, resolve(value)]),
+  ) as unknown as Theme;
+}
+
+/** The palette as plain colors, for a reader that cannot take `var()`: Mermaid. */
+export function useResolvedTheme(): Theme {
+  const scheme = useResolvedScheme();
+  const { element, version } = useContext(ThemeHostContext);
+  return useMemo(
+    () => resolvedPalette(scheme === 'dark' ? dark : light, element, scheme),
+    // `version` marks a recompute of the host's colors.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scheme, element, version],
+  );
 }

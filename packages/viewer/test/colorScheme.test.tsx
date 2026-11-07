@@ -4,11 +4,10 @@
 
 import { screen } from '@testing-library/react';
 
-import { ColorSchemeProvider } from '../src/components/ColorSchemeProvider';
+import { ThemeRoot } from '../src/components/ThemeRoot';
 import { DocumentPanel } from '../src/components/DocumentPanel';
 import { storage } from '../src/storage';
 import type { FileNode } from '../src/types';
-import { css } from './dom';
 import {
   createFakePlatform,
   press,
@@ -42,7 +41,7 @@ afterEach(() => {
 
 async function renderPanel(): Promise<void> {
   renderWithPlatform(
-    <ColorSchemeProvider>
+    <ThemeRoot>
       <DocumentPanel
         file={file}
         isSidebarVisible
@@ -52,14 +51,14 @@ async function renderPanel(): Promise<void> {
         onBack={() => {}}
         onNext={() => {}}
       />
-    </ColorSchemeProvider>,
+    </ThemeRoot>,
     createFakePlatform({}, { '/notes/notes.md': '# Notes' }),
   );
   await settle();
 }
 
-function nameColor(): string {
-  return screen.getByRole('heading', { name: 'notes.md' }).style.color;
+function m3Scheme(): string | undefined {
+  return document.querySelector('m3e-theme')?.scheme;
 }
 
 function schemeButton(label: string): HTMLElement {
@@ -91,12 +90,12 @@ it('starts on System and switches the document to dark', async () => {
     'aria-pressed',
     'true',
   );
-  expect(nameColor()).toBe(css('color', '#1A2536'));
+  expect(m3Scheme()).toBe('auto');
   expect(document.documentElement.style.colorScheme).toBe('light dark');
 
   await press(schemeButton('Dark color scheme'));
 
-  expect(nameColor()).toBe(css('color', '#ececee'));
+  expect(m3Scheme()).toBe('dark');
   expect(schemeButton('Dark color scheme')).toHaveAttribute(
     'aria-pressed',
     'true',
@@ -110,6 +109,6 @@ it('restores a stored scheme', async () => {
 
   await renderPanel();
 
-  expect(nameColor()).toBe(css('color', '#ececee'));
+  expect(m3Scheme()).toBe('dark');
   expect(document.documentElement.style.colorScheme).toBe('dark');
 });

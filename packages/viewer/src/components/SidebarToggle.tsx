@@ -43,7 +43,7 @@ export function SidebarToggle({ isVisible, onToggle }: SidebarToggleProps) {
         border: `1px solid ${theme.border}`,
         borderRadius: '50%',
         backgroundColor: theme.background,
-        boxShadow: `0 1px 4px ${theme.floatShadow}`,
+        boxShadow: theme.floatShadow,
         color: theme.mutedText,
         fontSize: 14,
         lineHeight: 1,

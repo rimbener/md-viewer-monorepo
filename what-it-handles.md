@@ -187,7 +187,10 @@ the view moves down as the content grows. A scroll by the person stops that.
 The 10 files scrolled most recently keep a position. A file at the top keeps
 none. The color scheme control sits on the right of the file name row, level
 with the top of the name. The choices are System, Light and Dark. System
-follows the system appearance. Light and Dark stay fixed.
+follows the system appearance. Light and Dark stay fixed. The colors are the
+Material 3 monochrome scheme, in grays only. Links, find hits and code colors
+keep their own hues, because a gray link or a gray hit on a gray page is hard
+to see.
 
 The scan walks hidden directories — `.claude`, `.github` and `.cursor` are where
 a lot of specs live. It walks three directory levels from the folder it starts

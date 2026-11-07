@@ -3,8 +3,9 @@
 ## Status (read first in a new session)
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
-- **Done:** step 0 (spike), step 1 (setup).
-- **Next:** step 2 (theme).
+- **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
+  not done: Chrome extension was not connected).
+- **Next:** step 3 (buttons).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -208,7 +209,16 @@ Planned:
   `M3eTheme`. Both apps use it: the Viewer, and the web "not compatible" page
   (`apps/web/src/App.tsx` renders `<Unsupported>` with no Viewer).
 
-### 2. Theme
+### 2. Theme (done)
+
+Result: `theme.ts` maps keys to `var(--md-sys-color-*)` roles, keeps fixed
+colors, and has a monochrome fallback per scheme. `floatShadow` is now a
+full `box-shadow` value. `ThemeRoot` renders `M3eTheme` and gives
+`ThemeHostContext` (host element + version bumped on `change`).
+`useResolvedTheme()` gives Mermaid plain colors. `colorScheme.test.tsx`
+asserts the `m3e-theme` `scheme`.
+
+Planned:
 
 - `ThemeRoot` renders `<M3eTheme variant="monochrome" motion="standard"
 density={-2} scheme={…}>`. Map our scheme ids (`colorScheme.ts`):

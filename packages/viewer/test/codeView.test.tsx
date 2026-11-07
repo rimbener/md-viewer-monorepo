@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import { parseMarkdown } from '@md-viewer/markdown/parseBlocks';
 
 import { Markdown } from '../src/components/Markdown';
-import { css, strings } from './dom';
+import { strings } from './dom';
 import { press, renderWithPlatform } from './fakePlatform';
 
 function render(source: string): HTMLElement {
@@ -48,10 +48,12 @@ describe('a highlighted code block', () => {
 });
 
 describe('a code span', () => {
-  it('tints text inside backticks', () => {
+  it('gives text inside backticks the on-surface role', () => {
     render('use `name` here');
 
-    expect(screen.getByText('name').style.color).toBe(css('color', '#d39039'));
+    expect(screen.getByText('name').style.color).toBe(
+      'var(--md-sys-color-on-surface)',
+    );
   });
 });
 

@@ -92,7 +92,7 @@ export function NewFileDialog({
           border: `1px solid ${theme.border}`,
           borderRadius: 10,
           backgroundColor: theme.sidebar,
-          boxShadow: `0 8px 24px ${theme.floatShadow}`,
+          boxShadow: theme.floatShadow,
           color: theme.text,
         }}
       >
@@ -126,10 +126,7 @@ export function NewFileDialog({
           }}
         />
         {error !== null ? (
-          <span
-            role="alert"
-            style={{ fontSize: 12, color: theme.syntaxKeyword }}
-          >
+          <span role="alert" style={{ fontSize: 12, color: theme.error }}>
             {error}
           </span>
         ) : null}

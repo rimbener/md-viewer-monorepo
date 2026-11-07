@@ -777,7 +777,7 @@ export function DocumentPanel({
             style={{
               ...styles.filePath,
               ...oneLine,
-              color: theme.syntaxKeyword,
+              color: theme.error,
             }}
           >
             {draft === null
