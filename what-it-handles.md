@@ -245,6 +245,9 @@ hide the sidebar. While the sidebar is hidden, it moves to the window's left
 edge and shows `→`, and the header moves right to make space for it.
 Command-B, or Control-B off the Mac, does the same as the button.
 The field marks hits in the open document. Letter case does not matter.
+While the editor shows, alone or beside the preview, Find searches the
+markdown source in the editor. The preview is searched only when the editor is
+hidden.
 Command-F, or Control-F off the Mac, focuses the field instead of the browser's
 own find.
 Previous and Next move through the hits, and the view scrolls to the current

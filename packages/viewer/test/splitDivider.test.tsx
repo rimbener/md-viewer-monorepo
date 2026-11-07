@@ -39,7 +39,7 @@ function divider(): HTMLElement {
 
 function sourceShare(): string {
   const field = screen.getByRole('textbox', { name: 'Markdown source' });
-  return field.parentElement!.style.flexBasis;
+  return field.parentElement!.parentElement!.style.flexBasis;
 }
 
 /** jsdom lays nothing out, so the split gets a box of its own. */

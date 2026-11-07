@@ -117,6 +117,77 @@ it('clears the marks', async () => {
   expect(findField()).toHaveValue('');
 });
 
+function sourceHits(): HTMLElement[] {
+  return [
+    ...screen.getByTestId('editor-marks').querySelectorAll<HTMLElement>('mark'),
+  ];
+}
+
+function previewHits(): HTMLElement[] {
+  return [
+    ...screen
+      .getByTestId('document-scroll')
+      .querySelectorAll<HTMLElement>('mark[data-find-hit]'),
+  ];
+}
+
+it('finds in the source, not the preview, while the split shows', async () => {
+  const user = userEvent.setup();
+  await renderApp();
+  await user.click(screen.getByRole('button', { name: 'Show editor' }));
+
+  // `# Title` is a hit in the source only: the preview drops the `#`.
+  await user.type(findField(), '# t');
+
+  expect(screen.getByLabelText('Match 1 of 1')).toBeInTheDocument();
+  expect(sourceHits().map(mark => mark.textContent)).toEqual(['# T']);
+  expect(previewHits()).toEqual([]);
+});
+
+it('finds in the source when only the editor shows', async () => {
+  const user = userEvent.setup();
+  await renderApp();
+  await user.click(screen.getByRole('button', { name: 'Show editor' }));
+  await user.click(screen.getByRole('button', { name: 'Show editor only' }));
+
+  await user.type(findField(), 'alpha');
+  await user.click(screen.getByRole('button', { name: 'Next match' }));
+
+  expect(screen.getByLabelText('Match 2 of 2')).toBeInTheDocument();
+  expect(sourceHits().map(mark => mark.style.backgroundColor)).toEqual([
+    'rgb(255, 224, 138)',
+    'rgb(245, 165, 36)',
+  ]);
+});
+
+it('counts the source again as it is typed', async () => {
+  const user = userEvent.setup();
+  await renderApp();
+  await user.click(screen.getByRole('button', { name: 'Show editor' }));
+  await user.type(findField(), 'alpha');
+
+  await user.type(
+    screen.getByRole('textbox', { name: 'Markdown source' }),
+    ' alpha',
+  );
+
+  expect(screen.getByLabelText('Match 1 of 3')).toBeInTheDocument();
+});
+
+it('finds in the preview again once the editor hides', async () => {
+  const user = userEvent.setup();
+  await renderApp();
+  await user.click(screen.getByRole('button', { name: 'Show editor' }));
+  await user.click(screen.getByRole('button', { name: 'Show editor only' }));
+  await user.type(findField(), 'alpha');
+
+  await user.click(screen.getByRole('button', { name: 'Show preview only' }));
+
+  expect(screen.queryByTestId('editor-marks')).not.toBeInTheDocument();
+  expect(previewHits()).toHaveLength(2);
+  expect(screen.getByLabelText('Match 1 of 2')).toBeInTheDocument();
+});
+
 function Probe({
   source,
   query,

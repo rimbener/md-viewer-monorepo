@@ -22,6 +22,7 @@ import {
   type HistoryStep,
 } from '../editHistory';
 import { FindProvider, useShowText } from '../find';
+import { findMatches, MAX_MATCHES } from '../search';
 import { usePlatform } from '../platform';
 import {
   loadCharacters,
@@ -517,6 +518,23 @@ export function DocumentPanel({
   const isTruncated =
     rendered !== null && rendered.length > MAX_RENDERED_CHARACTERS;
 
+  // Find goes where the editor is: the source whenever it shows, else the preview.
+  const findsInSource =
+    editorMode !== 'preview' &&
+    !isTruncated &&
+    error === null &&
+    !isLoading &&
+    file !== null;
+  const sourceMatches = useMemo(
+    () => (findsInSource ? findMatches(text ?? '', query, MAX_MATCHES) : null),
+    [findsInSource, text, query],
+  );
+  useEffect(() => {
+    if (sourceMatches !== null) {
+      handleCount(sourceMatches.starts.length, sourceMatches.more);
+    }
+  }, [sourceMatches, handleCount]);
+
   const isGherkin = path !== null && gherkinPath === path;
 
   const blocks = useMemo(
@@ -767,10 +785,10 @@ export function DocumentPanel({
       </header>
 
       <FindProvider
-        query={query}
+        query={findsInSource ? '' : query}
         active={active}
         scrollRef={scrollRef}
-        onCount={handleCount}
+        onCount={findsInSource ? ignoreCount : handleCount}
       >
         {isLoading ? (
           <div style={{ ...styles.body, ...styles.centered }}>
@@ -800,6 +818,11 @@ export function DocumentPanel({
                 onRedo={redo}
                 fieldRef={scrollSync.attachEditor}
                 onScroll={scrollSync.onEditorScroll}
+                marks={
+                  sourceMatches === null || query.length === 0
+                    ? null
+                    : { query, starts: sourceMatches.starts, active }
+                }
               />
             </div>
             {editorMode === 'split' ? (
@@ -820,6 +843,8 @@ export function DocumentPanel({
     </main>
   );
 }
+
+function ignoreCount(): void {}
 
 type TitleRowProps = {
   children?: ReactNode;

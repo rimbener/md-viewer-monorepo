@@ -1,4 +1,4 @@
-import { splitMatches } from '../src/search';
+import { findMatches, splitMatches } from '../src/search';
 
 function joined(text: string, query: string, limit = 50): string {
   return splitMatches(text, query, limit)
@@ -67,3 +67,20 @@ function bits(seed: number, length: number): string {
   }
   return out;
 }
+
+describe('findMatches', () => {
+  it('gives where each hit starts, ignoring case', () => {
+    expect(findMatches('Alpha and alpha', 'alpha', 10)).toEqual({
+      starts: [0, 10],
+      more: false,
+    });
+  });
+
+  it('stops at the limit and says more are left', () => {
+    expect(findMatches('aaaa', 'a', 2)).toEqual({ starts: [0, 1], more: true });
+  });
+
+  it('finds nothing for an empty query', () => {
+    expect(findMatches('alpha', '', 10)).toEqual({ starts: [], more: false });
+  });
+});

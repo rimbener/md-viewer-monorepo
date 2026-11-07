@@ -1,12 +1,14 @@
 import {
+  Fragment,
   useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
+  type ReactNode,
 } from 'react';
 
-import { useTheme } from '../theme';
+import { useTheme, type Theme } from '../theme';
 import { CODE_FONT } from '../typography';
 
 /** Padding around the source, and the least space under its last line. */
@@ -14,6 +16,16 @@ const PADDING = 20;
 
 /** Source line, before zoom. */
 const LINE = 18;
+
+/** Space left above the current hit when the source scrolls to it. */
+const REVEAL_MARGIN = 48;
+
+/** Find hits in the source: where each starts, and which one is current. */
+export type EditorMarks = {
+  query: string;
+  starts: readonly number[];
+  active: number;
+};
 
 interface EditorProps {
   value: string;
@@ -27,6 +39,8 @@ interface EditorProps {
   /** Receives the text field, for a caller that follows its scroll. */
   fieldRef?: (element: HTMLTextAreaElement | null) => void;
   onScroll?: () => void;
+  /** Find hits to mark behind the text, or null when nothing is searched. */
+  marks?: EditorMarks | null;
 }
 
 /** Where `next` stops matching `previous`, counted from the end of the change. */
@@ -62,9 +76,11 @@ export function Editor({
   onRedo,
   fieldRef,
   onScroll,
+  marks = null,
 }: EditorProps) {
   const theme = useTheme();
   const field = useRef<HTMLTextAreaElement | null>(null);
+  const mirror = useRef<HTMLDivElement | null>(null);
   const shown = useRef(value);
   const commands = useRef({ onUndo, onRedo });
   commands.current = { onUndo, onRedo };
@@ -108,6 +124,45 @@ export function Editor({
     element.setSelectionRange(caret, caret);
   }, [value]);
 
+  const active = marks?.active ?? -1;
+  const query = marks?.query ?? '';
+
+  useLayoutEffect(() => {
+    if (mirror.current !== null && field.current !== null) {
+      mirror.current.scrollTop = field.current.scrollTop;
+    }
+  });
+
+  // Typing keeps the view still; only a new query or a step to another hit moves it.
+  useLayoutEffect(() => {
+    const element = field.current;
+    const hit = mirror.current?.querySelector<HTMLElement>(
+      `[data-find-hit="${active}"]`,
+    );
+    if (element === null || hit == null) {
+      return;
+    }
+    element.scrollTop = Math.max(0, hit.offsetTop - REVEAL_MARGIN);
+    if (mirror.current !== null) {
+      mirror.current.scrollTop = element.scrollTop;
+    }
+  }, [active, query]);
+
+  const text = {
+    margin: 0,
+    border: 'none',
+    padding: PADDING,
+    paddingBottom: endSpace,
+    fontFamily: CODE_FONT,
+    fontSize: 12.5 * scale,
+    lineHeight: `${lineHeight}px`,
+    whiteSpace: 'pre-wrap',
+    overflowWrap: 'break-word',
+    overflowY: 'auto',
+    // Both layers keep the same gutter so their lines wrap at the same place.
+    scrollbarGutter: 'stable',
+  } as const;
+
   // The text field's own history knows nothing of switched files and saves,
   // so the Edit menu's Undo, which arrives as an input event, goes to ours.
   useEffect(() => {
@@ -129,50 +184,111 @@ export function Editor({
   }, []);
 
   return (
-    <textarea
-      ref={attachField}
-      onScroll={onScroll}
-      className="field"
-      aria-label="Markdown source"
-      autoComplete="off"
-      autoCorrect="off"
-      autoCapitalize="none"
-      spellCheck={false}
-      value={value}
-      onChange={event => {
-        shown.current = event.target.value;
-        onChange(event.target.value);
-      }}
-      onKeyDown={event => {
-        if (!(event.metaKey || event.ctrlKey) || event.altKey) {
-          return;
-        }
-        const key = event.key.toLowerCase();
-        if (key === 'z') {
-          event.preventDefault();
-          if (event.shiftKey) {
-            onRedo();
-          } else {
-            onUndo();
+    <div
+      style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }}
+    >
+      {marks === null ? null : (
+        <div
+          ref={mirror}
+          aria-hidden="true"
+          data-testid="editor-marks"
+          style={{
+            ...text,
+            position: 'absolute',
+            inset: 0,
+            overflowY: 'hidden',
+            pointerEvents: 'none',
+            color: 'transparent',
+            backgroundColor: theme.sidebar,
+          }}
+        >
+          <MarkedSource value={value} marks={marks} theme={theme} />
+        </div>
+      )}
+      <textarea
+        ref={attachField}
+        onScroll={() => {
+          if (mirror.current !== null && field.current !== null) {
+            mirror.current.scrollTop = field.current.scrollTop;
           }
-        } else if (key === 'y' && !event.shiftKey) {
-          event.preventDefault();
-          onRedo();
-        }
-      }}
-      style={{
-        flex: 1,
-        minWidth: 0,
-        resize: 'none',
-        border: 'none',
-        padding: PADDING,
-        paddingBottom: endSpace,
-        fontFamily: CODE_FONT,
-        fontSize: 12.5 * scale,
-        lineHeight: `${lineHeight}px`,
-        backgroundColor: theme.sidebar,
-        color: theme.text,
-      }}
-    />
+          onScroll?.();
+        }}
+        className="field"
+        aria-label="Markdown source"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        value={value}
+        onChange={event => {
+          shown.current = event.target.value;
+          onChange(event.target.value);
+        }}
+        onKeyDown={event => {
+          if (!(event.metaKey || event.ctrlKey) || event.altKey) {
+            return;
+          }
+          const key = event.key.toLowerCase();
+          if (key === 'z') {
+            event.preventDefault();
+            if (event.shiftKey) {
+              onRedo();
+            } else {
+              onUndo();
+            }
+          } else if (key === 'y' && !event.shiftKey) {
+            event.preventDefault();
+            onRedo();
+          }
+        }}
+        style={{
+          ...text,
+          position: 'relative',
+          flex: 1,
+          minWidth: 0,
+          resize: 'none',
+          backgroundColor: marks === null ? theme.sidebar : 'transparent',
+          color: theme.text,
+        }}
+      />
+    </div>
   );
+}
+
+type MarkedSourceProps = {
+  value: string;
+  marks: EditorMarks;
+  theme: Theme;
+};
+
+/** The source again, invisible, with each hit painted where it falls. */
+function MarkedSource({ value, marks, theme }: MarkedSourceProps) {
+  const length = marks.query.length;
+  const pieces: ReactNode[] = [];
+  let cursor = 0;
+  marks.starts.forEach((start, index) => {
+    pieces.push(
+      <Fragment key={`t${index}`}>{value.slice(cursor, start)}</Fragment>,
+      <mark
+        key={`m${index}`}
+        data-find-hit={index}
+        style={{
+          color: 'transparent',
+          backgroundColor:
+            index === marks.active ? theme.searchCurrent : theme.searchHit,
+        }}
+      >
+        {value.slice(start, start + length)}
+      </mark>,
+    );
+    cursor = start + length;
+  });
+  // A trailing newline has no height in a div, unlike in the text field.
+  pieces.push(
+    <Fragment key="end">
+      {value.slice(cursor)}
+      {'\n'}
+    </Fragment>,
+  );
+  return <>{pieces}</>;
 }

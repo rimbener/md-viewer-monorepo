@@ -70,3 +70,24 @@ export function splitMatches(
 
   return { parts, more };
 }
+
+/**
+ * Where each non-overlapping hit of `query` starts in `text`, at most `limit`
+ * of them. `more` says a further hit was left out.
+ */
+export function findMatches(
+  text: string,
+  query: string,
+  limit: number,
+): { starts: number[]; more: boolean } {
+  const { parts, more } = splitMatches(text, query, limit);
+  const starts: number[] = [];
+  let cursor = 0;
+  for (const part of parts) {
+    if (part.match) {
+      starts.push(cursor);
+    }
+    cursor += part.text.length;
+  }
+  return { starts, more };
+}

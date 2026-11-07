@@ -208,11 +208,15 @@ rebuild the list.
 
 ## Find marks one text run at a time
 
-A hit has to sit inside one run of text: a word, a code token, a step. The
-search does not join a bold word to the plain word beside it, so a match
-cannot start in one run and end in the next. It marks at most 500 hits, then
-stops. The source editor is not marked. The preview beside the editor is. In
-the editor-only view there is no preview, so Find marks nothing.
+In the preview, a hit has to sit inside one run of text: a word, a code token,
+a step. The search does not join a bold word to the plain word beside it, so a
+match cannot start in one run and end in the next. It marks at most 500 hits,
+then stops.
+
+While the editor shows, Find searches the source and not the preview, so a
+hit can include markdown marks such as `#` or `**`. The preview beside the
+editor is not marked. The source is searched as plain text, so a hit can
+cross any formatting. It also marks at most 500 hits.
 
 ## No export
 
