@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { ThemeRoot } from '@md-viewer/viewer/ThemeRoot';
 import { Viewer } from '@md-viewer/viewer/Viewer';
 
 import { Unsupported } from './Unsupported';
@@ -24,12 +25,14 @@ export function App() {
 
   if (!canOpenFolders() && !hasSource) {
     return (
-      <Unsupported
-        onOpenUrl={url => {
-          openSource(url);
-          setHasSource(true);
-        }}
-      />
+      <ThemeRoot>
+        <Unsupported
+          onOpenUrl={url => {
+            openSource(url);
+            setHasSource(true);
+          }}
+        />
+      </ThemeRoot>
     );
   }
   return <Viewer platform={platform} />;

@@ -12,7 +12,7 @@ import {
   type CSSProperties,
 } from 'react';
 
-import { ColorSchemeProvider } from './components/ColorSchemeProvider';
+import { ThemeRoot } from './components/ThemeRoot';
 import { DocumentPanel } from './components/DocumentPanel';
 import { Sidebar } from './components/Sidebar';
 import {
@@ -696,9 +696,9 @@ type ViewerProps = {
 export function Viewer({ platform }: ViewerProps) {
   return (
     <PlatformProvider value={platform}>
-      <ColorSchemeProvider>
+      <ThemeRoot>
         <Session />
-      </ColorSchemeProvider>
+      </ThemeRoot>
     </PlatformProvider>
   );
 }

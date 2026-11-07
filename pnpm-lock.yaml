@@ -108,9 +108,27 @@ importers:
 
   packages/viewer:
     dependencies:
+      '@fontsource-variable/roboto-flex':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@lit/react':
+        specifier: ^1.0.8
+        version: 1.0.8(@types/react@19.3.0)
+      '@m3e/icons':
+        specifier: ^1.0.22
+        version: 1.0.22(@m3e/web@2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1))
+      '@m3e/react':
+        specifier: ~2.11.3
+        version: 2.11.3(@lit/react@1.0.8(@types/react@19.3.0))(@m3e/web@2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1))(lit@3.3.3)(react@19.3.1)
+      '@m3e/web':
+        specifier: ~2.11.3
+        version: 2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1)
       '@md-viewer/markdown':
         specifier: workspace:*
         version: link:../markdown
+      lit:
+        specifier: ^3.3.3
+        version: 3.3.3
       mermaid:
         specifier: ^12.1.0
         version: 12.2.0
@@ -459,6 +477,18 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@floating-ui/core@1.8.0':
+    resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
+
+  '@floating-ui/dom@1.8.0':
+    resolution: {integrity: sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==}
+
+  '@floating-ui/utils@0.2.12':
+    resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fontsource-variable/roboto-flex@5.3.0':
+    resolution: {integrity: sha512-bOxckUy0qXNRjhV6e4pcHGSvptix4ZRD1uaj5Za8h+p3qrb2GL4U4TQdpVmPSy0SmqwldfD+JJqEKdF68EyiAw==}
+
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
     engines: {node: '>=18.18.0'}
@@ -500,6 +530,39 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lit-labs/ssr-dom-shim@1.6.0':
+    resolution: {integrity: sha512-VHb0ALPMTlgKjM6yIxxoQNnpKyUKLD04VzeQdsiXkMqkvYlAHxq9glGLmgbb889/1GsohSOAjvQYoiBppXFqrQ==}
+
+  '@lit/react@1.0.8':
+    resolution: {integrity: sha512-p2+YcF+JE67SRX3mMlJ1TKCSTsgyOVdAwd/nxp3NuV1+Cb6MWALbN6nT7Ld4tpmYofcE5kcaSY1YBB9erY+6fw==}
+    peerDependencies:
+      '@types/react': 17 || 18 || 19
+
+  '@lit/reactive-element@2.1.2':
+    resolution: {integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==}
+
+  '@m3e/icons@1.0.22':
+    resolution: {integrity: sha512-/x/ArMsDos5caTwiU4t0Lz7BsF3EjdZF2mkkUAdvZE4kV/OQWcSHjDi2NHUWXAQMyVfRINHxMecBv+/l57gQBQ==}
+    peerDependencies:
+      '@m3e/web': ^2.3.2
+
+  '@m3e/react@2.11.3':
+    resolution: {integrity: sha512-ZAr7K75RBwH94MHZPmrE6b92jXQG+ULefz37wu4npmrNWDq7HbmAF4cqFBhr3mHdHuNpoFuUL5HKbM2ZYToFeQ==}
+    peerDependencies:
+      '@lit/react': ^1.0.8
+      '@m3e/web': ^2.11.3
+      lit: ^3.3.0
+      react: '>=18'
+
+  '@m3e/web@2.11.3':
+    resolution: {integrity: sha512-9pYX05c+bmOIGiJ7kfUh2ctdHHAhgfyzFgk5HBjxfXtJRYDuxsRtNWqUqTp5c/TdaGOeT/+WbvQw9G4D+9qXxQ==}
+    peerDependencies:
+      lit: ^3.3.0
+      tslib: ^2.8.1
+
+  '@material/material-color-utilities@0.4.0':
+    resolution: {integrity: sha512-dlq6VExJReb8dhjj3a/yTigr3ncNwoFmL5Iy2ENtbDX03EmNeOEdZ+vsaGrj7RTuO+mB7L58II4LCsl4NpM8uw==}
 
   '@mermaid-js/parser@2.0.1':
     resolution: {integrity: sha512-j37dj/h6p6pots1L7pLPPNuABEEu9WP4OYg9pW1g+nYG331j0+3canE9OagtYdytYvdSAMG+2fKU5cxep6LgjA==}
@@ -1100,6 +1163,11 @@ packages:
     resolution: {integrity: sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==}
     engines: {node: '>= 10'}
 
+  composed-offset-position@0.0.6:
+    resolution: {integrity: sha512-Q7dLompI6lUwd7LWyIcP66r4WcS9u7AL2h8HaeipiRfCRPLMWqRx8fYsjb4OHi6UQFifO7XtNC2IlEJ1ozIFxw==}
+    peerDependencies:
+      '@floating-ui/utils': ^0.2.5
+
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
@@ -1592,6 +1660,15 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
+  lit-element@4.2.2:
+    resolution: {integrity: sha512-aFKhNToWxoyhkNDmWZwEva2SlQia+jfG0fjIWV//YeTaWrVnOxD89dPKfigCUspXFmjzOEUQpOkejH5Ly6sG0w==}
+
+  lit-html@3.3.3:
+    resolution: {integrity: sha512-el8M6jK2o3RXBnrSHX3ZKrsN8zEV63pSExTO1wYJz7QndGYZ8353e2a5PPX+qHe2aGayfnchQmkAojaWAREOIA==}
+
+  lit@3.3.3:
+    resolution: {integrity: sha512-fycuvZg/hkpozL00lm1pEJH5nN/lr9ZXd6mJI2HSN4+Bzc+LDNdEApJ6HFbPkdFNHLvOplIIuJvxkS4XUxqirw==}
+
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
     engines: {node: '>=10'}
@@ -1882,6 +1959,9 @@ packages:
   ts-dedent@2.3.0:
     resolution: {integrity: sha512-JfJeIHke7y2egdGGgRAvpCwYFUsHlM2gPcrVOxFkznt/4uzQ7HFmvE63iFHVLBJNDuyDOQgijDK/tXH/f6Msjg==}
     engines: {node: '>=6.10'}
+
+  tslib@2.9.1:
+    resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -2341,6 +2421,19 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@floating-ui/core@1.8.0':
+    dependencies:
+      '@floating-ui/utils': 0.2.12
+
+  '@floating-ui/dom@1.8.0':
+    dependencies:
+      '@floating-ui/core': 1.8.0
+      '@floating-ui/utils': 0.2.12
+
+  '@floating-ui/utils@0.2.12': {}
+
+  '@fontsource-variable/roboto-flex@5.3.0': {}
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -2383,6 +2476,39 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@lit-labs/ssr-dom-shim@1.6.0': {}
+
+  '@lit/react@1.0.8(@types/react@19.3.0)':
+    dependencies:
+      '@types/react': 19.3.0
+
+  '@lit/reactive-element@2.1.2':
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.6.0
+
+  '@m3e/icons@1.0.22(@m3e/web@2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1))':
+    dependencies:
+      '@m3e/web': 2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1)
+
+  '@m3e/react@2.11.3(@lit/react@1.0.8(@types/react@19.3.0))(@m3e/web@2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1))(lit@3.3.3)(react@19.3.1)':
+    dependencies:
+      '@lit/react': 1.0.8(@types/react@19.3.0)
+      '@m3e/web': 2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1)
+      lit: 3.3.3
+      react: 19.3.1
+
+  '@m3e/web@2.11.3(@floating-ui/utils@0.2.12)(lit@3.3.3)(tslib@2.9.1)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@material/material-color-utilities': 0.4.0
+      composed-offset-position: 0.0.6(@floating-ui/utils@0.2.12)
+      lit: 3.3.3
+      tslib: 2.9.1
+    transitivePeerDependencies:
+      - '@floating-ui/utils'
+
+  '@material/material-color-utilities@0.4.0': {}
 
   '@mermaid-js/parser@2.0.1':
     dependencies:
@@ -2729,8 +2855,7 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@types/trusted-types@2.0.7':
-    optional: true
+  '@types/trusted-types@2.0.7': {}
 
   '@types/wicg-file-system-access@2023.10.7': {}
 
@@ -2978,6 +3103,10 @@ snapshots:
   commander@15.0.0: {}
 
   commander@7.2.0: {}
+
+  composed-offset-position@0.0.6(@floating-ui/utils@0.2.12):
+    dependencies:
+      '@floating-ui/utils': 0.2.12
 
   concat-map@0.0.1: {}
 
@@ -3500,6 +3629,22 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  lit-element@4.2.2:
+    dependencies:
+      '@lit-labs/ssr-dom-shim': 1.6.0
+      '@lit/reactive-element': 2.1.2
+      lit-html: 3.3.3
+
+  lit-html@3.3.3:
+    dependencies:
+      '@types/trusted-types': 2.0.7
+
+  lit@3.3.3:
+    dependencies:
+      '@lit/reactive-element': 2.1.2
+      lit-element: 4.2.2
+      lit-html: 3.3.3
+
   locate-path@6.0.0:
     dependencies:
       p-locate: 5.0.0
@@ -3779,6 +3924,8 @@ snapshots:
       typescript: 5.9.3
 
   ts-dedent@2.3.0: {}
+
+  tslib@2.9.1: {}
 
   type-check@0.4.0:
     dependencies:

@@ -8,13 +8,20 @@
     "./url": "./src/url.ts",
     "./theme": "./src/theme.ts",
     "./OpenUrlForm": "./src/components/OpenUrlForm.tsx",
+    "./ThemeRoot": "./src/components/ThemeRoot.tsx",
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
     "typecheck": "tsc -p ."
   },
   "dependencies": {
+    "@fontsource-variable/roboto-flex": "^5.3.0",
+    "@lit/react": "^1.0.8",
+    "@m3e/icons": "^1.0.22",
+    "@m3e/react": "~2.11.3",
+    "@m3e/web": "~2.11.3",
     "@md-viewer/markdown": "workspace:*",
+    "lit": "^3.3.3",
     "mermaid": "^12.1.0"
   },
   "peerDependencies": {
