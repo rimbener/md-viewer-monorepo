@@ -384,7 +384,16 @@ Planned:
     `recentFoldersView.test.tsx` and `what-it-handles.md`.
   - Delete the own open/close, outside-click and context-menu code.
 
-### 7. Sidebar and tree
+### 7. Sidebar and tree (7a done: tree and sidebar contents)
+
+7a result: `FileTree` is an `m3e-tree`. The tree's `change` is the one path
+for mouse and keyboard: a file calls `onSelectFile`, a folder calls
+`onSelectDirectory` and the selection goes back to the open file. Items carry
+`data-path`. Learned: **@lit/react sets every prop again on each render**
+(no dirty check), so a prop that m3e also changes (`open`) is reset by any
+render: the start expansion is set once, imperatively, on mount. A tree item
+listens for clicks on its row in the shadow root: tests click its label
+(`clickTarget()` in `fakePlatform.tsx`). New `src/typescale.ts`.
 
 - `Sidebar` → `m3e-drawer-container`. The sidebar goes in the `start` slot,
   the document in the content. Use `start-mode="auto"`, so narrow screens

@@ -23,4 +23,4 @@ export { M3eSplitPane, type M3eSplitPaneElement } from '@m3e/react/split-pane';
 export { M3eTheme } from '@m3e/react/theme';
 export { M3eToolbar } from '@m3e/react/toolbar';
 export { M3eTooltip } from '@m3e/react/tooltip';
-export { M3eTree, M3eTreeItem } from '@m3e/react/tree';
+export { M3eTree, M3eTreeItem, type M3eTreeElement } from '@m3e/react/tree';

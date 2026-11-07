@@ -1,14 +1,20 @@
+import '@m3e/icons/outlined/note_add';
+import '@m3e/icons/outlined/refresh';
+
 import type { CSSProperties } from 'react';
 
+import { M3eButton, M3eIcon, M3eIconButton } from '../m3e';
 import { usePlatform } from '../platform';
 import type { RecentFolder } from '../recentFolders';
-import { useTheme, type Theme } from '../theme';
+import { useTheme } from '../theme';
 import type { DirectoryNode, FileNode } from '../types';
+import { typescale } from '../typescale';
 import { FileTree } from './FileTree';
 import { OpenUrlForm } from './OpenUrlForm';
 import { RecentFolderMenu } from './RecentFolderMenu';
 import { Spinner } from './Spinner';
 import { oneLine } from './text';
+import { Tooltip, useControlId } from './Tooltip';
 
 interface SidebarProps {
   root: DirectoryNode | null;
@@ -49,6 +55,9 @@ export function Sidebar({
 }: SidebarProps) {
   const theme = useTheme();
   const platform = usePlatform();
+  const reloadId = useControlId();
+  const addId = useControlId();
+  const cancelId = useControlId();
   const hairline = `1px solid ${theme.border}`;
   const canCreate =
     root !== null && currentFolderPath !== null && onAddFile !== null;
@@ -86,53 +95,64 @@ export function Sidebar({
               onSelect={onSelectRecentFolder}
               onRemove={onRemoveRecentFolder}
             />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                type="button"
-                className="pressable"
+            <div style={styles.actions}>
+              <M3eButton
+                variant="tonal"
                 onClick={onChooseFolder}
                 disabled={isScanning}
-                style={actionStyle(theme, isScanning)}
+                style={styles.grow}
               >
                 {root ? 'Change Folder…' : 'Choose Folder…'}
-              </button>
+              </M3eButton>
               {root && currentFolderPath !== null ? (
-                <button
-                  type="button"
-                  className="pressable"
-                  aria-label="Reload folder"
-                  title="Reads the folder again so new markdown files are shown"
-                  onClick={onReloadFolder}
-                  disabled={isScanning}
-                  style={actionStyle(theme, isScanning)}
-                >
-                  Reload
-                </button>
+                <>
+                  <M3eIconButton
+                    id={reloadId}
+                    variant="tonal"
+                    aria-label="Reload folder"
+                    onClick={onReloadFolder}
+                    disabled={isScanning}
+                  >
+                    <M3eIcon name="refresh" />
+                  </M3eIconButton>
+                  <Tooltip
+                    controlId={reloadId}
+                    text="Reads the folder again so new markdown files are shown"
+                  />
+                </>
               ) : null}
             </div>
             {canCreate ? (
-              <button
-                type="button"
-                className="pressable"
-                title="Makes a new markdown file in the folder of the selected file"
-                onClick={() => {
-                  if (newFileFolder !== null) {
-                    onAddFile?.(newFileFolder);
-                  }
-                }}
-                disabled={isScanning}
-                style={{
-                  ...actionStyle(theme, isScanning),
-                  width: '100%',
-                  marginTop: 8,
-                }}
-              >
-                Add new file
-              </button>
+              <>
+                <M3eButton
+                  id={addId}
+                  variant="outlined"
+                  onClick={() => {
+                    if (newFileFolder !== null) {
+                      onAddFile?.(newFileFolder);
+                    }
+                  }}
+                  disabled={isScanning}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  <M3eIcon slot="icon" name="note_add" />
+                  Add new file
+                </M3eButton>
+                <Tooltip
+                  controlId={addId}
+                  text="Makes a new markdown file in the folder of the selected file"
+                />
+              </>
             ) : null}
           </div>
         ) : (
-          <p style={{ margin: 0, fontSize: 12, color: theme.mutedText }}>
+          <p
+            style={{
+              margin: 0,
+              ...typescale('body-small'),
+              color: theme.mutedText,
+            }}
+          >
             This browser cannot open folders. Use Chrome or Edge to read a
             folder of markdown files.
           </p>
@@ -142,13 +162,19 @@ export function Sidebar({
         {root ? (
           <span
             title={root.path}
-            style={{ ...oneLine, fontSize: 11, color: theme.mutedText }}
+            style={{
+              ...oneLine,
+              ...typescale('label-small'),
+              color: theme.mutedText,
+            }}
           >
             {root.path}
           </span>
         ) : null}
         {error && root ? (
-          <span style={{ fontSize: 11, color: theme.mutedText }}>{error}</span>
+          <span style={{ ...typescale('label-small'), color: theme.error }}>
+            {error}
+          </span>
         ) : null}
       </div>
 
@@ -164,26 +190,30 @@ export function Sidebar({
       ) : (
         <div style={statusStyle}>
           {isScanning ? <Spinner /> : null}
-          <span style={{ fontSize: 12, color: theme.mutedText }}>
+          <span style={{ ...typescale('body-small'), color: theme.mutedText }}>
             {isScanning ? 'Scanning…' : (error ?? 'No folder selected yet.')}
           </span>
           {onCancelScan ? (
-            <button
-              type="button"
-              className="pressable"
-              title="Stops reading this folder and asks for another"
-              onClick={onCancelScan}
-              style={{ ...actionStyle(theme, false), flex: 'none' }}
-            >
-              Cancel
-            </button>
+            <>
+              <M3eButton
+                id={cancelId}
+                variant="outlined"
+                onClick={onCancelScan}
+              >
+                Cancel
+              </M3eButton>
+              <Tooltip
+                controlId={cancelId}
+                text="Stops reading this folder and asks for another"
+              />
+            </>
           ) : null}
         </div>
       )}
 
       {root && !error ? (
         <div style={{ padding: '6px 10px', borderTop: hairline }}>
-          <span style={{ fontSize: 11, color: theme.mutedText }}>
+          <span style={{ ...typescale('label-small'), color: theme.mutedText }}>
             {fileCount} markdown {fileCount === 1 ? 'file' : 'files'}
           </span>
         </div>
@@ -203,19 +233,16 @@ function folderOfSelection(
   return selectedPath.slice(0, selectedPath.lastIndexOf('/'));
 }
 
-function actionStyle(theme: Theme, isScanning: boolean): CSSProperties {
-  return {
+const styles = {
+  actions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
+  grow: {
     flex: 1,
-    padding: '6px 10px',
-    border: `1px solid ${theme.border}`,
-    borderRadius: 6,
-    backgroundColor: theme.background,
-    color: theme.accent,
-    fontSize: 13,
-    fontWeight: 600,
-    opacity: isScanning ? 0.5 : 1,
-  };
-}
+  },
+} satisfies Record<string, CSSProperties>;
 
 const statusStyle: CSSProperties = {
   flex: 1,

@@ -6,6 +6,7 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 
 import {
+  clickTarget,
   createFakePlatform,
   type FakePlatform,
   renderViewer,
@@ -77,7 +78,7 @@ async function waitForPreview(): Promise<void> {
 }
 
 async function open(name: string): Promise<void> {
-  fireEvent.click(screen.getByRole('treeitem', { name }));
+  fireEvent.click(clickTarget(screen.getByRole('treeitem', { name })));
   await settle();
 }
 

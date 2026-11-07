@@ -198,7 +198,10 @@ The scan walks hidden directories — `.claude`, `.github` and `.cursor` are whe
 a lot of specs live. It walks three directory levels from the folder it starts
 at. Clicking a folder in the tree walks that folder again, so a file deeper than
 three levels, or added since the last walk of that folder, appears then. Reload
-walks the open root again without asking for it. The tree is not watched.
+walks the open root again without asking for it; it is the refresh icon
+button beside Change Folder…. The tree is not watched. A folder in the tree
+opens and closes but is never selected: the selection stays on the open file.
+The arrow keys move through the tree, and Return or Space opens the file.
 
 Add new file, under Change Folder… and Reload, asks for a file name in a dialog
 that shows the target folder: the folder of the selected file, or the open

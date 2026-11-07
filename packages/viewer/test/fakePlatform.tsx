@@ -127,9 +127,19 @@ export async function renderViewer(platform: Platform): Promise<RenderResult> {
 /** Clicks `element` and lets every read it starts settle. */
 export async function press(element: Element): Promise<void> {
   await act(async () => {
-    fireEvent.click(element);
+    fireEvent.click(clickTarget(element));
   });
   await settle();
+}
+
+/**
+ * Where a click lands. A tree item listens on its row in the shadow root, so
+ * a click goes to its label, which sits in that row.
+ */
+export function clickTarget(element: Element): Element {
+  return element.localName === 'm3e-tree-item'
+    ? (element.querySelector(':scope > [slot="label"]') ?? element)
+    : element;
 }
 
 /** Stores a session to restore: the last folder and, optionally, its file. */

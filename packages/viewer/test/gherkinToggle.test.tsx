@@ -5,6 +5,7 @@
 import { fireEvent, screen } from '@testing-library/react';
 
 import {
+  clickTarget,
   createFakePlatform,
   renderViewer,
   settle,
@@ -60,7 +61,9 @@ it('lays out an unfenced feature only on request, and back', async () => {
 
 it('hides the button for a document with no unfenced feature', async () => {
   await renderApp();
-  fireEvent.click(screen.getByRole('treeitem', { name: 'plain.md' }));
+  fireEvent.click(
+    clickTarget(screen.getByRole('treeitem', { name: 'plain.md' })),
+  );
   await settle();
   expect(button()).toBeNull();
 });
