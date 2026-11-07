@@ -128,9 +128,9 @@ it('undoes a replace all in one step', async () => {
 it('disables the replace row once the editor hides', async () => {
   const user = await openWith('alpha', 'beta');
 
-  await user.click(screen.getByRole('button', { name: 'Show editor only' }));
+  await user.click(screen.getByRole('radio', { name: 'Editor' }));
   expect(replaceField()).toBeEnabled();
-  await user.click(screen.getByRole('button', { name: 'Show preview only' }));
+  await user.click(screen.getByRole('radio', { name: 'Preview' }));
 
   expect(replaceField()).toBeDisabled();
   expect(replaceField()).toHaveValue('beta');

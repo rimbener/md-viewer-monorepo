@@ -18,14 +18,14 @@ export function UndoRedo({ canUndo, canRedo, onUndo, onRedo }: UndoRedoProps) {
         {
           icon: 'undo',
           accessibilityLabel: 'Undo',
-          title: 'Takes back the last edit',
+          tooltip: 'Takes back the last edit',
           disabled: !canUndo,
           onPress: onUndo,
         },
         {
           icon: 'redo',
           accessibilityLabel: 'Redo',
-          title: 'Puts back the edit that Undo took back',
+          tooltip: 'Puts back the edit that Undo took back',
           disabled: !canRedo,
           onPress: onRedo,
         },

@@ -1,9 +1,10 @@
 import { M3eButtonGroup, M3eIcon, M3eIconButton } from '../m3e';
+import { Tooltip, useControlId } from './Tooltip';
 
 export type IconAction = {
   icon: string;
   accessibilityLabel: string;
-  title: string;
+  tooltip: string;
   disabled: boolean;
   onPress: () => void;
 };
@@ -14,21 +15,33 @@ export function PairedIconButtons({
 }: {
   actions: [IconAction, IconAction];
 }) {
+  const id = useControlId();
+
   return (
-    <M3eButtonGroup variant="connected" size="extra-small">
-      {actions.map(action => (
-        <M3eIconButton
+    <>
+      <M3eButtonGroup variant="connected" size="extra-small">
+        {actions.map((action, index) => (
+          <M3eIconButton
+            key={action.accessibilityLabel}
+            id={`${id}-${index}`}
+            variant="tonal"
+            size="extra-small"
+            aria-label={action.accessibilityLabel}
+            disabled={action.disabled}
+            onClick={action.onPress}
+          >
+            <M3eIcon name={action.icon} />
+          </M3eIconButton>
+        ))}
+      </M3eButtonGroup>
+      {/* Outside the group, which shapes its buttons by their position. */}
+      {actions.map((action, index) => (
+        <Tooltip
           key={action.accessibilityLabel}
-          variant="tonal"
-          size="extra-small"
-          aria-label={action.accessibilityLabel}
-          title={action.title}
-          disabled={action.disabled}
-          onClick={action.onPress}
-        >
-          <M3eIcon name={action.icon} />
-        </M3eIconButton>
+          controlId={`${id}-${index}`}
+          text={action.tooltip}
+        />
       ))}
-    </M3eButtonGroup>
+    </>
   );
 }

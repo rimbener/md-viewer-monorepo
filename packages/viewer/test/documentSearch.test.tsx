@@ -51,12 +51,21 @@ function expectBackgrounds(content: string, colors: string[]): void {
   );
 }
 
-it('names each tool', async () => {
+it('explains the tools in tooltips, not in titles above them', async () => {
   await renderApp();
+  const tipFor = (control: HTMLElement) =>
+    Array.from(document.querySelectorAll('m3e-tooltip')).find(
+      tip => (tip as HTMLElement & { htmlFor: string }).htmlFor === control.id,
+    );
 
-  ['History', 'Preview', 'Font', 'Width', 'Zoom', 'Find'].forEach(title =>
-    expect(screen.getByText(title)).toBeInTheDocument(),
+  ['History', 'Font', 'Width', 'Zoom', 'Find'].forEach(title =>
+    expect(screen.queryByText(title, { exact: true })).toBeNull(),
   );
+  for (const name of ['Back', 'Next', 'Change font, currently Editorial']) {
+    const control = screen.getByRole('button', { name });
+    expect(control.id).not.toBe('');
+    expect(tipFor(control)).toBeDefined();
+  }
 });
 
 it('places the field last in the header', async () => {
@@ -134,7 +143,7 @@ function previewHits(): HTMLElement[] {
 it('finds in the source, not the preview, while the split shows', async () => {
   const user = userEvent.setup();
   await renderApp();
-  await user.click(screen.getByRole('button', { name: 'Show editor' }));
+  await user.click(screen.getByRole('radio', { name: 'Split' }));
 
   // `# Title` is a hit in the source only: the preview drops the `#`.
   await user.type(findField(), '# t');
@@ -147,8 +156,8 @@ it('finds in the source, not the preview, while the split shows', async () => {
 it('finds in the source when only the editor shows', async () => {
   const user = userEvent.setup();
   await renderApp();
-  await user.click(screen.getByRole('button', { name: 'Show editor' }));
-  await user.click(screen.getByRole('button', { name: 'Show editor only' }));
+  await user.click(screen.getByRole('radio', { name: 'Split' }));
+  await user.click(screen.getByRole('radio', { name: 'Editor' }));
 
   await user.type(findField(), 'alpha');
   await user.click(screen.getByRole('button', { name: 'Next match' }));
@@ -163,7 +172,7 @@ it('finds in the source when only the editor shows', async () => {
 it('counts the source again as it is typed', async () => {
   const user = userEvent.setup();
   await renderApp();
-  await user.click(screen.getByRole('button', { name: 'Show editor' }));
+  await user.click(screen.getByRole('radio', { name: 'Split' }));
   await user.type(findField(), 'alpha');
 
   await user.type(
@@ -177,11 +186,11 @@ it('counts the source again as it is typed', async () => {
 it('finds in the preview again once the editor hides', async () => {
   const user = userEvent.setup();
   await renderApp();
-  await user.click(screen.getByRole('button', { name: 'Show editor' }));
-  await user.click(screen.getByRole('button', { name: 'Show editor only' }));
+  await user.click(screen.getByRole('radio', { name: 'Split' }));
+  await user.click(screen.getByRole('radio', { name: 'Editor' }));
   await user.type(findField(), 'alpha');
 
-  await user.click(screen.getByRole('button', { name: 'Show preview only' }));
+  await user.click(screen.getByRole('radio', { name: 'Preview' }));
 
   expect(screen.queryByTestId('editor-marks')).not.toBeInTheDocument();
   expect(previewHits()).toHaveLength(2);

@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 4 (toolbar, editor modes, split pane).
+- **Next:** step 5 (find and inputs).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -290,7 +290,19 @@ Planned:
 - Delete `ToolButton.tsx`. Keep `Segmented.tsx`: `DocumentSearch` uses it
   until step 5.
 
-### 4. Toolbar, editor modes, split pane
+### 4. Toolbar, editor modes, split pane (done)
+
+Result: `Tooltip.tsx` (`useControlId()` makes ids that m3e can find with
+`querySelector`; `Tooltip` wraps `M3eTooltip htmlFor`). `EditorToggle` is a
+segmented button with icon segments named Preview / Split / Editor (test ids
+kept). `EditorSplit.tsx` replaces `SplitDivider`: the pane stays mounted in
+source mode with no end slot, `disabled`, and handle width 0. Double click
+reset checks `composedPath()` for `#drag-handle`. Learned: `htmlFor` on
+`m3e-tooltip` is a property, not an attribute; read `.checked` (not
+`aria-checked`) in tests right after a click; jsdom needs
+`hasPointerCapture` (added to the polyfills).
+
+Planned:
 
 - **Toolbar:** `DocumentPanel` title row → `m3e-app-bar` (file info).
   `ColorSchemeControl` goes in the `trailing` slot, also in the empty "no

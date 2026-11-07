@@ -211,12 +211,12 @@ app checks its size and change time each second. When it changes, it is read
 again, so a save in another editor shows up without switching away. A session
 edit is left alone: the header says the file changed, and the buffer stays.
 
-The editor button steps through three views: preview only, preview and
-editor, and editor only, then back to preview only. The app remembers the view
-for the next launch. The title above the button names the view on screen:
-Preview, Split or Editor, and the button draws a page, two panes or a pencil.
-Command-E, or Control-E off the Mac, does the same as the
-editor button, and only while that button is enabled.
+The editor button has three segments: Preview (preview only), Split (preview
+and editor) and Editor (editor only). Their icons are a page, two panes and a
+note with a pencil. The app remembers the view for the next launch.
+Command-E, or Control-E off the Mac, steps to the next view, and only while
+the button is enabled. The editor stays the same textarea between Split and
+Editor, so the caret, the selection and the scroll stay.
 
 The editor has a Save icon button to the right of the editor button. It writes the
 buffer to the file and clears `edited, not saved`. Command-S, or Control-S
@@ -234,9 +234,9 @@ history while the app runs.
 The editor and the preview scroll together. When you scroll one, the other
 goes to the same fraction of its length.
 
-Drag the line between the editor and the preview to resize the two panes.
-Each pane keeps at least 20% of the width. The arrow keys move the line in 5%
-steps when it has focus. A double click sets an even split again. The app
+Drag the handle between the editor and the preview to resize the two panes.
+Each pane keeps at least 20% of the width. The arrow keys move the handle in 5%
+steps when it has focus. A double click on the handle sets an even split again. The app
 remembers the split for the next launch.
 
 Blank space follows the last line. Its height is the view height, minus one
@@ -246,7 +246,12 @@ its last line.
 
 ## Find
 
-The file name sits on its own row above the tools. Each tool has a small title: History, the editor view, Font, Width, Zoom, and Find. Find is the last control on that tools row.
+The file name sits on its own row (an app bar) above the tools, with the
+color scheme control at its right end. The tools row is a toolbar, in this
+order: History, the Gherkin toggle when it applies, the editor button with
+Save and Undo/Redo, then Font, Width, Zoom and Find. The tools have no titles;
+each one explains itself in a tooltip on hover or focus. Find is the last
+control on that tools row.
 
 The sidebar toggle is not on that row. It is a round toggle icon button at the
 vertical middle of the header, centred on the sidebar's right edge. It is

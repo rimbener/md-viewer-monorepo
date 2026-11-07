@@ -18,7 +18,7 @@ export {
   M3eButtonSegment,
   M3eSegmentedButton,
 } from '@m3e/react/segmented-button';
-export { M3eSplitPane } from '@m3e/react/split-pane';
+export { M3eSplitPane, type M3eSplitPaneElement } from '@m3e/react/split-pane';
 export { M3eTheme } from '@m3e/react/theme';
 export { M3eToolbar } from '@m3e/react/toolbar';
 export { M3eTooltip } from '@m3e/react/tooltip';

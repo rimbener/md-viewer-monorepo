@@ -23,14 +23,14 @@ export function HistoryNav({
         {
           icon: 'chevron_left',
           accessibilityLabel: 'Back',
-          title: 'Shows the previous file opened in this folder',
+          tooltip: 'Shows the previous file opened in this folder',
           disabled: !canGoBack,
           onPress: onBack,
         },
         {
           icon: 'chevron_right',
           accessibilityLabel: 'Next',
-          title: 'Shows the next file opened in this folder',
+          tooltip: 'Shows the next file opened in this folder',
           disabled: !canGoNext,
           onPress: onNext,
         },

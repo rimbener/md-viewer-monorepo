@@ -38,14 +38,11 @@ import {
 } from '../preferences';
 import { useScrollMemory } from '../scrollMemory';
 import { useScrollSync } from '../scrollSync';
-import {
-  EDITOR_MODE_TITLE,
-  nextEditorMode,
-  type EditorMode,
-} from '../editorMode';
+import { nextEditorMode, type EditorMode } from '../editorMode';
 import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
 import type { FileNode } from '../types';
+import { M3eAppBar, M3eToolbar } from '../m3e';
 import { isHttpUrl } from '../url';
 import {
   CODE_FONT,
@@ -66,7 +63,7 @@ import { GherkinToggle } from './GherkinToggle';
 import { SaveButton } from './SaveButton';
 import { SidebarToggle, SIDEBAR_TOGGLE_CLEARANCE } from './SidebarToggle';
 import { Spinner } from './Spinner';
-import { SplitDivider } from './SplitDivider';
+import { EditorSplit } from './EditorSplit';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
@@ -262,12 +259,16 @@ export function DocumentPanel({
   }, []);
 
   // The write stays out of the state updater, which React may call twice.
-  const toggleEditor = useCallback(() => {
+  const chooseEditorMode = useCallback((next: EditorMode) => {
     hasChosenEditor.current = true;
-    const next = nextEditorMode(editorMode);
     setEditorMode(next);
     saveEditorMode(next);
-  }, [editorMode]);
+  }, []);
+
+  const toggleEditor = useCallback(
+    () => chooseEditorMode(nextEditorMode(editorMode)),
+    [chooseEditorMode, editorMode],
+  );
 
   const changeEditorFraction = useCallback((next: number) => {
     hasChosenEditorFraction.current = true;
@@ -656,14 +657,12 @@ export function DocumentPanel({
   );
 
   const historyTool = (
-    <Tool title="History">
-      <HistoryNav
-        canGoBack={canGoBack}
-        canGoNext={canGoNext}
-        onBack={onBack}
-        onNext={onNext}
-      />
-    </Tool>
+    <HistoryNav
+      canGoBack={canGoBack}
+      canGoNext={canGoNext}
+      onBack={onBack}
+      onNext={onNext}
+    />
   );
 
   const headerStyle: CSSProperties = {
@@ -685,7 +684,7 @@ export function DocumentPanel({
         <header style={headerStyle}>
           {sidebarToggle}
           <TitleRow />
-          <div style={styles.tools}>{historyTool}</div>
+          <M3eToolbar style={styles.tools}>{historyTool}</M3eToolbar>
         </header>
         <div style={{ ...styles.body, ...styles.centered }}>
           <span style={{ ...styles.message, color: theme.mutedText }}>
@@ -767,10 +766,7 @@ export function DocumentPanel({
       <header style={headerStyle}>
         {sidebarToggle}
         <TitleRow>
-          <h1
-            title={file.path}
-            style={{ ...styles.fileName, ...oneLine, color: theme.text }}
-          >
+          <h1 title={file.path} style={{ ...styles.fileName, ...oneLine }}>
             {file.name}
           </h1>
           <span
@@ -785,72 +781,55 @@ export function DocumentPanel({
               : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
           </span>
         </TitleRow>
-        <div style={styles.tools}>
+        <M3eToolbar style={styles.tools}>
           {historyTool}
           {canRenderGherkin ? (
-            <Tool title="Gherkin">
-              <GherkinToggle
-                isActive={isGherkin}
-                onToggle={() => setGherkinPath(isGherkin ? null : path)}
-              />
-            </Tool>
+            <GherkinToggle
+              isActive={isGherkin}
+              onToggle={() => setGherkinPath(isGherkin ? null : path)}
+            />
           ) : null}
-          <Tool title={EDITOR_MODE_TITLE[editorMode]}>
-            <div style={styles.toolRow}>
-              <EditorToggle
-                mode={editorMode}
-                disabled={!canEdit}
-                onToggle={toggleEditor}
+          <EditorToggle
+            mode={editorMode}
+            disabled={!canEdit}
+            onChange={chooseEditorMode}
+          />
+          {isEditing ? (
+            <>
+              <SaveButton disabled={!canSave} onSave={save} />
+              <UndoRedo
+                canUndo={canUndo(history)}
+                canRedo={canRedo(history)}
+                onUndo={undo}
+                onRedo={redo}
               />
-              {isEditing ? (
-                <>
-                  <SaveButton disabled={!canSave} onSave={save} />
-                  <UndoRedo
-                    canUndo={canUndo(history)}
-                    canRedo={canRedo(history)}
-                    onUndo={undo}
-                    onRedo={redo}
-                  />
-                </>
-              ) : null}
-            </div>
-          </Tool>
+            </>
+          ) : null}
           <div style={{ flex: 1 }} />
-          <Tool title="Font">
-            <FontControl schemeId={schemeId} onChange={changeScheme} />
-          </Tool>
-          <Tool title="Width">
-            <ColumnControl
-              characters={characters}
-              onChange={changeCharacters}
-            />
-          </Tool>
-          <Tool title="Zoom">
-            <ZoomControl scale={scale} onChange={changeZoom} />
-          </Tool>
-          <Tool title="Find">
-            <DocumentSearch
-              query={query}
-              count={matchCount}
-              active={active}
-              capped={capped}
-              onQuery={changeQuery}
-              onActive={setActive}
-              replace={
-                canEdit
-                  ? {
-                      isEnabled: findsInSource,
-                      focusKey: replaceFocusKey,
-                      value: replacement,
-                      onValue: setReplacement,
-                      onReplaceOne: replaceOne,
-                      onReplaceAll: replaceEvery,
-                    }
-                  : null
-              }
-            />
-          </Tool>
-        </div>
+          <FontControl schemeId={schemeId} onChange={changeScheme} />
+          <ColumnControl characters={characters} onChange={changeCharacters} />
+          <ZoomControl scale={scale} onChange={changeZoom} />
+          <DocumentSearch
+            query={query}
+            count={matchCount}
+            active={active}
+            capped={capped}
+            onQuery={changeQuery}
+            onActive={setActive}
+            replace={
+              canEdit
+                ? {
+                    isEnabled: findsInSource,
+                    focusKey: replaceFocusKey,
+                    value: replacement,
+                    onValue: setReplacement,
+                    onReplaceOne: replaceOne,
+                    onReplaceAll: replaceEvery,
+                  }
+                : null
+            }
+          />
+        </M3eToolbar>
       </header>
 
       <FindProvider
@@ -870,14 +849,13 @@ export function DocumentPanel({
             </span>
           </div>
         ) : isEditing ? (
-          <div style={styles.split}>
-            <div
-              style={{
-                ...styles.source,
-                flexBasis:
-                  editorMode === 'source' ? '100%' : `${editorFraction * 100}%`,
-              }}
-            >
+          <EditorSplit
+            isSplit={editorMode === 'split'}
+            fraction={editorFraction}
+            onChange={changeEditorFraction}
+            onCommit={saveEditorFraction}
+            preview={document}
+            editor={
               <Editor
                 value={text ?? ''}
                 scale={scale}
@@ -893,18 +871,8 @@ export function DocumentPanel({
                     : { query, starts: sourceMatches.starts, active }
                 }
               />
-            </div>
-            {editorMode === 'split' ? (
-              <>
-                <SplitDivider
-                  fraction={editorFraction}
-                  onChange={changeEditorFraction}
-                  onCommit={saveEditorFraction}
-                />
-                <div style={styles.preview}>{document}</div>
-              </>
-            ) : null}
-          </div>
+            }
+          />
         ) : (
           document
         )}
@@ -921,29 +889,14 @@ type TitleRowProps = {
 
 function TitleRow({ children }: TitleRowProps) {
   return (
-    <div style={styles.titleRow}>
-      <div style={styles.fileInfo}>{children}</div>
-      <ColorSchemeControl />
-    </div>
-  );
-}
-
-type ToolProps = {
-  title: string;
-  children: ReactNode;
-};
-
-/** A short name above one header control. */
-function Tool({ title, children }: ToolProps) {
-  const theme = useTheme();
-
-  return (
-    <div style={styles.tool}>
-      <span style={{ ...styles.toolTitle, color: theme.mutedText }}>
-        {title}
-      </span>
-      {children}
-    </div>
+    <M3eAppBar size="small" style={styles.titleRow}>
+      <div slot="title" style={styles.fileInfo}>
+        {children}
+      </div>
+      <div slot="trailing">
+        <ColorSchemeControl />
+      </div>
+    </M3eAppBar>
   );
 }
 
@@ -990,17 +943,15 @@ const styles = {
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
-    gap: 10,
-    padding: '18px 24px 12px',
+    padding: '4px 24px 8px',
     borderBottom: '1px solid',
   },
   titleRow: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
+    '--m3e-app-bar-container-color': 'transparent',
+    '--m3e-app-bar-padding-left': '0px',
+    '--m3e-app-bar-padding-right': '0px',
+  } as CSSProperties,
   fileInfo: {
-    flex: 1,
     display: 'flex',
     minWidth: 0,
     gap: 4,
@@ -1008,27 +959,14 @@ const styles = {
   tools: {
     display: 'flex',
     flexWrap: 'wrap',
-    alignItems: 'flex-end',
-    gap: 12,
-  },
-  tool: {
-    display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
-    gap: 4,
-  },
-  toolRow: {
-    display: 'flex',
-    gap: 6,
-  },
-  toolTitle: {
-    fontSize: 10,
-  },
+    gap: 8,
+    '--m3e-toolbar-container-color': 'transparent',
+  } as CSSProperties,
   fileName: {
     flexShrink: 1,
     margin: 0,
-    fontSize: 18,
-    fontWeight: 600,
+    font: 'inherit',
   },
   filePath: {
     flexShrink: 0,
@@ -1043,24 +981,6 @@ const styles = {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-  },
-  // Source on the left, rendered document on the right; the divider sets the share.
-  split: {
-    flex: 1,
-    minHeight: 0,
-    display: 'flex',
-  },
-  source: {
-    flexGrow: 0,
-    flexShrink: 0,
-    minWidth: 0,
-    display: 'flex',
-  },
-  preview: {
-    flex: 1,
-    minWidth: 0,
-    display: 'flex',
-    flexDirection: 'column',
   },
   content: {
     padding: '20px 24px',

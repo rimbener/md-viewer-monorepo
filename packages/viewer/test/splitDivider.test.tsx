@@ -1,9 +1,10 @@
 /**
- * Dragging the line between the editor and the preview to resize them.
+ * Resizing the editor and the preview with the split pane between them.
  */
 
 import { fireEvent, screen } from '@testing-library/react';
 
+import type { M3eSplitPaneElement } from '../src/m3e';
 import {
   createFakePlatform,
   renderViewer,
@@ -12,13 +13,6 @@ import {
 } from './fakePlatform';
 
 const FRACTION_KEY = 'mdviewer.editorFraction';
-
-// jsdom has no PointerEvent, and the plain Event it falls back to drops clientX.
-if (typeof window.PointerEvent === 'undefined') {
-  window.PointerEvent = class extends MouseEvent {
-    pointerId = 1;
-  } as unknown as typeof PointerEvent;
-}
 
 beforeEach(() => {
   storeSession('/notes', '/notes/notes.md');
@@ -30,92 +24,100 @@ async function openEditor(): Promise<void> {
     { '/notes/notes.md': '# Notes' },
   );
   await renderViewer(platform);
-  fireEvent.click(screen.getByRole('button', { name: 'Show editor' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Split' }));
+  await settle();
 }
 
-function divider(): HTMLElement {
-  return screen.getByRole('separator', { name: 'Resize editor' });
+function pane(): M3eSplitPaneElement {
+  return document.querySelector('m3e-split-pane') as M3eSplitPaneElement;
 }
 
-function sourceShare(): string {
-  const field = screen.getByRole('textbox', { name: 'Markdown source' });
-  return field.parentElement!.parentElement!.style.flexBasis;
+/** The drag handle lives in the pane's shadow root, out of `getByRole`. */
+function handle(): HTMLElement {
+  return pane().shadowRoot!.querySelector('[role="separator"]')!;
 }
 
-/** jsdom lays nothing out, so the split gets a box of its own. */
-function placeSplit(left: number, width: number): void {
-  const split = divider().parentElement!.parentElement!;
-  split.getBoundingClientRect = () =>
-    ({ left, width, top: 0, height: 0 }) as DOMRect;
+/** What a drag does: m3e moves its value, then tells the page. */
+async function dragTo(value: number, end: boolean): Promise<void> {
+  pane().value = value;
+  fireEvent(pane(), new Event('input', { bubbles: true }));
+  if (end) {
+    fireEvent(pane(), new Event('change', { bubbles: true }));
+  }
+  await settle();
 }
 
-it('splits evenly by default', async () => {
+it('splits evenly by default, between 20% and 80%', async () => {
   await openEditor();
 
-  expect(sourceShare()).toBe('50%');
-  expect(divider()).toHaveAttribute('aria-valuenow', '50');
+  expect(pane().value).toBe(50);
+  expect(pane().min).toBe(20);
+  expect(pane().max).toBe(80);
+  expect(pane().step).toBe(5);
+  expect(handle()).toHaveAttribute('aria-label', 'Resize editor');
+  expect(handle()).toHaveAttribute('aria-valuenow', '50');
 });
 
-it('follows the pointer and keeps the share when released', async () => {
+it('follows a drag and keeps the share only when released', async () => {
   await openEditor();
-  placeSplit(100, 1000);
 
-  fireEvent.pointerDown(divider(), { button: 0, clientX: 600 });
-  fireEvent.pointerMove(divider(), { clientX: 400 });
+  await dragTo(30, false);
 
-  expect(sourceShare()).toBe('30%');
-  // Only the end of the drag is written.
+  expect(pane().value).toBe(30);
   expect(window.localStorage.getItem(FRACTION_KEY)).toBeNull();
 
-  fireEvent.pointerUp(divider(), { clientX: 400 });
+  await dragTo(30, true);
 
   expect(window.localStorage.getItem(FRACTION_KEY)).toBe('0.3');
 });
 
-it('stops short of either edge', async () => {
+it('ignores input that bubbles up from inside a pane', async () => {
   await openEditor();
-  placeSplit(0, 1000);
+  const field = screen.getByRole('textbox', { name: 'Markdown source' });
 
-  fireEvent.pointerDown(divider(), { button: 0, clientX: 500 });
-  fireEvent.pointerMove(divider(), { clientX: 10 });
-  expect(sourceShare()).toBe('20%');
+  fireEvent.change(field, { target: { value: '# Changed' } });
+  await settle();
 
-  fireEvent.pointerMove(divider(), { clientX: 990 });
-  expect(sourceShare()).toBe('80%');
+  expect(pane().value).toBe(50);
+  expect(window.localStorage.getItem(FRACTION_KEY)).toBeNull();
 });
 
-it('ignores pointer moves without a drag', async () => {
-  await openEditor();
-  placeSplit(0, 1000);
-
-  fireEvent.pointerMove(divider(), { clientX: 300 });
-
-  expect(sourceShare()).toBe('50%');
-});
-
-it('moves with the arrow keys and resets on double click', async () => {
+it('moves with the arrow keys and resets on a double click', async () => {
   await openEditor();
 
-  fireEvent.keyDown(divider(), { key: 'ArrowLeft' });
-  expect(divider()).toHaveAttribute('aria-valuenow', '45');
+  fireEvent.keyDown(handle(), { key: 'ArrowLeft' });
+  await settle();
+  expect(pane().value).toBe(45);
+  expect(window.localStorage.getItem(FRACTION_KEY)).toBe('0.45');
 
-  fireEvent.doubleClick(divider());
-  expect(sourceShare()).toBe('50%');
+  fireEvent.doubleClick(handle());
+  await settle();
+  expect(pane().value).toBe(50);
   expect(window.localStorage.getItem(FRACTION_KEY)).toBe('0.5');
+});
+
+it('keeps the editor mounted, with no handle, when the editor shows alone', async () => {
+  await openEditor();
+  const field = screen.getByRole('textbox', { name: 'Markdown source' });
+
+  fireEvent.click(screen.getByRole('radio', { name: 'Editor' }));
+  await settle();
+
+  expect(screen.getByRole('textbox', { name: 'Markdown source' })).toBe(field);
+  expect(pane().disabled).toBe(true);
+  expect(pane().querySelector('[slot="end"]')).toBeNull();
 });
 
 it('restores the stored share', async () => {
   window.localStorage.setItem(FRACTION_KEY, '0.65');
   await openEditor();
-  await settle();
 
-  expect(sourceShare()).toBe('65%');
+  expect(pane().value).toBe(65);
 });
 
 it('falls back to an even split for a stored share out of range', async () => {
   window.localStorage.setItem(FRACTION_KEY, '0.95');
   await openEditor();
-  await settle();
 
-  expect(sourceShare()).toBe('50%');
+  expect(pane().value).toBe(50);
 });

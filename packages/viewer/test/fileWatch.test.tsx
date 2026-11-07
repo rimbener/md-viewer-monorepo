@@ -60,7 +60,7 @@ it('rerenders the open file when it changes on disk', async () => {
 
 it('keeps a draft and says so when disk changes under it', async () => {
   await renderViewer(platform);
-  fireEvent.click(screen.getByRole('button', { name: 'Show editor' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Split' }));
   fireEvent.change(editor(), { target: { value: '# Changed' } });
   await waitOutDebounce();
 

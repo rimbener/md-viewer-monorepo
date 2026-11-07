@@ -35,10 +35,23 @@ function saveButton(): HTMLElement | null {
   return screen.queryByRole('button', { name: 'Save' });
 }
 
+const VIEWS = ['Preview', 'Split', 'Editor'] as const;
+
+function view(name: (typeof VIEWS)[number]): HTMLElement {
+  return screen.getByRole('radio', { name });
+}
+
+function checkedView(): string | undefined {
+  // The property, not `aria-checked`: m3e reflects that on a later update.
+  return VIEWS.find(
+    name => (view(name) as HTMLElement & { checked: boolean }).checked,
+  );
+}
+
+/** The segment after the checked one, as ⌘E steps. */
 function toggle(): HTMLElement {
-  return screen.getByRole('button', {
-    name: /^Show (editor|editor only|preview only)$/,
-  });
+  const index = VIEWS.findIndex(name => name === checkedView());
+  return view(VIEWS[(index + 1) % VIEWS.length]);
 }
 
 function editor(): HTMLTextAreaElement {
@@ -68,45 +81,46 @@ async function open(name: string): Promise<void> {
   await settle();
 }
 
-it('steps through preview, preview and editor, and editor only', async () => {
+it('shows preview only, preview and editor, or editor only', async () => {
   await renderApp();
   expect(hasEditor()).toBe(false);
-  expect(toggle()).toHaveAccessibleName('Show editor');
+  expect(checkedView()).toBe('Preview');
 
-  fireEvent.click(toggle());
+  fireEvent.click(view('Split'));
+  await settle();
 
   expect(editor()).toHaveValue('# Notes');
   // The document stays on screen: the editor is a second pane, not a mode.
   expect(shows('Notes')).toBe(true);
-  expect(toggle()).toHaveAccessibleName('Show editor only');
+  expect(checkedView()).toBe('Split');
 
-  fireEvent.click(toggle());
+  const field = editor();
+  fireEvent.click(view('Editor'));
+  await settle();
 
-  expect(editor()).toHaveValue('# Notes');
+  // The same textarea, so caret, selection and scroll survive.
+  expect(editor()).toBe(field);
   expect(shows('Notes')).toBe(false);
-  expect(toggle()).toHaveAccessibleName('Show preview only');
+  expect(checkedView()).toBe('Editor');
 
-  fireEvent.click(toggle());
+  fireEvent.click(view('Preview'));
+  await settle();
 
   expect(hasEditor()).toBe(false);
   expect(shows('Notes')).toBe(true);
-  expect(toggle()).toHaveAccessibleName('Show editor');
+  expect(checkedView()).toBe('Preview');
 });
 
-it('names and draws each view on the editor button', async () => {
+it('keeps the view test ids on the segments', async () => {
   await renderApp();
 
-  for (const [title, icon] of [
-    ['Preview', 'editor-mode-preview'],
-    ['Split', 'editor-mode-split'],
-    ['Editor', 'editor-mode-source'],
+  for (const id of [
+    'editor-mode-preview',
+    'editor-mode-split',
+    'editor-mode-source',
   ]) {
-    expect(screen.getByText(title)).toBeInTheDocument();
-    expect(screen.getByTestId(icon)).toBeInTheDocument();
-    fireEvent.click(toggle());
+    expect(screen.getByTestId(id)).toHaveAttribute('role', 'radio');
   }
-
-  expect(screen.getByText('Preview')).toBeInTheDocument();
 });
 
 it('rerenders the document as the source is typed', async () => {
@@ -387,10 +401,9 @@ it('writes nothing on Command-S with nothing to save', async () => {
 
 it('writes nothing on Command-S while the editor is closed', async () => {
   const platform = await renderApp();
-  fireEvent.click(toggle());
+  fireEvent.click(view('Split'));
   type('# Changed');
-  fireEvent.click(toggle());
-  fireEvent.click(toggle());
+  fireEvent.click(view('Preview'));
 
   fireEvent.keyDown(window, { key: 's', metaKey: true });
   await settle();
@@ -406,8 +419,10 @@ it.each([
 
   const isDefault = fireEvent.keyDown(window, { key: 'e', ...modifier });
   expect(isDefault).toBe(false);
-  expect(toggle()).toHaveAccessibleName('Show editor only');
+  await settle();
+  expect(checkedView()).toBe('Split');
 
   fireEvent.keyDown(window, { key: 'e', ...modifier });
-  expect(toggle()).toHaveAccessibleName('Show preview only');
+  await settle();
+  expect(checkedView()).toBe('Editor');
 });

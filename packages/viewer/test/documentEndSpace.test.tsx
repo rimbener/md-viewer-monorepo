@@ -103,7 +103,7 @@ describe('the editor', () => {
 
   async function openEditor(): Promise<void> {
     await renderPanel();
-    fireEvent.click(screen.getByRole('button', { name: 'Show editor' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Split' }));
   }
 
   function expectedEditorSpace(viewHeight: number): number {

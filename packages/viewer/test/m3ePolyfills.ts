@@ -115,3 +115,19 @@ if (typeof CSS === 'undefined' || typeof CSS.supports !== 'function') {
     CSS: { ...(globalThis.CSS ?? {}), supports: () => false },
   });
 }
+
+// m3e gestures capture the pointer that a userEvent click sends.
+if (!('hasPointerCapture' in Element.prototype)) {
+  const captured = new WeakMap<Element, Set<number>>();
+  Object.assign(Element.prototype, {
+    setPointerCapture(this: Element, id: number) {
+      captured.set(this, (captured.get(this) ?? new Set()).add(id));
+    },
+    releasePointerCapture(this: Element, id: number) {
+      captured.get(this)?.delete(id);
+    },
+    hasPointerCapture(this: Element, id: number) {
+      return captured.get(this)?.has(id) ?? false;
+    },
+  });
+}
