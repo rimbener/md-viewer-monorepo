@@ -62,7 +62,7 @@ function m3Scheme(): string | undefined {
 }
 
 function schemeButton(label: string): HTMLElement {
-  return screen.getByRole('button', { name: label });
+  return screen.getByRole('radio', { name: label });
 }
 
 function follows(first: Node, second: Node): boolean {
@@ -87,7 +87,7 @@ it('starts on System and switches the document to dark', async () => {
   await renderPanel();
 
   expect(schemeButton('System color scheme')).toHaveAttribute(
-    'aria-pressed',
+    'aria-checked',
     'true',
   );
   expect(m3Scheme()).toBe('auto');
@@ -97,7 +97,7 @@ it('starts on System and switches the document to dark', async () => {
 
   expect(m3Scheme()).toBe('dark');
   expect(schemeButton('Dark color scheme')).toHaveAttribute(
-    'aria-pressed',
+    'aria-checked',
     'true',
   );
   expect(document.documentElement.style.colorScheme).toBe('dark');

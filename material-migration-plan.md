@@ -4,8 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected).
-- **Next:** step 3 (buttons).
+  not done: Chrome extension was not connected), step 3 (buttons).
+- **Owner checks in browser at the end** of the migration, not per step.
+- **Next:** step 4 (toolbar, editor modes, split pane).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -264,7 +265,16 @@ density={-2} scheme={…}>`. Map our scheme ids (`colorScheme.ts`):
   `change` event, with a fixed fallback in `theme.ts` for jsdom. `mermaid.ts`
   uses it. Update `mermaid.test.ts`.
 
-### 3. Buttons
+### 3. Buttons (done)
+
+Result: shared `PairedIconButtons` (history, undo/redo) and `StepControl`
+(zoom, width). Toggles cancel `beforeinput` and call React. `EditorToggle` is
+a temporary `m3e-icon-button` with the old SVG until step 4. Font button shows
+only the scheme name. Learned: m3e reflects `disabled` on its async update,
+so tests `await settle()` before `toBeDisabled()`; `m3e-icon` `name` is a
+property, not an attribute; segments have role `radio` + `aria-checked`.
+
+Planned:
 
 | Now                            | m3e                                                                                                                                                                                |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

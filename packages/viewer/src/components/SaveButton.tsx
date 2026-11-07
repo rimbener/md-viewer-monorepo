@@ -1,5 +1,6 @@
-import { useTheme } from '../theme';
-import { ToolButton } from './ToolButton';
+import '@m3e/icons/outlined/save';
+
+import { M3eIcon, M3eIconButton } from '../m3e';
 
 interface SaveButtonProps {
   disabled?: boolean;
@@ -8,18 +9,16 @@ interface SaveButtonProps {
 
 /** Writes the edited source over the file on disk. */
 export function SaveButton({ disabled = false, onSave }: SaveButtonProps) {
-  const theme = useTheme();
-
   return (
-    <ToolButton
-      accessibilityLabel="Save"
+    <M3eIconButton
+      variant="tonal"
+      size="extra-small"
+      aria-label="Save"
       title="Writes the edited source to the file (⌘S, Ctrl+S)"
       disabled={disabled}
-      onPress={onSave}
+      onClick={onSave}
     >
-      <span style={{ color: disabled ? theme.mutedText : theme.accent }}>
-        Save
-      </span>
-    </ToolButton>
+      <M3eIcon name="save" />
+    </M3eIconButton>
   );
 }

@@ -195,12 +195,15 @@ it('shows Save only while the editor is open', async () => {
   expect(saveButton()).toBeNull();
 
   fireEvent.click(toggle());
+  await settle();
   expect(saveButton()).toBeDisabled();
 
   type('# Changed');
+  await settle();
   expect(saveButton()).toBeEnabled();
 
   fireEvent.click(toggle());
+  await settle();
   expect(saveButton()).toBeEnabled();
 
   fireEvent.click(toggle());
@@ -264,6 +267,7 @@ it('shows Undo and Redo only while the editor is open', async () => {
   expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull();
 
   fireEvent.click(toggle());
+  await settle();
 
   expect(undoButton()).toBeDisabled();
   expect(redoButton()).toBeDisabled();
@@ -276,10 +280,12 @@ it('takes edits back and puts them back with the buttons', async () => {
   await typeStep('# Two');
 
   fireEvent.click(undoButton());
+  await settle();
   expect(editor()).toHaveValue('# One');
   expect(redoButton()).toBeEnabled();
 
   fireEvent.click(undoButton());
+  await settle();
   expect(editor()).toHaveValue('# Notes');
   // Back to what is on disk, so there is nothing left to save.
   expect(screen.queryByText(/edited, not saved/)).toBeNull();

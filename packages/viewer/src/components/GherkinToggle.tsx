@@ -1,5 +1,6 @@
-import { useTheme } from '../theme';
-import { ToolButton } from './ToolButton';
+import '@m3e/icons/outlined/checklist';
+
+import { M3eIcon, M3eIconButton } from '../m3e';
 
 interface GherkinToggleProps {
   isActive: boolean;
@@ -8,23 +9,20 @@ interface GherkinToggleProps {
 
 /** Lays out an unfenced `Feature:` as Gherkin, or back as markdown. */
 export function GherkinToggle({ isActive, onToggle }: GherkinToggleProps) {
-  const theme = useTheme();
-
   return (
-    <ToolButton
-      accessibilityLabel={isActive ? 'Render as markdown' : 'Render as gherkin'}
+    <M3eIconButton
+      toggle
+      selected={isActive}
+      size="extra-small"
+      aria-label={isActive ? 'Render as markdown' : 'Render as gherkin'}
       title="Lays out an unfenced Feature: as Gherkin"
-      isActive={isActive}
-      onPress={onToggle}
+      onBeforeInput={(event: Event) => {
+        // React owns `selected`; the button must not flip itself.
+        event.preventDefault();
+        onToggle();
+      }}
     >
-      <span
-        style={{
-          fontSize: 12,
-          color: isActive ? theme.accent : theme.mutedText,
-        }}
-      >
-        Render as gherkin
-      </span>
-    </ToolButton>
+      <M3eIcon name="checklist" />
+    </M3eIconButton>
   );
 }

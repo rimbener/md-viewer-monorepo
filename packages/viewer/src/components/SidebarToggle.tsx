@@ -1,6 +1,9 @@
-import { useTheme } from '../theme';
+import '@m3e/icons/outlined/left_panel_close';
+import '@m3e/icons/outlined/left_panel_open';
 
-const SIZE = 28;
+import { M3eIcon, M3eIconButton } from '../m3e';
+
+const SIZE = 32;
 
 /** Gap to the window edge while the sidebar is hidden. */
 const CLOSED_INSET = 6;
@@ -14,42 +17,33 @@ interface SidebarToggleProps {
 }
 
 /**
- * Shows and hides the file tree. A circle at the vertical middle of the
- * header, centred on the sidebar's edge, so it is never inside the panel it
- * hides. Its parent must be positioned.
+ * Shows and hides the file tree. At the vertical middle of the header,
+ * centred on the sidebar's edge, so it is never inside the panel it hides.
+ * Its parent must be positioned.
  */
 export function SidebarToggle({ isVisible, onToggle }: SidebarToggleProps) {
-  const theme = useTheme();
-
   return (
-    <button
-      type="button"
-      className="pressable"
+    <M3eIconButton
+      toggle
+      selected={isVisible}
+      variant="tonal"
+      size="extra-small"
       aria-label={isVisible ? 'Hide sidebar' : 'Show sidebar'}
       title="Shows or hides the list of markdown files (⌘B, Ctrl+B)"
-      onClick={onToggle}
+      onBeforeInput={(event: Event) => {
+        // React owns `selected`; the button must not flip itself.
+        event.preventDefault();
+        onToggle();
+      }}
       style={{
         position: 'absolute',
         top: '50%',
         left: isVisible ? -SIZE / 2 : CLOSED_INSET,
         zIndex: 1,
-        width: SIZE,
-        height: SIZE,
         marginTop: -SIZE / 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 0,
-        border: `1px solid ${theme.border}`,
-        borderRadius: '50%',
-        backgroundColor: theme.background,
-        boxShadow: theme.floatShadow,
-        color: theme.mutedText,
-        fontSize: 14,
-        lineHeight: 1,
       }}
     >
-      {isVisible ? '←' : '→'}
-    </button>
+      <M3eIcon name={isVisible ? 'left_panel_close' : 'left_panel_open'} />
+    </M3eIconButton>
   );
 }

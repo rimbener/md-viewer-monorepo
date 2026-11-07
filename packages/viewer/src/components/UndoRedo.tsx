@@ -1,4 +1,7 @@
-import { Segment, SegmentedGroup } from './Segmented';
+import '@m3e/icons/outlined/redo';
+import '@m3e/icons/outlined/undo';
+
+import { PairedIconButtons } from './PairedIconButtons';
 
 interface UndoRedoProps {
   canUndo: boolean;
@@ -10,23 +13,23 @@ interface UndoRedoProps {
 /** Undo and Redo through the edits made to the open document. */
 export function UndoRedo({ canUndo, canRedo, onUndo, onRedo }: UndoRedoProps) {
   return (
-    <SegmentedGroup>
-      <Segment
-        label="↶"
-        accessibilityLabel="Undo"
-        title="Takes back the last edit"
-        fontSize={16}
-        disabled={!canUndo}
-        onPress={onUndo}
-      />
-      <Segment
-        label="↷"
-        accessibilityLabel="Redo"
-        title="Puts back the edit that Undo took back"
-        fontSize={16}
-        disabled={!canRedo}
-        onPress={onRedo}
-      />
-    </SegmentedGroup>
+    <PairedIconButtons
+      actions={[
+        {
+          icon: 'undo',
+          accessibilityLabel: 'Undo',
+          title: 'Takes back the last edit',
+          disabled: !canUndo,
+          onPress: onUndo,
+        },
+        {
+          icon: 'redo',
+          accessibilityLabel: 'Redo',
+          title: 'Puts back the edit that Undo took back',
+          disabled: !canRedo,
+          onPress: onRedo,
+        },
+      ]}
+    />
   );
 }

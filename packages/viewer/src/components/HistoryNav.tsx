@@ -1,4 +1,7 @@
-import { Segment, SegmentedGroup } from './Segmented';
+import '@m3e/icons/outlined/chevron_left';
+import '@m3e/icons/outlined/chevron_right';
+
+import { PairedIconButtons } from './PairedIconButtons';
 
 interface HistoryNavProps {
   canGoBack: boolean;
@@ -15,23 +18,23 @@ export function HistoryNav({
   onNext,
 }: HistoryNavProps) {
   return (
-    <SegmentedGroup>
-      <Segment
-        label="‹"
-        accessibilityLabel="Back"
-        title="Shows the previous file opened in this folder"
-        fontSize={16}
-        disabled={!canGoBack}
-        onPress={onBack}
-      />
-      <Segment
-        label="›"
-        accessibilityLabel="Next"
-        title="Shows the next file opened in this folder"
-        fontSize={16}
-        disabled={!canGoNext}
-        onPress={onNext}
-      />
-    </SegmentedGroup>
+    <PairedIconButtons
+      actions={[
+        {
+          icon: 'chevron_left',
+          accessibilityLabel: 'Back',
+          title: 'Shows the previous file opened in this folder',
+          disabled: !canGoBack,
+          onPress: onBack,
+        },
+        {
+          icon: 'chevron_right',
+          accessibilityLabel: 'Next',
+          title: 'Shows the next file opened in this folder',
+          disabled: !canGoNext,
+          onPress: onNext,
+        },
+      ]}
+    />
   );
 }

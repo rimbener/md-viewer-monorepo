@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 
 import type { EditorMode } from '../editorMode';
-import { useTheme } from '../theme';
-import { ToolButton } from './ToolButton';
+import { M3eIconButton } from '../m3e';
 
 interface EditorToggleProps {
   mode: EditorMode;
@@ -26,16 +25,14 @@ export function EditorToggle({
   disabled = false,
   onToggle,
 }: EditorToggleProps) {
-  const theme = useTheme();
-  const isOpen = mode !== 'preview';
-
   return (
-    <ToolButton
-      accessibilityLabel={NEXT_LABEL[mode]}
+    <M3eIconButton
+      variant={mode === 'preview' ? 'outlined' : 'tonal'}
+      size="extra-small"
+      aria-label={NEXT_LABEL[mode]}
       title="Steps through preview, preview and editor, and editor only (⌘E, Ctrl+E)"
       disabled={disabled}
-      isActive={isOpen}
-      onPress={onToggle}
+      onClick={onToggle}
     >
       <svg
         data-testid={`editor-mode-${mode}`}
@@ -43,7 +40,7 @@ export function EditorToggle({
         height={16}
         viewBox="0 0 16 16"
         fill="none"
-        stroke={isOpen ? theme.accent : theme.mutedText}
+        stroke="currentColor"
         strokeWidth={1.3}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -52,7 +49,7 @@ export function EditorToggle({
       >
         {ICONS[mode]}
       </svg>
-    </ToolButton>
+    </M3eIconButton>
   );
 }
 

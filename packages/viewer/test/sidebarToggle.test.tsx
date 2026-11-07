@@ -4,7 +4,12 @@
 
 import { fireEvent, screen } from '@testing-library/react';
 
-import { createFakePlatform, renderViewer, storeSession } from './fakePlatform';
+import {
+  createFakePlatform,
+  renderViewer,
+  settle,
+  storeSession,
+} from './fakePlatform';
 
 beforeEach(() => {
   storeSession('/notes');
@@ -57,14 +62,21 @@ it.each([
   expect(showsTree()).toBe(true);
 });
 
+function iconName(): string | null {
+  return toggle().querySelector('m3e-icon')?.name ?? null;
+}
+
 it('points the way the sidebar will move', async () => {
   await renderApp();
-  expect(toggle()).toHaveTextContent('←');
-  expect(toggle()).toHaveStyle({ position: 'absolute', left: '-14px' });
+  expect(toggle()).toHaveAttribute('aria-pressed', 'true');
+  expect(iconName()).toBe('left_panel_close');
+  expect(toggle()).toHaveStyle({ position: 'absolute', left: '-16px' });
 
   fireEvent.click(toggle());
+  await settle();
 
-  expect(toggle()).toHaveTextContent('→');
+  expect(toggle()).toHaveAttribute('aria-pressed', 'false');
+  expect(iconName()).toBe('left_panel_open');
   expect(toggle()).toHaveStyle({ left: '6px' });
 });
 
@@ -72,7 +84,7 @@ it('floats at the middle of the header, outside the tools', async () => {
   await renderApp();
   const header = toggle().closest('header') as HTMLElement;
 
-  expect(toggle()).toHaveStyle({ top: '50%', marginTop: '-14px' });
+  expect(toggle()).toHaveStyle({ top: '50%', marginTop: '-16px' });
   expect(header).toHaveStyle({ position: 'relative' });
   expect(screen.queryByText('Sidebar')).toBeNull();
 });
@@ -84,7 +96,7 @@ it('moves the header clear of the button while the tree is hidden', async () => 
 
   fireEvent.click(toggle());
 
-  expect(header()).toHaveStyle({ paddingLeft: '44px' });
+  expect(header()).toHaveStyle({ paddingLeft: '48px' });
 });
 
 it('remembers that the tree was hidden', async () => {

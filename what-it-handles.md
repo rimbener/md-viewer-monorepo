@@ -114,7 +114,8 @@ above it.
 
 A feature written straight into the document, with no fence, reads as markdown
 by default. When a top-level line starts with `Feature:`, `Business Need:` or
-`Ability:`, a "Render as gherkin" button shows in the tools row. It lays the
+`Ability:`, a "Render as gherkin" toggle button (a checklist icon) shows in the tools
+row. It lays the
 feature out as if it were fenced, from that line to the next column-0 `#`,
 fence or rule. The choice holds for the open document only, and resets when
 another document opens.
@@ -217,13 +218,16 @@ Preview, Split or Editor, and the button draws a page, two panes or a pencil.
 Command-E, or Control-E off the Mac, does the same as the
 editor button, and only while that button is enabled.
 
-The editor has a Save button to the right of the editor button. It writes the
+The editor has a Save icon button to the right of the editor button. It writes the
 buffer to the file and clears `edited, not saved`. Command-S, or Control-S
 off the Mac, does the same. The desktop app writes
 through the file system. The web app asks the browser for write access on the
 first save.
 
-Undo and Redo sit to the right of Save. Command-Z or Control-Z undoes;
+Undo and Redo sit to the right of Save, as two joined icon buttons. Back and
+Next in History look the same. Font is an outlined button with the font name.
+Width and Zoom each have −, the value and +: pressing the value resets it, and
+it is disabled at the default. Command-Z or Control-Z undoes;
 Shift-Command-Z, Shift-Control-Z or Control-Y redoes. Each file keeps its own
 history while the app runs.
 
@@ -244,10 +248,11 @@ its last line.
 
 The file name sits on its own row above the tools. Each tool has a small title: History, the editor view, Font, Width, Zoom, and Find. Find is the last control on that tools row.
 
-The sidebar toggle is not on that row. It is a round button at the vertical
-middle of the header, centred on the sidebar's right edge. It shows `←` to
-hide the sidebar. While the sidebar is hidden, it moves to the window's left
-edge and shows `→`, and the header moves right to make space for it.
+The sidebar toggle is not on that row. It is a round toggle icon button at the
+vertical middle of the header, centred on the sidebar's right edge. It is
+selected while the sidebar shows, and its icon is a closing panel. While the
+sidebar is hidden, it moves to the window's left edge and shows an opening
+panel, and the header moves right to make space for it.
 Command-B, or Control-B off the Mac, does the same as the button.
 The field marks hits in the open document. Letter case does not matter.
 While the editor shows, alone or beside the preview, Find searches the
