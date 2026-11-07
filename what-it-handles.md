@@ -193,6 +193,13 @@ at. Clicking a folder in the tree walks that folder again, so a file deeper than
 three levels, or added since the last walk of that folder, appears then. Reload
 walks the open root again without asking for it. The tree is not watched.
 
+Add new file, under Change Folder… and Reload, asks for a file name in a dialog
+that shows the target folder: the folder of the selected file, or the open
+folder when no file is selected. OK makes an empty file there, shows it in the
+tree and opens it. A name without `.md` or `.mdc` gets `.md`.
+Cancel or Escape closes the dialog. The desktop app writes through the file
+system. The web app asks the browser for write access on the first new file.
+
 The open file is. The desktop app watches it through the file system. The web
 app checks its size and change time each second. When it changes, it is read
 again, so a save in another editor shows up without switching away. A session

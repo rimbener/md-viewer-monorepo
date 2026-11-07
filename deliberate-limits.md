@@ -160,6 +160,10 @@ The web app opens a folder for reading only. The first Save asks the browser
 for write access to that file; when it is refused, the header says so and the
 buffer stays. A document opened by URL cannot be saved.
 
+A new file goes only in the folder of the selected file, or in the open folder
+when no file is selected. There is no folder picker, and a new file never goes
+over a file that is already there. A name cannot hold `/` or `\`.
+
 ## Undo keeps 100 steps per file
 
 Undo and Redo show beside Save while the editor is open. Command-Z or

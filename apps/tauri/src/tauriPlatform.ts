@@ -83,6 +83,14 @@ export function createTauriPlatform(): Platform {
       return writeTextFile(toNativePath(path), contents);
     },
 
+    async createFile(path, contents) {
+      const native = toNativePath(path);
+      if (await exists(native)) {
+        throw new Error('A file with that name already exists.');
+      }
+      await writeTextFile(native, contents, { createNew: true });
+    },
+
     watchFile(path, onChange) {
       return stopLater(watch(toNativePath(path), () => onChange()));
     },

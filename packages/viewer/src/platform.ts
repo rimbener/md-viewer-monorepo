@@ -36,6 +36,11 @@ export interface Platform {
   readFile(path: string): Promise<string>;
   /** Writes text over the file at `path`. Absent where nothing can be written. */
   writeFile?: (path: string, contents: string) => Promise<void>;
+  /**
+   * Makes a new file at `path` holding `contents`. Rejects when a file is
+   * already there. Absent where nothing can be written.
+   */
+  createFile?: (path: string, contents: string) => Promise<void>;
   /** Calls `onChange` when the file at `path` changes. Returns the stop. */
   watchFile(path: string, onChange: () => void): () => void;
   /** A file handed to the app from outside — Finder, a link — or null. */

@@ -322,6 +322,27 @@ function Session() {
     }
   }, [remember, reveal]);
 
+  const createFile = useCallback(
+    async (folder: string, name: string) => {
+      const root = rootPathRef.current;
+      if (root === null || platform.createFile === undefined) {
+        throw new Error('No folder is open.');
+      }
+      const path = `${folder}/${name}`;
+      await platform.createFile(path, '');
+      const tree = await scanToFile(platform.readDir, root, path);
+      if (rootPathRef.current !== root) {
+        return;
+      }
+      setRoot(tree);
+      const created = findFile(tree, path);
+      if (created !== null) {
+        selectFile(created);
+      }
+    },
+    [platform, selectFile],
+  );
+
   const reloadFolder = useCallback(() => {
     setScanNonce(previous => previous + 1);
   }, []);
@@ -526,6 +547,7 @@ function Session() {
           onSelectRecentFolder={selectRecentFolder}
           onRemoveRecentFolder={removeRecentFolder}
           onReloadFolder={reloadFolder}
+          onCreateFile={platform.createFile ? createFile : null}
           onCancelScan={isScanning ? cancelScan : null}
           onSelectFile={selectFile}
           onSelectDirectory={selectDirectory}

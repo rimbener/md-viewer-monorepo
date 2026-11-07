@@ -74,6 +74,14 @@ export function createFakePlatform(
     writeFile: vi.fn(async (path: string, contents: string) => {
       files[path] = contents;
     }),
+    createFile: vi.fn(async (path: string, contents: string) => {
+      if (path in files) {
+        throw new Error('A file with that name already exists.');
+      }
+      files[path] = contents;
+      const slash = path.lastIndexOf('/');
+      folders[path.slice(0, slash)]?.push(path.slice(slash + 1));
+    }),
     watchFile: vi.fn((path: string, onChange: () => void) => {
       const set = watchers.get(path) ?? new Set();
       set.add(onChange);

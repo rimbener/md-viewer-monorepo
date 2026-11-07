@@ -204,6 +204,31 @@ export function createWebPlatform(): Platform {
       await writable.close();
     },
 
+    async createFile(path, contents) {
+      const slash = path.lastIndexOf('/');
+      const name = path.slice(slash + 1);
+      const directory = await directoryAt(path.slice(0, slash));
+      const options = { mode: 'readwrite' } as const;
+      // The folder was opened read-only, so the first new file asks for more.
+      if (
+        (await directory.queryPermission(options)) !== 'granted' &&
+        (await directory.requestPermission(options)) !== 'granted'
+      ) {
+        throw new Error('Permission to create files was refused.');
+      }
+      const isTaken = await directory.getFileHandle(name).then(
+        () => true,
+        () => false,
+      );
+      if (isTaken) {
+        throw new Error('A file with that name already exists.');
+      }
+      const handle = await directory.getFileHandle(name, { create: true });
+      const writable = await handle.createWritable();
+      await writable.write(contents);
+      await writable.close();
+    },
+
     watchFile(path, onChange) {
       if (isHttpUrl(path)) {
         return () => {};

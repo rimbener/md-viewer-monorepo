@@ -41,7 +41,7 @@ function createLimit(max: number): Limit {
   };
 }
 
-function isMarkdown(name: string): boolean {
+export function isMarkdown(name: string): boolean {
   const lower = name.toLowerCase();
   return MARKDOWN_EXTENSIONS.some(extension => lower.endsWith(extension));
 }
