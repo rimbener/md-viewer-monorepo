@@ -4,7 +4,7 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate), step 9 (cleanup), step 10 (docs).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate), step 9 (cleanup), step 10 (docs), menu button in a full-width top app bar (owner review).
 - **Owner checks in browser at the end** of the migration, not per step.
 - **Next:** owner browser check (light, dark, narrow width), then PR.
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
@@ -276,15 +276,15 @@ property, not an attribute; segments have role `radio` + `aria-checked`.
 
 Planned:
 
-| Now                            | m3e                                                                                                                                                                                |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SidebarToggle`                | Controlled `m3e-icon-button toggle` (`selected` = sidebar visible), calls `toggleSidebar`. Not `m3e-drawer-toggle`: that one is not a button and writes the drawer state directly. |
-| `GherkinToggle`                | `m3e-icon-button toggle` (`selected` replaces `isActive`)                                                                                                                          |
-| `SaveButton`                   | `m3e-icon-button variant="tonal"` (`save`)                                                                                                                                         |
-| `FontControl`                  | `m3e-button variant="outlined"` with the scheme name                                                                                                                               |
-| `UndoRedo`, `HistoryNav`       | `m3e-button-group` of 2 `m3e-icon-button`s                                                                                                                                         |
-| `ZoomControl`, `ColumnControl` | `m3e-button-group`: − icon button, **Reset `m3e-button`** with the value as its label ("Reset zoom", "Reset line length", disabled at the default), + icon button                  |
-| `ColorSchemeControl`           | Controlled `m3e-segmented-button` + `m3e-button-segment`                                                                                                                           |
+| Now                            | m3e                                                                                                                                                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SidebarToggle`                | Standard `m3e-icon-button` with the `menu` icon, `aria-expanded`, in the `leading` slot of a full-width top app bar (owner review: M3 standard position). Not `m3e-drawer-toggle`: that one writes the drawer state directly. |
+| `GherkinToggle`                | `m3e-icon-button toggle` (`selected` replaces `isActive`)                                                                                                                                                                     |
+| `SaveButton`                   | `m3e-icon-button variant="tonal"` (`save`)                                                                                                                                                                                    |
+| `FontControl`                  | `m3e-button variant="outlined"` with the scheme name                                                                                                                                                                          |
+| `UndoRedo`, `HistoryNav`       | `m3e-button-group` of 2 `m3e-icon-button`s                                                                                                                                                                                    |
+| `ZoomControl`, `ColumnControl` | `m3e-button-group`: − icon button, **Reset `m3e-button`** with the value as its label ("Reset zoom", "Reset line length", disabled at the default), + icon button                                                             |
+| `ColorSchemeControl`           | Controlled `m3e-segmented-button` + `m3e-button-segment`                                                                                                                                                                      |
 
 - Use `size="extra-small"` on the tools-row controls.
 - Delete `ToolButton.tsx`. Keep `Segmented.tsx`: `DocumentSearch` uses it

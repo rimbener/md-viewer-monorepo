@@ -187,8 +187,7 @@ Each file keeps its scroll position. A file opens where it was left, after a
 switch, a reload or the next launch. When the content is not yet tall enough,
 the view moves down as the content grows. A scroll by the person stops that.
 The 10 files scrolled most recently keep a position. A file at the top keeps
-none. The color scheme control sits on the right of the file name row, level
-with the top of the name. The choices are System, Light and Dark. System
+none. The color scheme control sits at the right end of the top app bar. The choices are System, Light and Dark. System
 follows the system appearance. Light and Dark stay fixed. The colors are the
 Material 3 monochrome scheme, in grays only. Links, find hits and code colors
 keep their own hues, because a gray link or a gray hit on a gray page is hard
@@ -251,8 +250,9 @@ its last line.
 
 ## Find
 
-The file name sits on its own row (an app bar) above the tools, with the
-color scheme control at its right end. The tools row is a toolbar, in this
+A top app bar goes across the full window, above the sidebar and the
+document. From left to right: the menu button, the file name, and the color
+scheme control. The tools row under it, in the document column, is a toolbar, in this
 order: History, the Gherkin toggle when it applies, the editor button with
 Save and Undo/Redo, then Font, Width, Zoom and Find. The tools have no titles;
 each one explains itself in a tooltip on hover or focus. Find is the last
@@ -262,11 +262,8 @@ Find is an outlined text field with a search icon. The match count and the
 Previous match, Next match and Clear find icon buttons sit inside its right
 end.
 
-The sidebar toggle is not on that row. It is a round toggle icon button at the
-vertical middle of the header, centred on the sidebar's right edge. It is
-selected while the sidebar shows, and its icon is a closing panel. While the
-sidebar is hidden, it moves to the window's left edge and shows an opening
-panel, and the header moves right to make space for it.
+The menu button (three lines) at the left end of the top app bar opens and
+closes the sidebar. It does not move.
 Command-B, or Control-B off the Mac, does the same as the button.
 The sidebar is a navigation drawer. A hidden sidebar stays in memory, so the
 folders opened in the tree are still open when it shows again. In a window

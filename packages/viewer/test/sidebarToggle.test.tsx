@@ -74,37 +74,30 @@ function iconName(): string | null {
   return toggle().querySelector('m3e-icon')?.name ?? null;
 }
 
-it('points the way the sidebar will move', async () => {
+it('is the menu button at the start of the top app bar', async () => {
   await renderApp();
-  expect(toggle()).toHaveAttribute('aria-pressed', 'true');
-  expect(iconName()).toBe('left_panel_close');
-  expect(toggle()).toHaveStyle({ position: 'absolute', left: '-16px' });
+  const bar = document.querySelector('m3e-app-bar') as HTMLElement;
 
-  fireEvent.click(toggle());
-  await settle();
-
-  expect(toggle()).toHaveAttribute('aria-pressed', 'false');
-  expect(iconName()).toBe('left_panel_open');
-  expect(toggle()).toHaveStyle({ left: '6px' });
+  expect(iconName()).toBe('menu');
+  expect(toggle().closest('[slot="leading"]')?.parentElement).toBe(bar);
+  expect(bar.closest('m3e-drawer-container')).toBeNull();
 });
 
-it('floats at the middle of the header, outside the tools', async () => {
+it('tells whether the drawer is open', async () => {
   await renderApp();
-  const header = toggle().closest('header') as HTMLElement;
-
-  expect(toggle()).toHaveStyle({ top: '50%', marginTop: '-16px' });
-  expect(header).toHaveStyle({ position: 'relative' });
-  expect(screen.queryByText('Sidebar')).toBeNull();
-});
-
-it('moves the header clear of the button while the tree is hidden', async () => {
-  await renderApp();
-  const header = () => toggle().closest('header') as HTMLElement;
-  expect(header()).toHaveStyle({ paddingLeft: '24px' });
+  expect(toggle()).toHaveAttribute('aria-expanded', 'true');
 
   fireEvent.click(toggle());
 
-  expect(header()).toHaveStyle({ paddingLeft: '48px' });
+  expect(toggle()).toHaveAttribute('aria-expanded', 'false');
+});
+
+it('shows the file name in the top app bar', async () => {
+  storeSession('/notes', '/notes/notes.md');
+  await renderApp();
+  const bar = document.querySelector('m3e-app-bar') as HTMLElement;
+
+  expect(bar.querySelector('h1')).toHaveTextContent('notes.md');
 });
 
 it('remembers that the tree was hidden', async () => {

@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
   type CSSProperties,
-  type ReactNode,
 } from 'react';
 
 import { hasBareFeature, parseMarkdown } from '@md-viewer/markdown/parseBlocks';
@@ -42,7 +41,7 @@ import { nextEditorMode, type EditorMode } from '../editorMode';
 import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
 import type { FileNode } from '../types';
-import { M3eAppBar, M3eToolbar } from '../m3e';
+import { M3eToolbar } from '../m3e';
 import { isHttpUrl } from '../url';
 import {
   CODE_FONT,
@@ -51,7 +50,6 @@ import {
   schemeById,
 } from '../typography';
 import { DEFAULT_ZOOM } from '../zoom';
-import { ColorSchemeControl } from './ColorSchemeControl';
 import { ColumnControl } from './ColumnControl';
 import { DocumentSearch } from './DocumentSearch';
 import { Editor } from './Editor';
@@ -61,9 +59,9 @@ import { HistoryNav } from './HistoryNav';
 import { Markdown } from './Markdown';
 import { GherkinToggle } from './GherkinToggle';
 import { SaveButton } from './SaveButton';
-import { SidebarToggle, SIDEBAR_TOGGLE_CLEARANCE } from './SidebarToggle';
 import { Spinner } from './Spinner';
 import { EditorSplit } from './EditorSplit';
+import { AppBarTitle } from './TopAppBar';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
@@ -668,11 +666,7 @@ export function DocumentPanel({
   const headerStyle: CSSProperties = {
     ...styles.header,
     borderBottomColor: theme.border,
-    ...(isSidebarVisible ? null : { paddingLeft: SIDEBAR_TOGGLE_CLEARANCE }),
   };
-  const sidebarToggle = (
-    <SidebarToggle isVisible={isSidebarVisible} onToggle={onToggleSidebar} />
-  );
 
   saveShortcut.current = null;
   editorShortcut.current = null;
@@ -682,8 +676,6 @@ export function DocumentPanel({
     return (
       <main style={styles.container}>
         <header style={headerStyle}>
-          {sidebarToggle}
-          <TitleRow />
           <M3eToolbar style={styles.tools}>{historyTool}</M3eToolbar>
         </header>
         <div style={{ ...styles.body, ...styles.centered }}>
@@ -763,24 +755,23 @@ export function DocumentPanel({
 
   return (
     <main style={styles.container}>
+      <AppBarTitle>
+        <h1 title={file.path} style={{ ...styles.fileName, ...oneLine }}>
+          {file.name}
+        </h1>
+        <span
+          style={{
+            ...styles.filePath,
+            ...oneLine,
+            color: theme.error,
+          }}
+        >
+          {draft === null
+            ? null
+            : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
+        </span>
+      </AppBarTitle>
       <header style={headerStyle}>
-        {sidebarToggle}
-        <TitleRow>
-          <h1 title={file.path} style={{ ...styles.fileName, ...oneLine }}>
-            {file.name}
-          </h1>
-          <span
-            style={{
-              ...styles.filePath,
-              ...oneLine,
-              color: theme.error,
-            }}
-          >
-            {draft === null
-              ? null
-              : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
-          </span>
-        </TitleRow>
         <M3eToolbar style={styles.tools}>
           {historyTool}
           {canRenderGherkin ? (
@@ -883,23 +874,6 @@ export function DocumentPanel({
 
 function ignoreCount(): void {}
 
-type TitleRowProps = {
-  children?: ReactNode;
-};
-
-function TitleRow({ children }: TitleRowProps) {
-  return (
-    <M3eAppBar size="small" style={styles.titleRow}>
-      <div slot="title" style={styles.fileInfo}>
-        {children}
-      </div>
-      <div slot="trailing">
-        <ColorSchemeControl />
-      </div>
-    </M3eAppBar>
-  );
-}
-
 type PlainBodyProps = {
   text: string;
   scale: number;
@@ -940,21 +914,10 @@ const styles = {
     fontSize: 13,
   },
   header: {
-    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
-    padding: '4px 24px 8px',
+    padding: '0 16px 8px',
     borderBottom: '1px solid',
-  },
-  titleRow: {
-    '--m3e-app-bar-container-color': 'transparent',
-    '--m3e-app-bar-padding-left': '0px',
-    '--m3e-app-bar-padding-right': '0px',
-  } as CSSProperties,
-  fileInfo: {
-    display: 'flex',
-    minWidth: 0,
-    gap: 4,
   },
   tools: {
     display: 'flex',

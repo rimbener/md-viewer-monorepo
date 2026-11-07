@@ -17,6 +17,7 @@ import { DocumentPanel } from './components/DocumentPanel';
 import { NewFileDialog } from './components/NewFileDialog';
 import { M3eDrawerContainer, type M3eDrawerContainerElement } from './m3e';
 import { Sidebar } from './components/Sidebar';
+import { TopAppBar } from './components/TopAppBar';
 import {
   applyLoadedHistory,
   canGoBack,
@@ -591,6 +592,7 @@ function Session() {
       style={
         {
           display: 'flex',
+          flexDirection: 'column',
           height: '100%',
           // An app drawn under system bars sets these; elsewhere they are 0.
           padding:
@@ -600,45 +602,50 @@ function Session() {
         } as CSSProperties
       }
     >
-      <M3eDrawerContainer
-        ref={drawerRef}
-        start={isSidebarVisible}
-        startMode="auto"
-        startDivider
-        style={styles.drawer}
-        onClickCapture={event => {
-          isScrimClick.current = isScrim(event.nativeEvent);
-        }}
-        onChange={onDrawerChange}
+      <TopAppBar
+        isSidebarVisible={isSidebarVisible}
+        onToggleSidebar={toggleSidebar}
       >
-        <Sidebar
-          slot="start"
-          root={root}
-          currentFolderPath={rootPath}
-          recentFolders={recentFolders}
-          selectedPath={selectedFile?.path ?? null}
-          isScanning={isScanning || isRestoring}
-          error={error}
-          fileCount={fileCount}
-          onChooseFolder={chooseFolder}
-          onSelectRecentFolder={selectRecentFolder}
-          onRemoveRecentFolder={removeRecentFolder}
-          onReloadFolder={reloadFolder}
-          onAddFile={platform.createFile ? setNewFileFolder : null}
-          onCancelScan={isScanning ? cancelScan : null}
-          onSelectFile={selectFile}
-          onSelectDirectory={selectDirectory}
-        />
-        <DocumentPanel
-          file={selectedFile}
-          isSidebarVisible={isSidebarVisible}
-          onToggleSidebar={toggleSidebar}
-          canGoBack={canGoBack(history)}
-          canGoNext={canGoNext(history)}
-          onBack={goBack}
-          onNext={goNext}
-        />
-      </M3eDrawerContainer>
+        <M3eDrawerContainer
+          ref={drawerRef}
+          start={isSidebarVisible}
+          startMode="auto"
+          startDivider
+          style={styles.drawer}
+          onClickCapture={event => {
+            isScrimClick.current = isScrim(event.nativeEvent);
+          }}
+          onChange={onDrawerChange}
+        >
+          <Sidebar
+            slot="start"
+            root={root}
+            currentFolderPath={rootPath}
+            recentFolders={recentFolders}
+            selectedPath={selectedFile?.path ?? null}
+            isScanning={isScanning || isRestoring}
+            error={error}
+            fileCount={fileCount}
+            onChooseFolder={chooseFolder}
+            onSelectRecentFolder={selectRecentFolder}
+            onRemoveRecentFolder={removeRecentFolder}
+            onReloadFolder={reloadFolder}
+            onAddFile={platform.createFile ? setNewFileFolder : null}
+            onCancelScan={isScanning ? cancelScan : null}
+            onSelectFile={selectFile}
+            onSelectDirectory={selectDirectory}
+          />
+          <DocumentPanel
+            file={selectedFile}
+            isSidebarVisible={isSidebarVisible}
+            onToggleSidebar={toggleSidebar}
+            canGoBack={canGoBack(history)}
+            canGoNext={canGoNext(history)}
+            onBack={goBack}
+            onNext={goNext}
+          />
+        </M3eDrawerContainer>
+      </TopAppBar>
       {newFileFolder !== null ? (
         <NewFileDialog
           folderPath={newFileFolder}
@@ -802,7 +809,7 @@ const styles = {
   drawer: {
     flex: 1,
     minWidth: 0,
-    height: '100%',
+    minHeight: 0,
     '--m3e-drawer-container-width': '280px',
   } as CSSProperties,
 };

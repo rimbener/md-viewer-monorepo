@@ -1,11 +1,12 @@
 /**
- * The color scheme control on the file name row.
+ * The color scheme control in the top app bar.
  */
 
 import { screen } from '@testing-library/react';
 
 import { ThemeRoot } from '../src/components/ThemeRoot';
 import { DocumentPanel } from '../src/components/DocumentPanel';
+import { TopAppBar } from '../src/components/TopAppBar';
 import { storage } from '../src/storage';
 import type { FileNode } from '../src/types';
 import {
@@ -42,15 +43,17 @@ afterEach(() => {
 async function renderPanel(): Promise<void> {
   renderWithPlatform(
     <ThemeRoot>
-      <DocumentPanel
-        file={file}
-        isSidebarVisible
-        onToggleSidebar={() => {}}
-        canGoBack={false}
-        canGoNext={false}
-        onBack={() => {}}
-        onNext={() => {}}
-      />
+      <TopAppBar isSidebarVisible onToggleSidebar={() => {}}>
+        <DocumentPanel
+          file={file}
+          isSidebarVisible
+          onToggleSidebar={() => {}}
+          canGoBack={false}
+          canGoNext={false}
+          onBack={() => {}}
+          onNext={() => {}}
+        />
+      </TopAppBar>
     </ThemeRoot>,
     createFakePlatform({}, { '/notes/notes.md': '# Notes' }),
   );
@@ -73,7 +76,7 @@ function follows(first: Node, second: Node): boolean {
   );
 }
 
-it('sits on the file name row, to the right of the name', async () => {
+it('sits in the top app bar, to the right of the name', async () => {
   await renderPanel();
   const name = screen.getByRole('heading', { name: 'notes.md' });
   const system = schemeButton('System color scheme');
