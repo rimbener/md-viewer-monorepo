@@ -253,6 +253,10 @@ Save and Undo/Redo, then Font, Width, Zoom and Find. The tools have no titles;
 each one explains itself in a tooltip on hover or focus. Find is the last
 control on that tools row.
 
+Find is an outlined text field with a search icon. The match count and the
+Previous match, Next match and Clear find icon buttons sit inside its right
+end.
+
 The sidebar toggle is not on that row. It is a round toggle icon button at the
 vertical middle of the header, centred on the sidebar's right edge. It is
 selected while the sidebar shows, and its icon is a closing panel. While the

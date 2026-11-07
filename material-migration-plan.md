@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 5 (find and inputs).
+- **Next:** step 6 (dialog and menus).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -331,7 +331,14 @@ Planned:
     slots. Re-run `documentEndSpace.test.tsx` and `scrollSync.test.tsx`, and
     check in a real browser that both panes fill their height.
 
-### 5. Find and inputs
+### 5. Find and inputs (done)
+
+Result: as planned. The disabled Replace field explains itself in a tooltip on
+its form field (a disabled input gets no hover). Learned: the m3e submit
+button calls `form.requestSubmit()` one `setTimeout` after the click; the
+polyfill now finds `ElementInternals.form` through the host.
+
+Planned:
 
 - `DocumentSearch` keeps all its parts and labels:
   - Find field: `m3e-form-field` with a native `<input>` ("Find in

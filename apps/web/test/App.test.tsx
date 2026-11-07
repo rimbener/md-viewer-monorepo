@@ -30,6 +30,8 @@ test('still opens a document by URL there', async () => {
     'https://example.com/docs/README.md',
   );
   await userEvent.click(screen.getByRole('button', { name: 'Open URL' }));
+  // m3e submits the form a timer tick after the click.
+  await act(() => new Promise(resolve => setTimeout(resolve, 0)));
   for (let pass = 0; pass < 6; pass += 1) {
     await act(async () => {});
   }

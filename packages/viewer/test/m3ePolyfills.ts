@@ -43,7 +43,23 @@ if (!('states' in ElementInternals.prototype)) {
   });
 }
 
+// jsdom's ElementInternals has no form methods, so a submit button cannot
+// find its form without the host.
+const hosts = new WeakMap<ElementInternals, HTMLElement>();
+const attachInternals = HTMLElement.prototype.attachInternals;
+HTMLElement.prototype.attachInternals = function (this: HTMLElement) {
+  const internals = attachInternals.call(this);
+  hosts.set(internals, this);
+  return internals;
+};
+
 if (!('setFormValue' in ElementInternals.prototype)) {
+  Object.defineProperty(ElementInternals.prototype, 'form', {
+    configurable: true,
+    get(this: ElementInternals) {
+      return hosts.get(this)?.closest('form') ?? null;
+    },
+  });
   const validity = { valid: true } as ValidityState;
   Object.assign(ElementInternals.prototype, {
     setFormValue() {},
@@ -52,7 +68,6 @@ if (!('setFormValue' in ElementInternals.prototype)) {
     reportValidity: () => true,
   });
   for (const [key, value] of [
-    ['form', null],
     ['willValidate', false],
     ['validity', validity],
     ['validationMessage', ''],
