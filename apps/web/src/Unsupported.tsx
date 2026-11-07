@@ -1,5 +1,7 @@
+import { M3eCard } from '@md-viewer/viewer/m3e';
 import { OpenUrlForm } from '@md-viewer/viewer/OpenUrlForm';
 import { useTheme } from '@md-viewer/viewer/theme';
+import { typescale } from '@md-viewer/viewer/typescale';
 
 type UnsupportedProps = {
   onOpenUrl: (url: string) => void;
@@ -21,32 +23,31 @@ export function Unsupported({ onOpenUrl }: UnsupportedProps) {
         color: theme.text,
       }}
     >
-      <div
-        style={{
-          maxWidth: 440,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: 20 }}>Browser not compatible</h1>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: '21px' }}>
-          MD Viewer reads a folder of markdown files through the File System
-          Access API. Only Chromium browsers, such as Chrome and Edge, have it.
-          Open this page in one of them to read a folder.
-        </p>
-        <p
-          style={{
-            margin: 0,
-            fontSize: 13,
-            lineHeight: '19px',
-            color: theme.mutedText,
-          }}
+      <M3eCard variant="outlined" style={{ maxWidth: 480 }}>
+        <h1 slot="header" style={{ margin: 0, ...typescale('title-large') }}>
+          Browser not compatible
+        </h1>
+        <div
+          slot="content"
+          style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
         >
-          You can still read one document by its URL:
-        </p>
-        <OpenUrlForm onOpen={onOpenUrl} />
-      </div>
+          <p style={{ margin: 0, ...typescale('body-medium') }}>
+            MD Viewer reads a folder of markdown files through the File System
+            Access API. Only Chromium browsers, such as Chrome and Edge, have
+            it. Open this page in one of them to read a folder.
+          </p>
+          <p
+            style={{
+              margin: 0,
+              ...typescale('body-small'),
+              color: theme.mutedText,
+            }}
+          >
+            You can still read one document by its URL:
+          </p>
+          <OpenUrlForm onOpen={onOpenUrl} />
+        </div>
+      </M3eCard>
     </main>
   );
 }

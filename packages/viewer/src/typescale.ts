@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
 type TypescaleRole =
-  'body-small' | 'body-medium' | 'label-small' | 'label-medium' | 'title-small';
+  'body-small' | 'body-medium' | 'label-small' | 'title-large';
 
 /** The M3 type role that `m3e-theme` writes as `--md-sys-typescale-*`. */
 export function typescale(role: TypescaleRole): CSSProperties {

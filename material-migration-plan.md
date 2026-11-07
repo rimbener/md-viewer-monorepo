@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer), step 8 (spinner, web gate).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 8 (spinner and web gate).
+- **Next:** step 9 (cleanup).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -437,7 +437,11 @@ listens for clicks on its row in the shadow root: tests click its label
 - Update `sidebarToggle.test.tsx` and other tests that expect no tree items
   when the sidebar is hidden: the tree stays mounted (decision 6).
 
-### 8. Spinner and web gate
+### 8. Spinner and web gate (done)
+
+Result: `Spinner` is `m3e-loading-indicator`. `Unsupported` is an outlined
+`m3e-card`. `@md-viewer/viewer` now exports `./m3e` and `./typescale` for the
+web app (a `package.json` `exports` change, no dependency change).
 
 - `Spinner` → `m3e-loading-indicator` or `m3e-circular-progress-indicator`.
   Delete `.spinner` and `@keyframes`.

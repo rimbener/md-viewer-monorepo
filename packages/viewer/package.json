@@ -9,6 +9,8 @@
     "./theme": "./src/theme.ts",
     "./OpenUrlForm": "./src/components/OpenUrlForm.tsx",
     "./ThemeRoot": "./src/components/ThemeRoot.tsx",
+    "./m3e": "./src/m3e.ts",
+    "./typescale": "./src/typescale.ts",
     "./styles.css": "./src/styles.css"
   },
   "scripts": {
