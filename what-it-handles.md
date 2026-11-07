@@ -268,6 +268,13 @@ selected while the sidebar shows, and its icon is a closing panel. While the
 sidebar is hidden, it moves to the window's left edge and shows an opening
 panel, and the header moves right to make space for it.
 Command-B, or Control-B off the Mac, does the same as the button.
+The sidebar is a navigation drawer. A hidden sidebar stays in memory, so the
+folders opened in the tree are still open when it shows again. In a window
+narrower than 960 px the drawer covers the document (under 600 px) or pushes it
+aside, with a scrim over the rest. There, a click on the scrim hides the
+sidebar and the app remembers that; picking a file or pressing Command-F hides
+it too, and the app does not remember that. When the window becomes narrow,
+the drawer closes by itself, and that is not remembered either.
 The field marks hits in the open document. Letter case does not matter.
 While the editor shows, alone or beside the preview, Find searches the
 markdown source in the editor. The preview is searched only when the editor is

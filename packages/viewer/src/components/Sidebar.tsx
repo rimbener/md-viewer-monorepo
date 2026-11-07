@@ -17,6 +17,8 @@ import { oneLine } from './text';
 import { Tooltip, useControlId } from './Tooltip';
 
 interface SidebarProps {
+  /** The drawer slot it fills. */
+  slot?: string;
   root: DirectoryNode | null;
   currentFolderPath: string | null;
   recentFolders: readonly RecentFolder[];
@@ -37,6 +39,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({
+  slot,
   root,
   currentFolderPath,
   recentFolders,
@@ -68,13 +71,13 @@ export function Sidebar({
 
   return (
     <aside
+      slot={slot}
       style={{
         display: 'flex',
         flexDirection: 'column',
         width: 280,
-        flexShrink: 0,
+        height: '100%',
         backgroundColor: theme.sidebar,
-        borderRight: hairline,
       }}
     >
       <div

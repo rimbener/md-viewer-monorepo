@@ -926,7 +926,7 @@ function PlainBody({ text, scale }: PlainBodyProps) {
 
 const styles = {
   container: {
-    flex: 1,
+    height: '100%',
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',

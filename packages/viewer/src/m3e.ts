@@ -4,7 +4,10 @@ export { M3eButtonGroup } from '@m3e/react/button-group';
 export { M3eCard } from '@m3e/react/card';
 export { M3eDialog } from '@m3e/react/dialog';
 export { M3eDivider } from '@m3e/react/divider';
-export { M3eDrawerContainer } from '@m3e/react/drawer-container';
+export {
+  M3eDrawerContainer,
+  type M3eDrawerContainerElement,
+} from '@m3e/react/drawer-container';
 export { M3eFormField } from '@m3e/react/form-field';
 export { M3eIcon } from '@m3e/react/icon';
 export { M3eIconButton } from '@m3e/react/icon-button';

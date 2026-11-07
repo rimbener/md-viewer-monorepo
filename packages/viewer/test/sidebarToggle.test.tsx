@@ -6,6 +6,7 @@ import { fireEvent, screen } from '@testing-library/react';
 
 import {
   createFakePlatform,
+  press,
   renderViewer,
   settle,
   storeSession,
@@ -28,8 +29,15 @@ function toggle(): HTMLElement {
   return screen.getByRole('button', { name: /^(Show|Hide) sidebar$/ });
 }
 
+type Drawer = HTMLElement & { start: boolean };
+
+function drawer(): Drawer {
+  return document.querySelector('m3e-drawer-container') as Drawer;
+}
+
+/** The drawer keeps the tree mounted; open or closed is the drawer's state. */
 function showsTree(): boolean {
-  return screen.queryByRole('tree') !== null;
+  return drawer().start && screen.queryByRole('tree') !== null;
 }
 
 it('hides the tree and brings it back', async () => {
@@ -114,4 +122,93 @@ it('opens with the tree hidden when that is what was stored', async () => {
 
   expect(showsTree()).toBe(false);
   expect(toggle()).toHaveAccessibleName('Show sidebar');
+});
+
+it('keeps the tree, and what is open in it, while hidden', async () => {
+  await renderApp();
+  fireEvent.click(toggle());
+  await settle();
+
+  expect(screen.getByRole('tree')).toBeInTheDocument();
+  expect(drawer().start).toBe(false);
+});
+
+describe('on a narrow window', () => {
+  beforeEach(() => {
+    // Phone width: every max-width query matches, no min-width one does.
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: !query.includes('min-width') && query.includes('max-width'),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  async function openDrawer(): Promise<void> {
+    await renderApp();
+    if (!drawer().start) {
+      fireEvent.click(toggle());
+      await settle();
+    }
+    window.localStorage.removeItem('mdviewer.sidebarVisible');
+  }
+
+  it('keeps the choice when the scrim closes the drawer', async () => {
+    await openDrawer();
+    // m3e reads breakpoints through an observer made before this stub.
+    (drawer() as Drawer & { _startMode: string })._startMode = 'over';
+    const scrim = drawer().shadowRoot!.querySelector('.scrim') as HTMLElement;
+
+    fireEvent.click(scrim);
+    await settle();
+
+    expect(drawer().start).toBe(false);
+    expect(toggle()).toHaveAccessibleName('Show sidebar');
+    expect(window.localStorage.getItem('mdviewer.sidebarVisible')).toBe(
+      'false',
+    );
+  });
+
+  it('closes the drawer before Command-F focuses Find', async () => {
+    storeSession('/notes', '/notes/notes.md');
+    await openDrawer();
+
+    fireEvent.keyDown(window, { key: 'f', metaKey: true });
+    await settle();
+
+    expect(drawer().start).toBe(false);
+    expect(document.activeElement).toBe(
+      screen.getByRole('textbox', { name: 'Find in document' }),
+    );
+  });
+
+  it('closes the drawer after a file is picked, without keeping it', async () => {
+    await openDrawer();
+
+    await press(screen.getByRole('treeitem', { name: 'notes.md' }));
+
+    expect(drawer().start).toBe(false);
+    expect(screen.getByRole('heading', { name: 'Notes' })).toBeInTheDocument();
+    expect(window.localStorage.getItem('mdviewer.sidebarVisible')).toBeNull();
+  });
+});
+
+it('does not keep a close that a breakpoint made', async () => {
+  await renderApp();
+
+  drawer().start = false;
+  fireEvent(drawer(), new Event('change', { bubbles: true }));
+  await settle();
+
+  expect(toggle()).toHaveAccessibleName('Show sidebar');
+  expect(window.localStorage.getItem('mdviewer.sidebarVisible')).toBeNull();
 });

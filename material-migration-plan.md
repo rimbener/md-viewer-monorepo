@@ -4,9 +4,9 @@
 
 - **Branch:** `hernan/material-3`, from `main`. One commit per step.
 - **Done:** step 0 (spike), step 1 (setup), step 2 (theme; browser check
-  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus).
+  not done: Chrome extension was not connected), step 3 (buttons), step 4 (toolbar, split), step 5 (find, inputs), step 6 (dialog, menus), step 7 (tree, drawer).
 - **Owner checks in browser at the end** of the migration, not per step.
-- **Next:** step 7 (sidebar and tree).
+- **Next:** step 8 (spinner and web gate).
 - **Spike:** local branch `spike/m3e` (not pushed). It has the jsdom probes
   (`packages/viewer/test/m3eSpike.test.tsx`) and a demo page with every
   component (`packages/viewer/src/m3eSpikeBundle.tsx`, shown at `/?spike` by
@@ -384,7 +384,17 @@ Planned:
     `recentFoldersView.test.tsx` and `what-it-handles.md`.
   - Delete the own open/close, outside-click and context-menu code.
 
-### 7. Sidebar and tree (7a done: tree and sidebar contents)
+### 7. Sidebar and tree (done)
+
+7b result: `m3e-drawer-container` in the Viewer, `Sidebar` in `slot="start"`
+(always mounted), dialog outside the drawer. `onClickCapture` marks a scrim
+click (the click reaches the host's capture listener before the scrim's own
+handler fires `change`), so only a scrim close is saved. `isDrawerModal()`
+uses m3e's breakpoint (`max-width: 959.98px`): a file pick closes a modal
+drawer, and a window-capture ⌘F listener closes it, waits for
+`updateComplete`, then sends ⌘F again. jsdom: the m3e breakpoint observer is
+made before a test can stub `matchMedia`, so the scrim test sets the private
+`_startMode`.
 
 7a result: `FileTree` is an `m3e-tree`. The tree's `change` is the one path
 for mouse and keyboard: a file calls `onSelectFile`, a folder calls

@@ -15,6 +15,7 @@ import {
 import { ThemeRoot } from './components/ThemeRoot';
 import { DocumentPanel } from './components/DocumentPanel';
 import { NewFileDialog } from './components/NewFileDialog';
+import { M3eDrawerContainer, type M3eDrawerContainerElement } from './m3e';
 import { Sidebar } from './components/Sidebar';
 import {
   applyLoadedHistory,
@@ -98,12 +99,74 @@ function Session() {
   }
 
   // The write stays out of the state updater, which React may call twice.
-  const toggleSidebar = useCallback(() => {
+  const chooseSidebar = useCallback((next: boolean) => {
     hasChosenSidebar.current = true;
-    const next = !isSidebarVisible;
     setIsSidebarVisible(next);
     saveSidebarVisible(next);
-  }, [isSidebarVisible]);
+  }, []);
+
+  const toggleSidebar = useCallback(
+    () => chooseSidebar(!isSidebarVisible),
+    [chooseSidebar, isSidebarVisible],
+  );
+
+  const drawerRef = useRef<M3eDrawerContainerElement>(null);
+  const isScrimClick = useRef(false);
+
+  // The drawer closes itself on a scrim click (a choice, so it is kept) and
+  // when the window narrows past a breakpoint (not a choice, or a phone would
+  // store "hidden" at every launch).
+  const onDrawerChange = useCallback(
+    (event: Event) => {
+      if (event.target !== event.currentTarget) {
+        return;
+      }
+      const isOpen = (event.currentTarget as M3eDrawerContainerElement).start;
+      if (isScrimClick.current) {
+        isScrimClick.current = false;
+        chooseSidebar(isOpen);
+      } else {
+        setIsSidebarVisible(isOpen);
+      }
+    },
+    [chooseSidebar],
+  );
+
+  const closeModalDrawer = useCallback(() => {
+    if (isDrawerModal()) {
+      setIsSidebarVisible(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const closeForFind = (event: KeyboardEvent) => {
+      const drawer = drawerRef.current;
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        event.altKey ||
+        event.key.toLowerCase() !== 'f' ||
+        drawer === null ||
+        !drawer.start ||
+        !isDrawerModal()
+      ) {
+        return;
+      }
+      // An open modal drawer makes the document inert, so the find field
+      // cannot take the focus until the drawer has closed.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setIsSidebarVisible(false);
+      drawer.start = false;
+      const { key, metaKey, ctrlKey } = event;
+      drawer.updateComplete.then(() =>
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key, metaKey, ctrlKey }),
+        ),
+      );
+    };
+    window.addEventListener('keydown', closeForFind, true);
+    return () => window.removeEventListener('keydown', closeForFind, true);
+  }, []);
 
   useEffect(() => {
     isMounted.current = true;
@@ -274,13 +337,14 @@ function Session() {
   const selectFile = useCallback(
     (file: FileNode) => {
       setSelectedFile(file);
+      closeModalDrawer();
       if (rootPath === null) {
         return;
       }
       saveLastFile(file.path);
       remember(recordVisit(historyRef.current, file.path));
     },
-    [remember, rootPath],
+    [closeModalDrawer, remember, rootPath],
   );
 
   const showOpenedFile = useCallback(
@@ -539,8 +603,19 @@ function Session() {
         } as CSSProperties
       }
     >
-      {isSidebarVisible ? (
+      <M3eDrawerContainer
+        ref={drawerRef}
+        start={isSidebarVisible}
+        startMode="auto"
+        startDivider
+        style={styles.drawer}
+        onClickCapture={event => {
+          isScrimClick.current = isScrim(event.nativeEvent);
+        }}
+        onChange={onDrawerChange}
+      >
         <Sidebar
+          slot="start"
           root={root}
           currentFolderPath={rootPath}
           recentFolders={recentFolders}
@@ -557,16 +632,16 @@ function Session() {
           onSelectFile={selectFile}
           onSelectDirectory={selectDirectory}
         />
-      ) : null}
-      <DocumentPanel
-        file={selectedFile}
-        isSidebarVisible={isSidebarVisible}
-        onToggleSidebar={toggleSidebar}
-        canGoBack={canGoBack(history)}
-        canGoNext={canGoNext(history)}
-        onBack={goBack}
-        onNext={goNext}
-      />
+        <DocumentPanel
+          file={selectedFile}
+          isSidebarVisible={isSidebarVisible}
+          onToggleSidebar={toggleSidebar}
+          canGoBack={canGoBack(history)}
+          canGoNext={canGoNext(history)}
+          onBack={goBack}
+          onNext={goNext}
+        />
+      </M3eDrawerContainer>
       {newFileFolder !== null ? (
         <NewFileDialog
           folderPath={newFileFolder}
@@ -713,3 +788,24 @@ export function Viewer({ platform }: ViewerProps) {
     </PlatformProvider>
   );
 }
+
+/** Narrower than this, the `auto` drawer covers or pushes the document. */
+const MODAL_DRAWER_QUERY = '(max-width: 959.98px)';
+
+function isDrawerModal(): boolean {
+  return window.matchMedia?.(MODAL_DRAWER_QUERY).matches ?? false;
+}
+
+function isScrim(event: Event): boolean {
+  const origin = event.composedPath()[0];
+  return origin instanceof HTMLElement && origin.classList.contains('scrim');
+}
+
+const styles = {
+  drawer: {
+    flex: 1,
+    minWidth: 0,
+    height: '100%',
+    '--m3e-drawer-container-width': '280px',
+  } as CSSProperties,
+};
