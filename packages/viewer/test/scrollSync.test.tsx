@@ -66,7 +66,7 @@ function size(element: HTMLElement, scrollHeight: number): void {
 describe('the split view', () => {
   beforeEach(() => {
     storeSession('/notes', '/notes/notes.md');
-    window.localStorage.setItem('mdviewer.editorVisible', 'true');
+    window.localStorage.setItem('mdviewer.editorMode', 'split');
   });
 
   async function renderSplit(): Promise<{

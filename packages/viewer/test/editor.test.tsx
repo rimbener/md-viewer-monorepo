@@ -36,7 +36,9 @@ function saveButton(): HTMLElement | null {
 }
 
 function toggle(): HTMLElement {
-  return screen.getByRole('button', { name: /^(Show|Hide) editor$/ });
+  return screen.getByRole('button', {
+    name: /^Show (editor|editor only|preview only)$/,
+  });
 }
 
 function editor(): HTMLTextAreaElement {
@@ -66,7 +68,7 @@ async function open(name: string): Promise<void> {
   await settle();
 }
 
-it('opens the editor beside the document and closes it again', async () => {
+it('steps through preview, preview and editor, and editor only', async () => {
   await renderApp();
   expect(hasEditor()).toBe(false);
   expect(toggle()).toHaveAccessibleName('Show editor');
@@ -76,11 +78,35 @@ it('opens the editor beside the document and closes it again', async () => {
   expect(editor()).toHaveValue('# Notes');
   // The document stays on screen: the editor is a second pane, not a mode.
   expect(shows('Notes')).toBe(true);
-  expect(toggle()).toHaveAccessibleName('Hide editor');
+  expect(toggle()).toHaveAccessibleName('Show editor only');
+
+  fireEvent.click(toggle());
+
+  expect(editor()).toHaveValue('# Notes');
+  expect(shows('Notes')).toBe(false);
+  expect(toggle()).toHaveAccessibleName('Show preview only');
 
   fireEvent.click(toggle());
 
   expect(hasEditor()).toBe(false);
+  expect(shows('Notes')).toBe(true);
+  expect(toggle()).toHaveAccessibleName('Show editor');
+});
+
+it('names and draws each view on the editor button', async () => {
+  await renderApp();
+
+  for (const [title, icon] of [
+    ['Preview', 'editor-mode-preview'],
+    ['Split', 'editor-mode-split'],
+    ['Editor', 'editor-mode-source'],
+  ]) {
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByTestId(icon)).toBeInTheDocument();
+    fireEvent.click(toggle());
+  }
+
+  expect(screen.getByText('Preview')).toBeInTheDocument();
 });
 
 it('rerenders the document as the source is typed', async () => {
@@ -117,10 +143,19 @@ it('remembers that the editor was open', async () => {
 
   fireEvent.click(toggle());
 
-  expect(window.localStorage.getItem('mdviewer.editorVisible')).toBe('true');
+  expect(window.localStorage.getItem('mdviewer.editorMode')).toBe('split');
 });
 
-it('opens with the editor showing when that is what was stored', async () => {
+it('opens with only the editor when that is what was stored', async () => {
+  window.localStorage.setItem('mdviewer.editorMode', 'source');
+
+  await renderApp();
+
+  expect(hasEditor()).toBe(true);
+  expect(shows('Notes')).toBe(false);
+});
+
+it('reads the older stored editor flag as the split', async () => {
   window.localStorage.setItem('mdviewer.editorVisible', 'true');
 
   await renderApp();
@@ -163,6 +198,9 @@ it('shows Save only while the editor is open', async () => {
   expect(saveButton()).toBeDisabled();
 
   type('# Changed');
+  expect(saveButton()).toBeEnabled();
+
+  fireEvent.click(toggle());
   expect(saveButton()).toBeEnabled();
 
   fireEvent.click(toggle());
@@ -346,6 +384,7 @@ it('writes nothing on Command-S while the editor is closed', async () => {
   fireEvent.click(toggle());
   type('# Changed');
   fireEvent.click(toggle());
+  fireEvent.click(toggle());
 
   fireEvent.keyDown(window, { key: 's', metaKey: true });
   await settle();
@@ -356,13 +395,13 @@ it('writes nothing on Command-S while the editor is closed', async () => {
 it.each([
   ['Command', { metaKey: true }],
   ['Control', { ctrlKey: true }],
-])('toggles the editor on %s-E', async (_name, modifier) => {
+])('steps the editor on %s-E', async (_name, modifier) => {
   await renderApp();
 
   const isDefault = fireEvent.keyDown(window, { key: 'e', ...modifier });
   expect(isDefault).toBe(false);
-  expect(toggle()).toHaveAccessibleName('Hide editor');
+  expect(toggle()).toHaveAccessibleName('Show editor only');
 
   fireEvent.keyDown(window, { key: 'e', ...modifier });
-  expect(toggle()).toHaveAccessibleName('Show editor');
+  expect(toggle()).toHaveAccessibleName('Show preview only');
 });

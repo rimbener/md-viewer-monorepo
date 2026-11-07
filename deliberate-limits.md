@@ -146,8 +146,8 @@ the editor button, and is enabled only while the buffer has unsaved edits. A
 document's buffer is kept for as long as the app is running, so switching to
 another file and back does not lose it, but quitting does. Command-S, or
 Control-S off the Mac, does what Save does, and only while Save is enabled;
-it never opens the browser's own save. Command-E, or Control-E, toggles the
-editor and takes the key from the browser. There is no prompt on the way out. The header says
+it never opens the browser's own save. Command-E, or Control-E, steps the
+editor view and takes the key from the browser. There is no prompt on the way out. The header says
 `edited, not saved` whenever a buffer has diverged from disk, and stops when
 the text matches the file again.
 
@@ -207,7 +207,8 @@ rebuild the list.
 A hit has to sit inside one run of text: a word, a code token, a step. The
 search does not join a bold word to the plain word beside it, so a match
 cannot start in one run and end in the next. It marks at most 500 hits, then
-stops. The source editor is not marked. The preview beside the editor is.
+stops. The source editor is not marked. The preview beside the editor is. In
+the editor-only view there is no preview, so Find marks nothing.
 
 ## No export
 

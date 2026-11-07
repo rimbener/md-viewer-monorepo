@@ -198,8 +198,12 @@ app checks its size and change time each second. When it changes, it is read
 again, so a save in another editor shows up without switching away. A session
 edit is left alone: the header says the file changed, and the buffer stays.
 
-Command-E, or Control-E off the Mac, shows and hides the editor, as the
-editor button does, and only while that button is enabled.
+The editor button steps through three views: preview only, preview and
+editor, and editor only, then back to preview only. The app remembers the view
+for the next launch. The title above the button names the view on screen:
+Preview, Split or Editor, and the button draws a page, two panes or a pencil.
+Command-E, or Control-E off the Mac, does the same as the
+editor button, and only while that button is enabled.
 
 The editor has a Save button to the right of the editor button. It writes the
 buffer to the file and clears `edited, not saved`. Command-S, or Control-S
@@ -226,7 +230,7 @@ its last line.
 
 ## Find
 
-The file name sits on its own row above the tools. Each tool has a small title: History, Editor, Font, Width, Zoom, and Find. Find is the last control on that tools row.
+The file name sits on its own row above the tools. Each tool has a small title: History, the editor view, Font, Width, Zoom, and Find. Find is the last control on that tools row.
 
 The sidebar toggle is not on that row. It is a round button at the vertical
 middle of the header, centred on the sidebar's right edge. It shows `←` to

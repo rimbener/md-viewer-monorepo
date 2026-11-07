@@ -26,17 +26,22 @@ import { usePlatform } from '../platform';
 import {
   loadCharacters,
   loadEditorFraction,
-  loadEditorVisible,
+  loadEditorMode,
   loadFontScheme,
   loadZoom,
   saveCharacters,
   saveEditorFraction,
-  saveEditorVisible,
+  saveEditorMode,
   saveFontScheme,
   saveZoom,
 } from '../preferences';
 import { useScrollMemory } from '../scrollMemory';
 import { useScrollSync } from '../scrollSync';
+import {
+  EDITOR_MODE_TITLE,
+  nextEditorMode,
+  type EditorMode,
+} from '../editorMode';
 import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
 import type { FileNode } from '../types';
@@ -172,7 +177,7 @@ export function DocumentPanel({
   const [bodyHeight, setBodyHeight] = useState(0);
   const [schemeId, setSchemeId] = useState(DEFAULT_SCHEME_ID);
   // Reading is the common case, so the editor stays closed until asked for.
-  const [isEditorVisible, setIsEditorVisible] = useState(false);
+  const [editorMode, setEditorMode] = useState<EditorMode>('preview');
   const hasChosenZoom = useRef(false);
   const hasChosenCharacters = useRef(false);
   const hasChosenScheme = useRef(false);
@@ -202,9 +207,9 @@ export function DocumentPanel({
       }
     });
 
-    loadEditorVisible().then(stored => {
+    loadEditorMode().then(stored => {
       if (!cancelled && stored !== null && !hasChosenEditor.current) {
-        setIsEditorVisible(stored);
+        setEditorMode(stored);
       }
     });
 
@@ -254,10 +259,10 @@ export function DocumentPanel({
   // The write stays out of the state updater, which React may call twice.
   const toggleEditor = useCallback(() => {
     hasChosenEditor.current = true;
-    const next = !isEditorVisible;
-    setIsEditorVisible(next);
-    saveEditorVisible(next);
-  }, [isEditorVisible]);
+    const next = nextEditorMode(editorMode);
+    setEditorMode(next);
+    saveEditorMode(next);
+  }, [editorMode]);
 
   const changeEditorFraction = useCallback((next: number) => {
     hasChosenEditorFraction.current = true;
@@ -544,8 +549,8 @@ export function DocumentPanel({
     ? 'loading'
     : error !== null
       ? 'error'
-      : isEditorVisible && !isTruncated
-        ? 'split'
+      : editorMode !== 'preview' && !isTruncated
+        ? editorMode
         : 'single';
   const scrollMemory = useScrollMemory(path, scrollRef, bodyHeight, mountKey);
   const { onContentSizeChange } = scrollMemory;
@@ -630,7 +635,8 @@ export function DocumentPanel({
   if (canEdit) {
     editorShortcut.current = toggleEditor;
   }
-  if (isEditorVisible && canEdit && canSave) {
+  const isEditing = editorMode !== 'preview' && canEdit;
+  if (isEditing && canSave) {
     saveShortcut.current = save;
   }
   const lineHeight = isTruncated
@@ -714,14 +720,14 @@ export function DocumentPanel({
               />
             </Tool>
           ) : null}
-          <Tool title="Editor">
+          <Tool title={EDITOR_MODE_TITLE[editorMode]}>
             <div style={styles.toolRow}>
               <EditorToggle
-                isVisible={isEditorVisible}
+                mode={editorMode}
                 disabled={!canEdit}
                 onToggle={toggleEditor}
               />
-              {isEditorVisible && canEdit ? (
+              {isEditing ? (
                 <>
                   <SaveButton disabled={!canSave} onSave={save} />
                   <UndoRedo
@@ -776,12 +782,13 @@ export function DocumentPanel({
               {error}
             </span>
           </div>
-        ) : isEditorVisible && canEdit ? (
+        ) : isEditing ? (
           <div style={styles.split}>
             <div
               style={{
                 ...styles.source,
-                flexBasis: `${editorFraction * 100}%`,
+                flexBasis:
+                  editorMode === 'source' ? '100%' : `${editorFraction * 100}%`,
               }}
             >
               <Editor
@@ -795,12 +802,16 @@ export function DocumentPanel({
                 onScroll={scrollSync.onEditorScroll}
               />
             </div>
-            <SplitDivider
-              fraction={editorFraction}
-              onChange={changeEditorFraction}
-              onCommit={saveEditorFraction}
-            />
-            <div style={styles.preview}>{document}</div>
+            {editorMode === 'split' ? (
+              <>
+                <SplitDivider
+                  fraction={editorFraction}
+                  onChange={changeEditorFraction}
+                  onCommit={saveEditorFraction}
+                />
+                <div style={styles.preview}>{document}</div>
+              </>
+            ) : null}
           </div>
         ) : (
           document

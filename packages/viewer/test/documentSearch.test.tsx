@@ -54,7 +54,7 @@ function expectBackgrounds(content: string, colors: string[]): void {
 it('names each tool', async () => {
   await renderApp();
 
-  ['History', 'Editor', 'Font', 'Width', 'Zoom', 'Find'].forEach(title =>
+  ['History', 'Preview', 'Font', 'Width', 'Zoom', 'Find'].forEach(title =>
     expect(screen.getByText(title)).toBeInTheDocument(),
   );
 });

@@ -12,6 +12,7 @@
 
 import { isColorSchemeId, type ColorSchemeId } from './colorScheme';
 import { isCharacterCount } from './column';
+import { isEditorMode, type EditorMode } from './editorMode';
 import {
   decodeFileHistory,
   encodeFileHistory,
@@ -42,6 +43,7 @@ const FONT_KEY = 'mdviewer.fontScheme';
 const COLOR_SCHEME_KEY = 'mdviewer.colorScheme';
 const SIDEBAR_KEY = 'mdviewer.sidebarVisible';
 const EDITOR_KEY = 'mdviewer.editorVisible';
+const EDITOR_MODE_KEY = 'mdviewer.editorMode';
 const EDITOR_FRACTION_KEY = 'mdviewer.editorFraction';
 const HISTORY_INDEX_KEY = 'mdviewer.fileHistoryFolders';
 const RECENT_FOLDERS_KEY = 'mdviewer.recentFolders';
@@ -138,13 +140,18 @@ export function saveSidebarVisible(isVisible: boolean): void {
 }
 
 /** Whether the source editor was open, or null when that was never chosen. */
-export async function loadEditorVisible(): Promise<boolean | null> {
-  const stored = await read(EDITOR_KEY);
-  return stored === null ? null : stored === 'true';
+export async function loadEditorMode(): Promise<EditorMode | null> {
+  const stored = await read(EDITOR_MODE_KEY);
+  if (stored !== null) {
+    return isEditorMode(stored) ? stored : null;
+  }
+  // Earlier builds stored only whether the split was open.
+  const legacy = await read(EDITOR_KEY);
+  return legacy === null ? null : legacy === 'true' ? 'split' : 'preview';
 }
 
-export function saveEditorVisible(isVisible: boolean): void {
-  write(EDITOR_KEY, String(isVisible));
+export function saveEditorMode(mode: EditorMode): void {
+  write(EDITOR_MODE_KEY, mode);
 }
 
 /** The editor's share of the split, or null when there is no usable one. */
