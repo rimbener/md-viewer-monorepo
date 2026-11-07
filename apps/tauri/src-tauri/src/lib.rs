@@ -46,6 +46,7 @@ fn file_argument() -> Option<String> {
     std::env::args().skip(1).find(|arg| !arg.starts_with('-'))
 }
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut opened = Opened::default();
     if let Some(path) = file_argument() {
@@ -56,6 +57,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_saf::init())
         .manage(OpenedFiles(Mutex::new(opened)))
         .invoke_handler(tauri::generate_handler![take_opened_file])
         .build(tauri::generate_context!())

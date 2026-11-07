@@ -1,0 +1,13 @@
+[package]
+name = "tauri-plugin-saf"
+version = "0.1.0"
+description = "Folders and documents through the Android Storage Access Framework"
+edition = "2021"
+publish = false
+links = "tauri-plugin-saf"
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }
+
+[dependencies]
+tauri = "2"

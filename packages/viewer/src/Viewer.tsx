@@ -526,6 +526,9 @@ function Session() {
         {
           display: 'flex',
           height: '100%',
+          // An app drawn under system bars sets these; elsewhere they are 0.
+          padding:
+            'var(--safe-area-top, 0px) var(--safe-area-right, 0px) var(--safe-area-bottom, 0px) var(--safe-area-left, 0px)',
           backgroundColor: theme.background,
           color: theme.text,
           // Pressed buttons and focus rings read the palette through these.

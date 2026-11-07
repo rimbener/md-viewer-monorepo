@@ -147,12 +147,14 @@ growing past its natural size. Relative paths resolve against the folder of the
 document being viewed, or against its URL for a document opened by URL.
 `/absolute` paths and `http(s):` URLs are used as-is. In the web app an image
 in an open folder is read through the folder and shown from a `blob:` URL; the
-desktop app shows it through Tauri's asset protocol.
+desktop app shows it through Tauri's asset protocol. The Android app reads it
+through the folder grant and shows it from a `blob:` URL.
 
 ## The session
 
 The folder and file open at the last quit are reopened at the next launch, with
-no dialog. The desktop app stores the folder path. The web app stores the
+no dialog. The desktop app stores the folder path. The Android app stores the
+folder's tree URI, and Android keeps the grant for it. The web app stores the
 folder handle in IndexedDB. The browser can keep the read permission with it,
 when the person chose "Allow on every visit". Otherwise the permission must be
 given again, and the browser asks only after a click: choose the folder in the
@@ -294,6 +296,19 @@ name of its parent folder. A file opened while the app runs gets a new window,
 titled with the file name. The other files in the folder stay unread. The app
 does not store that file as the last folder. A different app stays the default
 when a person has already chosen one.
+
+### Android app
+
+The Android app is the same Tauri app, built as an APK to install by hand. It
+reads only the folder that the person grants in the system folder picker, so a
+folder from any document provider works, cloud providers too. Android keeps the
+grant, so the last folder opens again at launch. As in the web app, the path
+of a folder is `/<folder name>`, and a second folder with the same name gets
+`/<folder name> (2)`. Save and Add new file write through the grant. The open
+file is checked for a change each second. The app draws under the status bar,
+the navigation bar and a camera cutout, and the plugin tells the page how much
+of each edge they cover. The viewer keeps its content inside those edges, and
+above the keyboard.
 
 ## Performance
 

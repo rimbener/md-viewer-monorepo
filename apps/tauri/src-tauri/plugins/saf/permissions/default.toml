@@ -1,0 +1,15 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = "Pick a folder, read, write and create the documents in it, and read the safe area."
+permissions = [
+  "allow-pick-folder",
+  "allow-open-tree",
+  "allow-list-children",
+  "allow-stat",
+  "allow-read-text",
+  "allow-read-base64",
+  "allow-write-text",
+  "allow-create-file",
+  "allow-safe-area",
+]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-open-tree"
+description = "Enables the open_tree command without any pre-configured scope."
+commands.allow = ["open_tree"]
+
+[[permission]]
+identifier = "deny-open-tree"
+description = "Denies the open_tree command without any pre-configured scope."
+commands.deny = ["open_tree"]

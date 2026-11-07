@@ -8,7 +8,7 @@ document on the right. One viewer, two thin apps:
 | `packages/markdown` | Markdown, Gherkin and syntax readers. Pure TypeScript, no UI. |
 | `packages/viewer`   | The React viewer. Talks to the platform through `Platform`.   |
 | `apps/web`          | Static web app. Chromium for folders, any browser for a URL.  |
-| `apps/tauri`        | Desktop app for macOS, Windows and Linux.                     |
+| `apps/tauri`        | Desktop app for macOS, Windows and Linux, and an Android APK. |
 
 [`what-it-handles.md`](what-it-handles.md) says what the viewer does.
 [`deliberate-limits.md`](deliberate-limits.md) says what it does not do, and why.
@@ -29,6 +29,19 @@ pnpm install:macos  # build, then copy MD Viewer.app to /Applications
 pnpm test           # vitest, every package
 pnpm typecheck
 pnpm lint
+```
+
+## Android
+
+Needs Android Studio (SDK, NDK, command-line tools), `JAVA_HOME`,
+`ANDROID_HOME` and `NDK_HOME`, and the Rust Android targets
+(`rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android`).
+
+```sh
+cd apps/tauri
+pnpm tauri android init                            # once; makes src-tauri/gen/android
+pnpm tauri android dev                             # on a USB phone or an emulator
+pnpm tauri android build --apk --target aarch64    # sign it, then adb install
 ```
 
 ## Open a document by URL

@@ -13,6 +13,7 @@
     "fs:allow-write-text-file",
     "fs:allow-watch",
     "fs:allow-unwatch",
+    "saf:default",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "**" }]

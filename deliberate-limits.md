@@ -131,6 +131,18 @@ when the person clicks Save. A store
 build for the Mac App Store would need the sandbox and security-scoped
 bookmarks back.
 
+## Android reads through the folder grant
+
+Tauri's dialog cannot pick a folder on Android, and its file system plugin
+cannot list a granted folder. All-files access would give plain paths, but it
+reaches only device storage, and the store refuses it. So the Android app does
+all reads and writes through the Storage Access Framework, in a small Kotlin
+plugin (`apps/tauri/src-tauri/plugins/saf`). A folder has no disk path there,
+so it is known by its name, as in the web app. Each read finds the document by
+name, folder by folder, so the first read deep in a large folder is slower. The
+app is not registered to open a file from another app, and it is not in the
+Play Store.
+
 ## Back and Next are navigation, not undo
 
 The buttons move through files you opened in the current folder. They do not
