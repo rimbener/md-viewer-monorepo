@@ -100,3 +100,25 @@ it('opens a file in a folder that a click read', async () => {
   await press(screen.getByRole('treeitem', { name: 'other.md' }));
   expect(screen.getByRole('heading', { name: 'Other' })).toBeInTheDocument();
 });
+
+it('shows a folder past the cap as one to open, and opens it on one click', async () => {
+  storeSession('/notes', '/notes/a/b/open.md');
+  const platform = notesPlatform({
+    ...BURIED,
+    '/notes/a/b': ['c/', 'open.md'],
+  });
+  await renderViewer(platform);
+  const c = screen.getByRole('treeitem', { name: 'c folder' });
+  // An item inside is what gives the folder its open toggle.
+  expect(c.querySelector('m3e-tree-item')).toHaveAttribute(
+    'aria-label',
+    'Loading',
+  );
+  expect(c).not.toHaveAttribute('aria-expanded', 'true');
+
+  await press(c);
+
+  expect(c).toHaveAttribute('aria-expanded', 'true');
+  expect(treeItem('d folder')).toBeInTheDocument();
+  expect(treeItem('Loading')).toBeNull();
+});

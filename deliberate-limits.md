@@ -230,8 +230,9 @@ in the preview than in the source, so the panes drift near it.
 ## The tree is walked three levels at a time
 
 A full recursive walk of a large project is expensive and can hang the UI.
-Each scan reads three directory levels. A deeper folder is read when you click
-it in the tree, and Reload walks the root again. The tree is not watched:
+Each scan reads three directory levels. A deeper folder shows with its open
+toggle and one "Loading…" item, and it is read when you click it in the tree.
+It opens on that click. Reload walks the root again. The tree is not watched:
 files added or removed while the app is open do not appear by themselves. A
 watcher would keep the tree live, but it would also let the list jump while
 someone was reading it. The open file is watched on its own, and that does not

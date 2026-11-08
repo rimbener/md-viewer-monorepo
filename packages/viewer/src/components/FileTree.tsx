@@ -99,7 +99,7 @@ export function FileTree({
       item.id ||= `file-tree-item-${nextItemId++}`;
     }
     tree[selectionManager].setItems(items);
-  }, [root]);
+  }, [nodes]);
 
   const onChange = (event: Event) => {
     const tree = event.currentTarget as M3eTreeElement;
@@ -139,7 +139,16 @@ export function FileTree({
         <span slot="label" style={{ ...oneLine, fontWeight: 600 }}>
           {node.name}
         </span>
-        {node.children.map(renderNode)}
+        {node.isUnread ? (
+          // m3e shows the toggle and opens a folder only when it has items.
+          <M3eTreeItem disabled aria-label="Loading">
+            <span slot="label" style={oneLine}>
+              Loading…
+            </span>
+          </M3eTreeItem>
+        ) : (
+          node.children.map(renderNode)
+        )}
       </M3eTreeItem>
     ) : (
       <M3eTreeItem

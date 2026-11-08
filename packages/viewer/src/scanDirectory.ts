@@ -120,6 +120,7 @@ async function scan(
         name: entry.name,
         path: entry.path,
         children: [],
+        isUnread: true,
       });
     }
   }

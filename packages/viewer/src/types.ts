@@ -16,6 +16,8 @@ export interface DirectoryNode {
   path: string;
   /** Directories first, then files; both alphabetical. */
   children: TreeNode[];
+  /** Past the walk: not read yet, so its children are not known. */
+  isUnread?: boolean;
 }
 
 export type TreeNode = FileNode | DirectoryNode;
