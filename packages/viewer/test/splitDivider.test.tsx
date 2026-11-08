@@ -152,3 +152,10 @@ it('sizes each pane by the split, not by its content', async () => {
     expect(element.style.contain).toBe('inline-size');
   }
 });
+
+it('shows the same resize cursor as the sidebar handle', async () => {
+  await openEditor();
+
+  const rule = pane().shadowRoot!.getElementById('editor-split-cursor');
+  expect(rule?.textContent).toContain('cursor: col-resize');
+});

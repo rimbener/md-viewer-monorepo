@@ -29,6 +29,21 @@ function paneFraction(event: Event): number | null {
   return (event.currentTarget as M3eSplitPaneElement).value / 100;
 }
 
+const RESIZE_CURSOR_ID = 'editor-split-cursor';
+
+/** m3e shows a grab cursor; the sidebar handle shows col-resize. */
+function addResizeCursor(pane: M3eSplitPaneElement | null): void {
+  const root = pane?.shadowRoot;
+  if (!root || root.getElementById(RESIZE_CURSOR_ID) !== null) {
+    return;
+  }
+  const style = document.createElement('style');
+  style.id = RESIZE_CURSOR_ID;
+  style.textContent =
+    '.drag-handle:not([aria-disabled]) { cursor: col-resize !important; }';
+  root.append(style);
+}
+
 function isOnHandle(event: SyntheticEvent): boolean {
   return event.nativeEvent
     .composedPath()
@@ -48,6 +63,7 @@ export function EditorSplit({
 }: EditorSplitProps) {
   return (
     <M3eSplitPane
+      ref={addResizeCursor}
       orientation="horizontal"
       label="Resize editor"
       value={percent(fraction)}
