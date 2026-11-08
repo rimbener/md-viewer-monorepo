@@ -10,20 +10,8 @@ import {
   type KeyboardEvent,
 } from 'react';
 
-import { M3eButton, M3eFormField, M3eIcon, M3eIconButton } from '../m3e';
+import { M3eIcon, M3eIconButton, M3eSearchBar } from '../m3e';
 import { MAX_QUERY_LENGTH } from '../search';
-import { Tooltip, useControlId } from './Tooltip';
-
-/** The replace row. It works on the source, so only while the editor shows. */
-export type ReplaceControls = {
-  isEnabled: boolean;
-  /** Bumped by Command-R, so the field takes the focus again. */
-  focusKey: number;
-  value: string;
-  onValue: (value: string) => void;
-  onReplaceOne: () => void;
-  onReplaceAll: () => void;
-};
 
 type DocumentSearchProps = {
   query: string;
@@ -32,10 +20,9 @@ type DocumentSearchProps = {
   capped: boolean;
   onQuery: (query: string) => void;
   onActive: (index: number) => void;
-  replace?: ReplaceControls | null;
 };
 
-/** Find field, match count, and previous / next. Last control on the tools row. */
+/** The Find search bar in the top app bar: field, match count, previous / next. */
 export function DocumentSearch({
   query,
   count,
@@ -43,21 +30,8 @@ export function DocumentSearch({
   capped,
   onQuery,
   onActive,
-  replace = null,
 }: DocumentSearchProps) {
-  const replaceId = useControlId();
-  const replaceOneId = useControlId();
-  const replaceAllId = useControlId();
   const fieldRef = useRef<HTMLInputElement>(null);
-  const replaceRef = useRef<HTMLInputElement>(null);
-  const focusKey = replace?.focusKey ?? 0;
-
-  useEffect(() => {
-    if (focusKey > 0) {
-      replaceRef.current?.focus();
-      replaceRef.current?.select();
-    }
-  }, [focusKey]);
 
   useEffect(() => {
     // Command-F (Control-F off the Mac) finds in the document, not the page.
@@ -97,24 +71,25 @@ export function DocumentSearch({
   };
 
   return (
-    <div style={styles.column}>
-      <M3eFormField variant="outlined" hideSubscript="always">
-        <M3eIcon slot="prefix" name="search" />
-        <input
-          ref={fieldRef}
-          aria-label="Find in document"
-          placeholder="Find"
-          value={query}
-          onChange={event => onQuery(event.target.value)}
-          onKeyDown={handleKey}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          maxLength={MAX_QUERY_LENGTH}
-        />
+    <M3eSearchBar style={styles.bar}>
+      <M3eIcon slot="leading" name="search" />
+      <input
+        slot="input"
+        role="searchbox"
+        ref={fieldRef}
+        aria-label="Find in document"
+        placeholder="Find"
+        value={query}
+        onChange={event => onQuery(event.target.value)}
+        onKeyDown={handleKey}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        maxLength={MAX_QUERY_LENGTH}
+      />
+      <span slot="trailing" style={styles.trailing}>
         <span
-          slot="suffix-text"
           aria-label={
             count === 0
               ? 'No matches'
@@ -124,107 +99,42 @@ export function DocumentSearch({
         >
           {count === 0 ? '0' : `${active + 1}/${count}${capped ? '+' : ''}`}
         </span>
-        <span slot="suffix" style={styles.actions}>
-          <M3eIconButton
-            aria-label="Previous match"
-            disabled={count === 0}
-            onClick={() => go(-1)}
-          >
-            <M3eIcon name="keyboard_arrow_up" />
-          </M3eIconButton>
-          <M3eIconButton
-            aria-label="Next match"
-            disabled={count === 0}
-            onClick={() => go(1)}
-          >
-            <M3eIcon name="keyboard_arrow_down" />
-          </M3eIconButton>
-          <M3eIconButton
-            aria-label="Clear find"
-            disabled={query.length === 0}
-            onClick={() => onQuery('')}
-          >
-            <M3eIcon name="close" />
-          </M3eIconButton>
-        </span>
-      </M3eFormField>
-      {replace !== null ? (
-        <div style={styles.row}>
-          <M3eFormField
-            id={replaceId}
-            variant="outlined"
-            hideSubscript="always"
-          >
-            <input
-              ref={replaceRef}
-              aria-label="Replace with"
-              placeholder="Replace"
-              disabled={!replace.isEnabled}
-              value={replace.value}
-              onChange={event => replace.onValue(event.target.value)}
-              onKeyDown={event => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  replace.onReplaceOne();
-                }
-              }}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-            />
-          </M3eFormField>
-          {replace.isEnabled ? null : (
-            <Tooltip
-              controlId={replaceId}
-              text="Replace works on the source. Show the editor to use it (⌘R, Ctrl+R)."
-            />
-          )}
-          <M3eButton
-            id={replaceOneId}
-            variant="text"
-            disabled={!replace.isEnabled || count === 0}
-            onClick={replace.onReplaceOne}
-          >
-            Replace one
-          </M3eButton>
-          <Tooltip
-            controlId={replaceOneId}
-            text="Replaces the current match (Return in the field)"
-          />
-          <M3eButton
-            id={replaceAllId}
-            variant="text"
-            disabled={!replace.isEnabled || count === 0}
-            onClick={replace.onReplaceAll}
-          >
-            Replace all
-          </M3eButton>
-          <Tooltip
-            controlId={replaceAllId}
-            text="Replaces every match in the source"
-          />
-        </div>
-      ) : null}
-    </div>
+        <M3eIconButton
+          aria-label="Previous match"
+          disabled={count === 0}
+          onClick={() => go(-1)}
+        >
+          <M3eIcon name="keyboard_arrow_up" />
+        </M3eIconButton>
+        <M3eIconButton
+          aria-label="Next match"
+          disabled={count === 0}
+          onClick={() => go(1)}
+        >
+          <M3eIcon name="keyboard_arrow_down" />
+        </M3eIconButton>
+        <M3eIconButton
+          aria-label="Clear find"
+          disabled={query.length === 0}
+          onClick={() => onQuery('')}
+        >
+          <M3eIcon name="close" />
+        </M3eIconButton>
+      </span>
+    </M3eSearchBar>
   );
 }
 
 const styles = {
-  column: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
+  // M3 search bar: 360 dp at its narrowest.
+  bar: {
+    width: 360,
   },
-  row: {
+  trailing: {
     display: 'flex',
     alignItems: 'center',
-    gap: 8,
   },
   count: {
     fontVariantNumeric: 'tabular-nums',
-  },
-  actions: {
-    display: 'flex',
   },
 } satisfies Record<string, CSSProperties>;

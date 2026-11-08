@@ -16,7 +16,7 @@ it('keeps the field focused after Return', async () => {
       onActive={onActive}
     />,
   );
-  const field = screen.getByRole('textbox', { name: 'Find in document' });
+  const field = screen.getByRole('searchbox', { name: 'Find in document' });
   await user.click(field);
 
   await user.keyboard('{Enter}');

@@ -19,7 +19,7 @@ type StepControlProps = {
 /** − / the value, which resets it / +, as one button group. */
 export function StepControl(props: StepControlProps) {
   return (
-    <M3eButtonGroup>
+    <M3eButtonGroup variant="connected">
       <M3eIconButton
         aria-label={props.decreaseLabel}
         disabled={!props.canDecrease}

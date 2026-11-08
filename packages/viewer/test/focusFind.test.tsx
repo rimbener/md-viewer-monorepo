@@ -13,7 +13,7 @@ function renderSearch(): HTMLInputElement {
       onActive={() => {}}
     />,
   );
-  return screen.getByRole('textbox', { name: 'Find in document' });
+  return screen.getByRole('searchbox', { name: 'Find in document' });
 }
 
 it.each([

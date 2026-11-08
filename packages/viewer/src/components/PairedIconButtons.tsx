@@ -19,7 +19,7 @@ export function PairedIconButtons({
 
   return (
     <>
-      <M3eButtonGroup>
+      <M3eButtonGroup variant="connected">
         {actions.map((action, index) => (
           <M3eIconButton
             key={action.accessibilityLabel}

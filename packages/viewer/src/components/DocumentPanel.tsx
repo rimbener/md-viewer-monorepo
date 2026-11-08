@@ -61,7 +61,8 @@ import { GherkinToggle } from './GherkinToggle';
 import { SaveButton } from './SaveButton';
 import { Spinner } from './Spinner';
 import { EditorSplit } from './EditorSplit';
-import { AppBarTitle } from './TopAppBar';
+import { AppBarActions, AppBarTitle } from './TopAppBar';
+import { ReplaceBar } from './ReplaceBar';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
@@ -167,6 +168,7 @@ export function DocumentPanel({
   const [query, setQuery] = useState('');
   const [replacement, setReplacement] = useState('');
   const [replaceFocusKey, setReplaceFocusKey] = useState(0);
+  const clearReplaceFocus = useCallback(() => setReplaceFocusKey(0), []);
   /** After a replace, the next current hit is the first one from here. */
   const resumeAt = useRef<number | null>(null);
   const [active, setActive] = useState(0);
@@ -450,12 +452,12 @@ export function DocumentPanel({
   /** What Command-E does now, or null while the editor button is disabled. */
   const editorShortcut = useRef<(() => void) | null>(null);
   const sidebarShortcut = useRef(onToggleSidebar);
-  /** What Command-R does now, or null while nothing can be replaced. */
+  /** What Command-G does now, or null while nothing can be replaced. */
   const replaceShortcut = useRef<(() => void) | null>(null);
   sidebarShortcut.current = onToggleSidebar;
 
   useEffect(() => {
-    // Control stands in for Command off the Mac; the page's own S, E and B give way.
+    // Control stands in for Command off the Mac; the page's own S, E, B and G give way.
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
         return;
@@ -464,7 +466,7 @@ export function DocumentPanel({
         s: saveShortcut,
         e: editorShortcut,
         b: sidebarShortcut,
-        r: replaceShortcut,
+        g: replaceShortcut,
       }[event.key.toLowerCase()];
       if (shortcut !== undefined) {
         event.preventDefault();
@@ -771,6 +773,16 @@ export function DocumentPanel({
             : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
         </span>
       </AppBarTitle>
+      <AppBarActions>
+        <DocumentSearch
+          query={query}
+          count={matchCount}
+          active={active}
+          capped={capped}
+          onQuery={changeQuery}
+          onActive={setActive}
+        />
+      </AppBarActions>
       <header style={headerStyle}>
         <M3eToolbar>
           {historyTool}
@@ -799,27 +811,18 @@ export function DocumentPanel({
           <FontControl schemeId={schemeId} onChange={changeScheme} />
           <ColumnControl characters={characters} onChange={changeCharacters} />
           <ZoomControl scale={scale} onChange={changeZoom} />
-          <DocumentSearch
-            query={query}
-            count={matchCount}
-            active={active}
-            capped={capped}
-            onQuery={changeQuery}
-            onActive={setActive}
-            replace={
-              canEdit
-                ? {
-                    isEnabled: findsInSource,
-                    focusKey: replaceFocusKey,
-                    value: replacement,
-                    onValue: setReplacement,
-                    onReplaceOne: replaceOne,
-                    onReplaceAll: replaceEvery,
-                  }
-                : null
-            }
-          />
         </M3eToolbar>
+        {canEdit && findsInSource ? (
+          <ReplaceBar
+            focusKey={replaceFocusKey}
+            onFocused={clearReplaceFocus}
+            value={replacement}
+            canReplace={matchCount > 0}
+            onValue={setReplacement}
+            onReplaceOne={replaceOne}
+            onReplaceAll={replaceEvery}
+          />
+        ) : null}
       </header>
 
       <FindProvider

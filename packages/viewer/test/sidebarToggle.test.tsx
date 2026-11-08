@@ -180,7 +180,7 @@ describe('on a narrow window', () => {
 
     expect(drawer().start).toBe(false);
     expect(document.activeElement).toBe(
-      screen.getByRole('textbox', { name: 'Find in document' }),
+      screen.getByRole('searchbox', { name: 'Find in document' }),
     );
   });
 

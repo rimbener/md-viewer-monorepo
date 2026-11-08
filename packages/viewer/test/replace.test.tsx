@@ -27,7 +27,7 @@ function source(): HTMLTextAreaElement {
 }
 
 function findField(): HTMLInputElement {
-  return screen.getByRole('textbox', { name: 'Find in document' });
+  return screen.getByRole('searchbox', { name: 'Find in document' });
 }
 
 function replaceField(): HTMLInputElement {
@@ -35,7 +35,7 @@ function replaceField(): HTMLInputElement {
 }
 
 function pressReplace(): boolean {
-  return fireEvent.keyDown(window, { key: 'r', metaKey: true });
+  return fireEvent.keyDown(window, { key: 'g', metaKey: true });
 }
 
 async function openWith(query: string, replacement: string) {
@@ -47,27 +47,26 @@ async function openWith(query: string, replacement: string) {
   return user;
 }
 
-it('shows the replace row disabled while the editor is hidden', async () => {
+it('shows no replace row while the editor is hidden', async () => {
   await renderApp();
 
-  expect(replaceField()).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Replace one' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Replace all' })).toBeDisabled();
+  expect(screen.queryByRole('textbox', { name: 'Replace with' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Replace one' })).toBeNull();
 });
 
-it('opens the split and focuses the replace field on Command-R', async () => {
+it('opens the split and focuses the replace field on Command-G', async () => {
   await renderApp();
 
   const isDefault = pressReplace();
 
-  // The browser would reload the page and lose the edits.
+  // The browser find-next must not run.
   expect(isDefault).toBe(false);
   expect(source()).toBeInTheDocument();
   expect(replaceField()).toBeEnabled();
   expect(replaceField()).toHaveFocus();
 });
 
-it('focuses the replace field on Command-R from the find field', async () => {
+it('focuses the replace field on Command-G from the find field', async () => {
   const user = userEvent.setup();
   await renderApp();
   pressReplace();
@@ -125,13 +124,13 @@ it('undoes a replace all in one step', async () => {
   expect(source()).toHaveValue(SOURCE);
 });
 
-it('disables the replace row once the editor hides', async () => {
+it('hides the replace row with the editor and keeps its text', async () => {
   const user = await openWith('alpha', 'beta');
 
-  await user.click(screen.getByRole('radio', { name: 'Editor' }));
-  expect(replaceField()).toBeEnabled();
   await user.click(screen.getByRole('radio', { name: 'Preview' }));
+  expect(screen.queryByRole('textbox', { name: 'Replace with' })).toBeNull();
+  await user.click(screen.getByRole('radio', { name: 'Split' }));
 
-  expect(replaceField()).toBeDisabled();
   expect(replaceField()).toHaveValue('beta');
+  expect(replaceField()).not.toHaveFocus();
 });

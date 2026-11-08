@@ -11,7 +11,12 @@ import { M3eAppBar } from '../m3e';
 import { ColorSchemeControl } from './ColorSchemeControl';
 import { SidebarToggle } from './SidebarToggle';
 
-const TitleHostContext = createContext<HTMLElement | null>(null);
+type Hosts = {
+  title: HTMLElement | null;
+  actions: HTMLElement | null;
+};
+
+const HostsContext = createContext<Hosts>({ title: null, actions: null });
 
 type TopAppBarProps = {
   isSidebarVisible: boolean;
@@ -26,6 +31,7 @@ export function TopAppBar({
   children,
 }: TopAppBarProps) {
   const [title, setTitle] = useState<HTMLElement | null>(null);
+  const [actions, setActions] = useState<HTMLElement | null>(null);
 
   return (
     <>
@@ -37,20 +43,27 @@ export function TopAppBar({
           />
         </span>
         <div slot="title" ref={setTitle} style={styles.title} />
-        <span slot="trailing">
+        <span slot="trailing" style={styles.trailing}>
+          <span ref={setActions} style={styles.trailing} />
           <ColorSchemeControl />
         </span>
       </M3eAppBar>
-      <TitleHostContext.Provider value={title}>
+      <HostsContext.Provider value={{ title, actions }}>
         {children}
-      </TitleHostContext.Provider>
+      </HostsContext.Provider>
     </>
   );
 }
 
 /** Puts the open document's name in the top app bar. */
 export function AppBarTitle({ children }: { children: ReactNode }) {
-  const host = useContext(TitleHostContext);
+  const host = useContext(HostsContext).title;
+  return host === null ? null : createPortal(children, host);
+}
+
+/** Puts the open document's actions (Find) at the end of the top app bar. */
+export function AppBarActions({ children }: { children: ReactNode }) {
+  const host = useContext(HostsContext).actions;
   return host === null ? null : createPortal(children, host);
 }
 
@@ -62,5 +75,10 @@ const styles = {
     display: 'flex',
     minWidth: 0,
     gap: 4,
+  },
+  trailing: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
   },
 } satisfies Record<string, CSSProperties>;

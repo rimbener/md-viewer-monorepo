@@ -34,7 +34,7 @@ async function renderApp(): Promise<void> {
 }
 
 function findField(): HTMLInputElement {
-  return screen.getByRole('textbox', { name: 'Find in document' });
+  return screen.getByRole('searchbox', { name: 'Find in document' });
 }
 
 function hits(content: string): HTMLElement[] {
@@ -68,15 +68,12 @@ it('explains the tools in tooltips, not in titles above them', async () => {
   }
 });
 
-it('places the field last in the header', async () => {
+it('places the field in a search bar in the top app bar', async () => {
   await renderApp();
-  const zoomIn = screen.getByRole('button', { name: 'Zoom in' });
 
-  expect(
-    zoomIn.compareDocumentPosition(findField()) &
-      Node.DOCUMENT_POSITION_FOLLOWING,
-  ).toBeTruthy();
-  expect(findField().tagName).toBe('INPUT');
+  expect(findField().closest('m3e-search-bar')).not.toBeNull();
+  expect(findField().closest('m3e-app-bar')).not.toBeNull();
+  expect(findField().closest('m3e-toolbar')).toBeNull();
 });
 
 it('marks hits and moves the current one', async () => {
