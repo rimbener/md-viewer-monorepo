@@ -58,7 +58,7 @@ it('explains the tools in tooltips, not in titles above them', async () => {
       tip => (tip as HTMLElement & { htmlFor: string }).htmlFor === control.id,
     );
 
-  ['History', 'Font', 'Width', 'Find'].forEach(title =>
+  ['History', 'Width', 'Find'].forEach(title =>
     expect(screen.queryByText(title, { exact: true })).toBeNull(),
   );
   for (const name of ['Back', 'Next', 'Change font, currently Editorial']) {
@@ -68,7 +68,26 @@ it('explains the tools in tooltips, not in titles above them', async () => {
   }
 });
 
-it('labels the step controls above their buttons', async () => {
+it('puts each tool group in its own toolbar, in a row that wraps', async () => {
+  await renderApp();
+  const toolbars = Array.from(document.querySelectorAll('m3e-toolbar'));
+
+  expect(toolbars).toHaveLength(7);
+  expect((toolbars[0].parentElement as HTMLElement).style.flexWrap).toBe(
+    'wrap',
+  );
+  expect(
+    screen.getByRole('button', { name: 'Back' }).closest('m3e-toolbar'),
+  ).toBe(toolbars[0]);
+  expect(
+    screen.getByRole('group', { name: 'Zoom' }).closest('m3e-toolbar'),
+  ).toBe(toolbars[4]);
+  expect(
+    screen.getByRole('radio', { name: 'Preview' }).closest('m3e-toolbar'),
+  ).toBe(toolbars[6]);
+});
+
+it('labels the font and step controls above their buttons', async () => {
   await renderApp();
 
   for (const label of ['Line length', 'Font size', 'Zoom']) {
@@ -76,6 +95,13 @@ it('labels the step controls above their buttons', async () => {
     expect(group.firstElementChild).toHaveTextContent(label);
     expect(group.querySelector('m3e-button-group')).not.toBeNull();
   }
+  const font = screen.getByRole('group', { name: 'Font' });
+  expect(font.firstElementChild).toHaveTextContent('Font');
+  expect(
+    screen
+      .getByRole('button', { name: 'Change font, currently Editorial' })
+      .closest('[role="group"]'),
+  ).toBe(font);
 });
 
 it('places the field under the tools, as the same field as Replace', async () => {

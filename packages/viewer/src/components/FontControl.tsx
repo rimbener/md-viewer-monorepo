@@ -1,5 +1,6 @@
 import { M3eButton } from '../m3e';
 import { nextSchemeId, schemeById } from '../typography';
+import { LabeledControl } from './LabeledControl';
 import { Tooltip, useControlId } from './Tooltip';
 
 interface FontControlProps {
@@ -13,7 +14,7 @@ export function FontControl({ schemeId, onChange }: FontControlProps) {
   const scheme = schemeById(schemeId);
 
   return (
-    <>
+    <LabeledControl label="Font">
       <M3eButton
         variant="outlined"
         aria-label={`Change font, currently ${scheme.name}`}
@@ -23,6 +24,6 @@ export function FontControl({ schemeId, onChange }: FontControlProps) {
         {scheme.name}
       </M3eButton>
       <Tooltip controlId={id} text={scheme.description} />
-    </>
+    </LabeledControl>
   );
 }

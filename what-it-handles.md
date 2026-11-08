@@ -196,7 +196,8 @@ Each file keeps its scroll position. A file opens where it was left, after a
 switch, a reload or the next launch. When the content is not yet tall enough,
 the view moves down as the content grows. A scroll by the person stops that.
 The 10 files scrolled most recently keep a position. A file at the top keeps
-none. The color scheme control sits at the right end of the top app bar. The choices are System, Light and Dark. System
+none. The color scheme control, labelled Theme, is the last group of the
+tools, also when no file is open. The choices are System, Light and Dark. System
 follows the system appearance. Light and Dark stay fixed. The colors are the
 Material 3 monochrome scheme, in grays only. Links, find hits and code colors
 keep their own hues, because a gray link or a gray hit on a gray page is hard
@@ -266,13 +267,13 @@ its last line.
 ## Find
 
 A top app bar goes across the full window, above the sidebar and the
-document. From left to right: the menu button, the file name and the color
-scheme control. The tools row under it, in the document
-column, is a toolbar of buttons only, in this order: History, the Gherkin
-toggle when it applies, the editor button with Save and Undo/Redo, then Font,
-Line length, Font size and Zoom. Paired buttons (Back and Next, Undo and Redo, the − value +
-steps) are connected button groups. Line length, Font size and Zoom have a
-small label above their buttons. The other tools have no titles; each one
+document. From left to right: the menu button and the file name. The tools row under it, in the document
+column, holds buttons only, in this order: History, the Gherkin
+toggle when it applies, Font, Line length, Font size, Zoom, Theme, and last
+the editor button with Save and Undo/Redo. Each group is its own toolbar, and the groups
+wrap to a new line when the column is too narrow for them, as on a phone. Paired buttons (Back and Next, Undo and Redo, the − value +
+steps) are connected button groups. Font, Line length, Font size, Zoom and
+Theme have a small label above their buttons. The other tools have no titles; each one
 explains itself in a tooltip on hover or focus.
 
 Find is an outlined text field with a search icon, on a row under the tools. The match count and the

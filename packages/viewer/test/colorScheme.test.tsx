@@ -12,6 +12,7 @@ import type { FileNode } from '../src/types';
 import {
   createFakePlatform,
   press,
+  renderViewer,
   renderWithPlatform,
   settle,
 } from './fakePlatform';
@@ -76,14 +77,23 @@ function follows(first: Node, second: Node): boolean {
   );
 }
 
-it('sits in the top app bar, to the right of the name', async () => {
+it('sits after Zoom, before the editor button, under a label', async () => {
   await renderPanel();
-  const name = screen.getByRole('heading', { name: 'notes.md' });
   const system = schemeButton('System color scheme');
-  const history = screen.getByRole('button', { name: 'Back' });
+  const zoom = screen.getByRole('group', { name: 'Zoom' });
+  const toolbars = document.querySelectorAll('m3e-toolbar');
 
-  expect(follows(name, system)).toBe(true);
-  expect(follows(system, history)).toBe(true);
+  expect(system.closest('m3e-app-bar')).toBeNull();
+  expect(follows(zoom, system)).toBe(true);
+  expect(system.closest('m3e-toolbar')).toBe(toolbars[toolbars.length - 2]);
+  expect(screen.getByRole('group', { name: 'Theme' })).toContainElement(system);
+});
+
+it('shows with no file open', async () => {
+  await renderViewer(createFakePlatform());
+
+  expect(screen.queryByRole('heading', { name: 'notes.md' })).toBeNull();
+  expect(schemeButton('System color scheme')).toBeInTheDocument();
 });
 
 it('starts on System and switches the document to dark', async () => {

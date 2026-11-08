@@ -10,7 +10,6 @@ import {
 import { createPortal } from 'react-dom';
 
 import { M3eAppBar } from '../m3e';
-import { ColorSchemeControl } from './ColorSchemeControl';
 import { IconButton } from './IconButton';
 
 const TitleHostContext = createContext<HTMLElement | null>(null);
@@ -42,9 +41,6 @@ export function TopAppBar({
           />
         </span>
         <div slot="title" ref={setTitle} style={styles.title} />
-        <span slot="trailing">
-          <ColorSchemeControl />
-        </span>
       </M3eAppBar>
       <TitleHostContext.Provider value={title}>
         {children}

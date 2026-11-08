@@ -46,6 +46,7 @@ import {
 } from '../typography';
 import { DEFAULT_FONT_SIZE, textScaleOf } from '../fontSize';
 import { DEFAULT_ZOOM } from '../zoom';
+import { ColorSchemeControl } from './ColorSchemeControl';
 import { ColumnControl } from './ColumnControl';
 import { DocumentSearch } from './DocumentSearch';
 import { Editor } from './Editor';
@@ -54,6 +55,7 @@ import { EditorToggle } from './EditorToggle';
 import { FontControl } from './FontControl';
 import { HistoryNav } from './HistoryNav';
 import { IconButton } from './IconButton';
+import { LabeledControl } from './LabeledControl';
 import { Markdown } from './Markdown';
 import { Spinner } from './Spinner';
 import { EditorSplit } from './EditorSplit';
@@ -284,6 +286,14 @@ export function DocumentPanel({
     />
   );
 
+  const themeTool = (
+    <M3eToolbar>
+      <LabeledControl label="Theme">
+        <ColorSchemeControl />
+      </LabeledControl>
+    </M3eToolbar>
+  );
+
   const headerStyle: CSSProperties = {
     ...styles.header,
     borderBottomColor: theme.border,
@@ -293,7 +303,10 @@ export function DocumentPanel({
     return (
       <main style={styles.container}>
         <header style={headerStyle}>
-          <M3eToolbar>{historyTool}</M3eToolbar>
+          <div style={styles.toolRow}>
+            <M3eToolbar>{historyTool}</M3eToolbar>
+            {themeTool}
+          </div>
         </header>
         <div style={{ ...styles.body, ...styles.centered }}>
           <span style={{ ...styles.message, color: theme.mutedText }}>
@@ -375,28 +388,45 @@ export function DocumentPanel({
         </span>
       </AppBarTitle>
       <header style={headerStyle}>
-        <M3eToolbar>
-          {historyTool}
+        {/* One toolbar per group: m3e keeps a toolbar on one line, the row wraps. */}
+        <div style={styles.toolRow}>
+          <M3eToolbar>{historyTool}</M3eToolbar>
           {canRenderGherkin ? (
-            <IconButton
-              icon="checklist"
-              label={isGherkin ? 'Render as markdown' : 'Render as gherkin'}
-              tooltip="Lays out an unfenced Feature: as Gherkin"
-              selected={isGherkin}
-              onClick={() => setGherkinPath(isGherkin ? null : path)}
-            />
+            <M3eToolbar>
+              <IconButton
+                icon="checklist"
+                label={isGherkin ? 'Render as markdown' : 'Render as gherkin'}
+                tooltip="Lays out an unfenced Feature: as Gherkin"
+                selected={isGherkin}
+                onClick={() => setGherkinPath(isGherkin ? null : path)}
+              />
+            </M3eToolbar>
           ) : null}
-          <EditorToggle
-            mode={editorMode}
-            disabled={!canEdit}
-            onChange={chooseEditorMode}
-          />
-          {isEditing ? <EditTools session={session} /> : null}
-          <FontControl schemeId={schemeId} onChange={changeScheme} />
-          <ColumnControl characters={characters} onChange={changeCharacters} />
-          <FontSizeControl size={fontSize} onChange={changeFontSize} />
-          <ZoomControl scale={scale} onChange={changeZoom} />
-        </M3eToolbar>
+          <M3eToolbar>
+            <FontControl schemeId={schemeId} onChange={changeScheme} />
+          </M3eToolbar>
+          <M3eToolbar>
+            <ColumnControl
+              characters={characters}
+              onChange={changeCharacters}
+            />
+          </M3eToolbar>
+          <M3eToolbar>
+            <FontSizeControl size={fontSize} onChange={changeFontSize} />
+          </M3eToolbar>
+          <M3eToolbar>
+            <ZoomControl scale={scale} onChange={changeZoom} />
+          </M3eToolbar>
+          {themeTool}
+          <M3eToolbar>
+            <EditorToggle
+              mode={editorMode}
+              disabled={!canEdit}
+              onChange={chooseEditorMode}
+            />
+            {isEditing ? <EditTools session={session} /> : null}
+          </M3eToolbar>
+        </div>
         <div style={styles.findRow}>
           <DocumentSearch
             query={find.query}
@@ -498,11 +528,21 @@ const styles = {
   message: {
     fontSize: 13,
   },
+  // One surface for the row, so wrapped toolbars do not show as separate blocks.
+  // Bottom alignment keeps the buttons of labelled groups on the same line.
+  toolRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'flex-end',
+    backgroundColor: 'var(--md-sys-color-surface-container)',
+    '--m3e-toolbar-container-color': 'transparent',
+  } as CSSProperties,
   findRow: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: 8,
+    marginTop: 8,
   },
   header: {
     display: 'flex',
