@@ -10,16 +10,6 @@ import {
 import { hasBareFeature, parseMarkdown } from '@md-viewer/markdown/parseBlocks';
 
 import { DEFAULT_CHARACTERS } from '../column';
-import {
-  canRedo,
-  canUndo,
-  emptyEditHistory,
-  recordEdit,
-  redoEdit,
-  undoEdit,
-  type EditHistory,
-  type HistoryStep,
-} from '../editHistory';
 import { FindProvider, useShowText } from '../find';
 import { findMatches, MAX_MATCHES, replaceAll } from '../search';
 import { usePlatform } from '../platform';
@@ -40,6 +30,7 @@ import { useScrollSync } from '../scrollSync';
 import { nextEditorMode, type EditorMode } from '../editorMode';
 import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
+import { useDocumentSession } from '../useDocumentSession';
 import type { FileNode } from '../types';
 import { M3eToolbar } from '../m3e';
 import { isHttpUrl } from '../url';
@@ -67,18 +58,6 @@ import { ReplaceBar } from './ReplaceBar';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
-
-/**
- * Past this size the document is almost certainly not prose, and parsing it
- * would block the page for longer than anyone wants.
- */
-const MAX_RENDERED_CHARACTERS = 500_000;
-
-/**
- * How long the typing must stop before the preview is rebuilt. Long enough
- * that a run of keystrokes parses once, short enough to still read as live.
- */
-const REPARSE_DELAY_MS = 150;
 
 /** Body line in `Markdown.tsx` (`size(21)`), before zoom and scheme scale. */
 const BODY_LINE = 21;
@@ -135,33 +114,8 @@ export function DocumentPanel({
 }: DocumentPanelProps) {
   const theme = useTheme();
   const platform = usePlatform();
-  const [source, setSource] = useState<string | null>(null);
   /** The path read with unfenced features laid out; any other path is not. */
   const [gherkinPath, setGherkinPath] = useState<string | null>(null);
-  /** Edits made in this session, or null while the file is as it is on disk. */
-  const [draft, setDraft] = useState<string | null>(null);
-  /**
-   * The edits the preview is built from. It trails `draft` by the debounce, so
-   * a burst of keystrokes reparses the document once instead of every time.
-   */
-  const [settledDraft, setSettledDraft] = useState<string | null>(null);
-  const reparse = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reread = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /**
-   * Unsaved edits for every file touched this session, so a glance at
-   * another document does not throw the work away.
-   */
-  const drafts = useRef(new Map<string, string>());
-  /** Undo and Redo per file, kept as long as its draft. */
-  const histories = useRef(new Map<string, EditHistory>());
-  const [history, setHistory] = useState(emptyEditHistory);
-  const sourceRef = useRef<string | null>(null);
-  const draftRef = useRef<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [diskChanged, setDiskChanged] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   // Zoom and line length are properties of the reader rather than of the
   // document: they survive switching files, and are restored on the next launch.
   const [scale, changeZoom] = useStoredPreference(
@@ -228,177 +182,32 @@ export function DocumentPanel({
   );
 
   const path = file?.path ?? null;
-  const pathRef = useRef(path);
-  pathRef.current = path;
-  sourceRef.current = source;
-  draftRef.current = draft;
+  const {
+    text,
+    rendered,
+    isTruncated,
+    isLoading,
+    error,
+    isDirty,
+    diskChanged,
+    isSaving,
+    saveError,
+    canUndo,
+    canRedo,
+    edit,
+    replace: replaceText,
+    undo,
+    redo,
+    save,
+  } = useDocumentSession(path);
 
   useEffect(() => {
-    // A pending reparse belongs to the file being left, not to the new one.
-    if (reparse.current !== null) {
-      clearTimeout(reparse.current);
-      reparse.current = null;
-    }
-    if (reread.current !== null) {
-      clearTimeout(reread.current);
-      reread.current = null;
-    }
-
     setQuery('');
     setActive(0);
     setMatchCount(0);
     setCapped(false);
-    setSaveError(null);
+  }, [path]);
 
-    if (path === null) {
-      setSource(null);
-      setDraft(null);
-      setHistory(emptyEditHistory());
-      setSettledDraft(null);
-      setError(null);
-      setDiskChanged(false);
-      return;
-    }
-
-    // Whatever was typed into this file earlier is what it should open on.
-    const stored = drafts.current.get(path) ?? null;
-    setDraft(stored);
-    setHistory(histories.current.get(path) ?? emptyEditHistory());
-    setSettledDraft(stored);
-    draftRef.current = stored;
-    setDiskChanged(false);
-
-    let cancelled = false;
-    let ticket = 0;
-
-    const issue = (isReload: boolean) => {
-      const t = ++ticket;
-      if (!isReload) {
-        setIsLoading(true);
-        setError(null);
-      }
-      platform
-        .readFile(path)
-        .then(contents => {
-          if (cancelled || t !== ticket) {
-            return;
-          }
-          if (isReload && contents === sourceRef.current) {
-            return;
-          }
-          setSource(contents);
-          if (isReload && draftRef.current !== null) {
-            setDiskChanged(true);
-          }
-        })
-        .catch((cause: unknown) => {
-          if (cancelled || t !== ticket || isReload) {
-            return;
-          }
-          setSource(null);
-          setError(
-            cause instanceof Error ? cause.message : 'Could not read the file.',
-          );
-        })
-        .finally(() => {
-          if (!cancelled && t === ticket && !isReload) {
-            setIsLoading(false);
-          }
-        });
-    };
-
-    issue(false);
-
-    const stop = platform.watchFile(path, () => {
-      if (reread.current !== null) {
-        clearTimeout(reread.current);
-      }
-      reread.current = setTimeout(() => {
-        reread.current = null;
-        issue(true);
-      }, REPARSE_DELAY_MS);
-    });
-
-    return () => {
-      cancelled = true;
-      stop();
-      if (reread.current !== null) {
-        clearTimeout(reread.current);
-        reread.current = null;
-      }
-    };
-  }, [path, platform]);
-
-  /** Puts `next` in the editor. Text that matches the file is not a draft. */
-  const applyText = useCallback(
-    (next: string, nextHistory: EditHistory) => {
-      if (path === null) {
-        return;
-      }
-      histories.current.set(path, nextHistory);
-      setHistory(nextHistory);
-      const nextDraft = next === sourceRef.current ? null : next;
-      if (nextDraft === null) {
-        drafts.current.delete(path);
-        setDiskChanged(false);
-      } else {
-        drafts.current.set(path, nextDraft);
-      }
-      draftRef.current = nextDraft;
-      setDraft(nextDraft);
-      setSaveError(null);
-      if (reparse.current !== null) {
-        clearTimeout(reparse.current);
-      }
-      reparse.current = setTimeout(() => {
-        reparse.current = null;
-        setSettledDraft(nextDraft);
-      }, REPARSE_DELAY_MS);
-    },
-    [path],
-  );
-
-  const currentText = () => draftRef.current ?? sourceRef.current ?? '';
-
-  const edit = useCallback(
-    (next: string) => {
-      const before = currentText();
-      if (path === null || next === before) {
-        return;
-      }
-      const stored = histories.current.get(path) ?? emptyEditHistory();
-      applyText(next, recordEdit(stored, before, Date.now()));
-    },
-    [path, applyText],
-  );
-
-  // A replace is one undo step of its own, never merged with the typing around it.
-  const replaceText = useCallback(
-    (next: string) => {
-      const before = currentText();
-      if (path === null || next === before) {
-        return;
-      }
-      const stored = histories.current.get(path) ?? emptyEditHistory();
-      const recorded = recordEdit({ ...stored, lastAt: null }, before, 0);
-      applyText(next, { ...recorded, lastAt: null });
-    },
-    [path, applyText],
-  );
-
-  const step = useCallback(
-    (move: (history: EditHistory, current: string) => HistoryStep | null) => {
-      if (path === null) {
-        return;
-      }
-      const stored = histories.current.get(path) ?? emptyEditHistory();
-      const next = move(stored, currentText());
-      if (next !== null) {
-        applyText(next.text, next.history);
-      }
-    },
-    [path, applyText],
-  );
   /** What Command-S does now, or null while Save is not on offer. */
   const saveShortcut = useRef<(() => void) | null>(null);
   /** What Command-E does now, or null while the editor button is disabled. */
@@ -428,69 +237,6 @@ export function DocumentPanel({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  const undo = useCallback(() => step(undoEdit), [step]);
-  const redo = useCallback(() => step(redoEdit), [step]);
-
-  const save = useCallback(() => {
-    const write = platform.writeFile;
-    const contents = draftRef.current;
-    if (path === null || write === undefined || contents === null) {
-      return;
-    }
-    setIsSaving(true);
-    setSaveError(null);
-    write(path, contents)
-      .then(() => {
-        // Typing during the write leaves a newer draft, which stays unsaved.
-        if (drafts.current.get(path) === contents) {
-          drafts.current.delete(path);
-        }
-        if (pathRef.current !== path) {
-          return;
-        }
-        // Set before the watcher rereads, so the own write is not a change.
-        sourceRef.current = contents;
-        setSource(contents);
-        if (draftRef.current === contents) {
-          if (reparse.current !== null) {
-            clearTimeout(reparse.current);
-            reparse.current = null;
-          }
-          setDraft(null);
-          setSettledDraft(null);
-          setDiskChanged(false);
-        }
-      })
-      .catch((cause: unknown) => {
-        if (pathRef.current === path) {
-          setSaveError(
-            cause instanceof Error ? cause.message : 'Could not save the file.',
-          );
-        }
-      })
-      .finally(() => setIsSaving(false));
-  }, [path, platform]);
-
-  useEffect(
-    () => () => {
-      if (reparse.current !== null) {
-        clearTimeout(reparse.current);
-      }
-      if (reread.current !== null) {
-        clearTimeout(reread.current);
-      }
-    },
-    [],
-  );
-
-  /** What the editor holds: the edits if there are any, else what is on disk. */
-  const text = draft ?? source;
-  /** What the reader sees, which lags the editor by the debounce. */
-  const rendered = settledDraft ?? source;
-
-  const isTruncated =
-    rendered !== null && rendered.length > MAX_RENDERED_CHARACTERS;
 
   // Find goes where the editor is: the source whenever it shows, else the preview.
   const findsInSource =
@@ -545,20 +291,18 @@ export function DocumentPanel({
 
   const blocks = useMemo(
     () =>
-      rendered === null || rendered.length > MAX_RENDERED_CHARACTERS
+      rendered === null || isTruncated
         ? []
         : parseMarkdown(rendered, { bareFeatures: isGherkin }),
-    [rendered, isGherkin],
+    [rendered, isTruncated, isGherkin],
   );
 
   const canRenderGherkin = useMemo(
     () =>
       isGherkin
         ? blocks.some(block => block.kind === 'codeBlock' && block.bare)
-        : rendered !== null &&
-          rendered.length <= MAX_RENDERED_CHARACTERS &&
-          hasBareFeature(rendered),
-    [isGherkin, blocks, rendered],
+        : rendered !== null && !isTruncated && hasBareFeature(rendered),
+    [isGherkin, blocks, rendered, isTruncated],
   );
 
   // Prose is read most comfortably at a bounded line length, so the column is
@@ -645,7 +389,7 @@ export function DocumentPanel({
   // reparse nothing — so the source pane has nothing to offer there.
   const canEdit = !isTruncated && error === null;
   const canSave =
-    draft !== null &&
+    isDirty &&
     !isSaving &&
     platform.writeFile !== undefined &&
     !isHttpUrl(file.path);
@@ -718,7 +462,7 @@ export function DocumentPanel({
             color: theme.error,
           }}
         >
-          {draft === null
+          {!isDirty
             ? null
             : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
         </span>
@@ -741,8 +485,8 @@ export function DocumentPanel({
             <>
               <SaveButton disabled={!canSave} onSave={save} />
               <UndoRedo
-                canUndo={canUndo(history)}
-                canRedo={canRedo(history)}
+                canUndo={canUndo}
+                canRedo={canRedo}
                 onUndo={undo}
                 onRedo={redo}
               />

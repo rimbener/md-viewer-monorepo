@@ -43,8 +43,8 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
   subpath (`@md-viewer/markdown/parseBlocks`). No barrel.
 - `packages/viewer` — the React viewer. `src/Viewer.tsx` owns the session: the
   chosen folder, the scanned tree, the selected file, sidebar visibility.
-  `components/DocumentPanel.tsx` owns one document — reading it, zoom, font
-  scheme, the editor pane. `components/Markdown.tsx` renders the parsed result.
+  `components/DocumentPanel.tsx` shows one document — zoom, font scheme, find,
+  the editor pane; `src/useDocumentSession.ts` reads, watches and saves it. `components/Markdown.tsx` renders the parsed result.
 - `apps/web` — `webPlatform.ts` (File System Access API, IndexedDB handles,
   `?src=` URLs) and the "not compatible" gate in `App.tsx`.
 - `apps/tauri` — `tauriPlatform.ts` (fs, dialog and opener plugins) and
@@ -126,9 +126,11 @@ unmount, and saves on `choose`. A stored value never overwrites a choice made
 while the read was in flight. `setWithoutChoosing` changes the value and does
 not save it (the drawer breakpoint). Use this hook for new preferences.
 
-Editing is in-memory only. `DocumentPanel` keeps a `Map` of drafts keyed by
-path in a ref, so switching files and back keeps the work, and quitting loses
-it. The preview reparses 150 ms after the last keystroke, and documents over
+Editing is in-memory only. `src/documentSession.ts` is a pure reducer that
+owns the text of the open file: disk copy, drafts and undo history per path,
+save state, the disk-changed flag. Switching files and back keeps the work;
+quitting loses it. `src/useDocumentSession.ts` is the thin shell: platform
+read, watch and write, and the timers. Test races on the reducer. The preview reparses 150 ms after the last keystroke, and documents over
 500,000 characters fall back to plain text with the editor disabled.
 
 ## Conventions
