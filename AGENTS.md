@@ -8,6 +8,8 @@ NEVER TRY TO CONTROL THE COMPUTER TO TEST THE APP. Exception: when Claude in
 Chrome is enabled, you may use it to open and check the web app
 (`pnpm dev:web`) in that browser.
 
+Always commit into main, unless the user asks you to commit into a different branch.
+
 ## What this is
 
 A markdown folder viewer: a tree of `.md` files on the left, the rendered
