@@ -120,6 +120,8 @@ m3e details that bite:
   `querySelector`.
   It finds the control only when `htmlFor` changes. If you remount the
   control (a `key`), remount the trigger too.
+- `m3e-toolbar` paints its background in a positioned layer, over static
+  content. Plain text in a toolbar needs `position: relative`.
 - `m3e-tree` lists its items only when its own children change. After the
   tree data changes, `FileTree` lists them again (`selectionManager`), or a
   click on a new nested item selects nothing.

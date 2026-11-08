@@ -15,6 +15,7 @@ interface ColumnControlProps {
 export function ColumnControl({ characters, onChange }: ColumnControlProps) {
   return (
     <StepControl
+      label="Line length"
       value={`${characters}`}
       decreaseLabel="Decrease line length"
       resetLabel="Reset line length"

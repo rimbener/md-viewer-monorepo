@@ -230,10 +230,10 @@ first save.
 
 Undo and Redo sit to the right of Save, as two joined icon buttons. Back and
 Next in History look the same. Font is an outlined button with the font name.
-Width, Size and Zoom each have −, the value and +: pressing the value resets it, and
+Line length, Font size and Zoom each have −, the value and +: pressing the value resets it, and
 it is disabled at the default.
 
-Size sets the body text from 10 px to 36 px in steps of 1 px, and starts at
+Font size sets the body text from 10 px to 36 px in steps of 1 px, and starts at
 14 px. Headings, code, Gherkin, diagrams and the source editor change in the
 same ratio. The space between blocks does not change. The column keeps its
 line length in characters, so it gets wider with the text. Zoom multiplies on
@@ -261,8 +261,9 @@ document. From left to right: the menu button, the file name and the color
 scheme control. The tools row under it, in the document
 column, is a toolbar of buttons only, in this order: History, the Gherkin
 toggle when it applies, the editor button with Save and Undo/Redo, then Font,
-Width, Size and Zoom. Paired buttons (Back and Next, Undo and Redo, the − value +
-steps) are connected button groups. The tools have no titles; each one
+Line length, Font size and Zoom. Paired buttons (Back and Next, Undo and Redo, the − value +
+steps) are connected button groups. Line length, Font size and Zoom have a
+small label above their buttons. The other tools have no titles; each one
 explains itself in a tooltip on hover or focus.
 
 Find is an outlined text field with a search icon, on a row under the tools. The match count and the

@@ -10,6 +10,7 @@ interface ZoomControlProps {
 export function ZoomControl({ scale, onChange }: ZoomControlProps) {
   return (
     <StepControl
+      label="Zoom"
       value={`${Math.round(scale * 100)}%`}
       decreaseLabel="Zoom out"
       resetLabel="Reset zoom"

@@ -15,6 +15,7 @@ interface FontSizeControlProps {
 export function FontSizeControl({ size, onChange }: FontSizeControlProps) {
   return (
     <StepControl
+      label="Font size"
       value={`${size}px`}
       decreaseLabel="Decrease font size"
       resetLabel="Reset font size"

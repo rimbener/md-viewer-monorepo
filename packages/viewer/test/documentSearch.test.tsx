@@ -58,13 +58,23 @@ it('explains the tools in tooltips, not in titles above them', async () => {
       tip => (tip as HTMLElement & { htmlFor: string }).htmlFor === control.id,
     );
 
-  ['History', 'Font', 'Width', 'Zoom', 'Find'].forEach(title =>
+  ['History', 'Font', 'Width', 'Find'].forEach(title =>
     expect(screen.queryByText(title, { exact: true })).toBeNull(),
   );
   for (const name of ['Back', 'Next', 'Change font, currently Editorial']) {
     const control = screen.getByRole('button', { name });
     expect(control.id).not.toBe('');
     expect(tipFor(control)).toBeDefined();
+  }
+});
+
+it('labels the step controls above their buttons', async () => {
+  await renderApp();
+
+  for (const label of ['Line length', 'Font size', 'Zoom']) {
+    const group = screen.getByRole('group', { name: label });
+    expect(group.firstElementChild).toHaveTextContent(label);
+    expect(group.querySelector('m3e-button-group')).not.toBeNull();
   }
 });
 
