@@ -93,6 +93,8 @@ never a hand-made control. Icons come from `@m3e/icons/outlined/<name>`, one
 side-effect import per icon. `ThemeRoot` renders `m3e-theme` (monochrome) around every screen.
 Use the library defaults for size, density, shape and spacing; set only a
 variant, and only where M3 gives the role (filled for the main action).
+A toolbar icon button uses `IconButton` (`components/IconButton.tsx`): it
+holds the control id, the tooltip and the controlled `selected` state.
 
 Colors come from `--md-sys-color-*` roles, or from the fixed colors in
 `src/theme.ts`: syntax, Gherkin, link, find hits, and the monochrome fallback

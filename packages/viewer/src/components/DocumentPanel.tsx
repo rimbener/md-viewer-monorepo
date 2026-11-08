@@ -1,3 +1,5 @@
+import '@m3e/icons/outlined/checklist';
+
 import {
   useCallback,
   useEffect,
@@ -11,7 +13,6 @@ import { hasBareFeature, parseMarkdown } from '@md-viewer/markdown/parseBlocks';
 
 import { DEFAULT_CHARACTERS } from '../column';
 import { FindProvider, useShowText } from '../find';
-import { usePlatform } from '../platform';
 import {
   loadCharacters,
   loadEditorFraction,
@@ -34,7 +35,6 @@ import { useDocumentSession } from '../useDocumentSession';
 import { useFindSession } from '../useFindSession';
 import type { FileNode } from '../types';
 import { M3eToolbar } from '../m3e';
-import { isHttpUrl } from '../url';
 import { useStoredPreference } from '../useStoredPreference';
 import {
   CODE_FONT,
@@ -46,17 +46,16 @@ import { DEFAULT_ZOOM } from '../zoom';
 import { ColumnControl } from './ColumnControl';
 import { DocumentSearch } from './DocumentSearch';
 import { Editor } from './Editor';
+import { EditTools } from './EditTools';
 import { EditorToggle } from './EditorToggle';
 import { FontControl } from './FontControl';
 import { HistoryNav } from './HistoryNav';
+import { IconButton } from './IconButton';
 import { Markdown } from './Markdown';
-import { GherkinToggle } from './GherkinToggle';
-import { SaveButton } from './SaveButton';
 import { Spinner } from './Spinner';
 import { EditorSplit } from './EditorSplit';
 import { AppBarTitle } from './TopAppBar';
 import { ReplaceBar } from './ReplaceBar';
-import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
 import { ZoomControl } from './ZoomControl';
 
@@ -112,7 +111,6 @@ export function DocumentPanel({
   onNext,
 }: DocumentPanelProps) {
   const theme = useTheme();
-  const platform = usePlatform();
   /** The path read with unfenced features laid out; any other path is not. */
   const [gherkinPath, setGherkinPath] = useState<string | null>(null);
   // Zoom and line length are properties of the reader rather than of the
@@ -158,6 +156,7 @@ export function DocumentPanel({
   );
 
   const path = file?.path ?? null;
+  const session = useDocumentSession(path);
   const {
     text,
     rendered,
@@ -166,16 +165,12 @@ export function DocumentPanel({
     error,
     isDirty,
     diskChanged,
-    isSaving,
     saveError,
-    canUndo,
-    canRedo,
     edit,
     replace: replaceText,
     undo,
     redo,
-    save,
-  } = useDocumentSession(path);
+  } = session;
 
   // Find goes where the editor is: the source whenever it shows, else the preview.
   const findsInSource =
@@ -203,14 +198,8 @@ export function DocumentPanel({
   // A document too large to parse is shown as plain text, and editing it would
   // reparse nothing — so the source pane has nothing to offer there.
   const canEdit = file !== null && !isTruncated && error === null;
-  const canSave =
-    file !== null &&
-    isDirty &&
-    !isSaving &&
-    platform.writeFile !== undefined &&
-    !isHttpUrl(file.path);
   const isEditing = editorMode !== 'preview' && canEdit;
-  useShortcut('s', isEditing && canSave ? save : null);
+  useShortcut('s', isEditing && session.canSave ? session.save : null);
   useShortcut('e', canEdit ? toggleEditor : null);
   useShortcut('g', canEdit ? openReplace : null);
 
@@ -378,9 +367,12 @@ export function DocumentPanel({
         <M3eToolbar>
           {historyTool}
           {canRenderGherkin ? (
-            <GherkinToggle
-              isActive={isGherkin}
-              onToggle={() => setGherkinPath(isGherkin ? null : path)}
+            <IconButton
+              icon="checklist"
+              label={isGherkin ? 'Render as markdown' : 'Render as gherkin'}
+              tooltip="Lays out an unfenced Feature: as Gherkin"
+              selected={isGherkin}
+              onClick={() => setGherkinPath(isGherkin ? null : path)}
             />
           ) : null}
           <EditorToggle
@@ -388,17 +380,7 @@ export function DocumentPanel({
             disabled={!canEdit}
             onChange={chooseEditorMode}
           />
-          {isEditing ? (
-            <>
-              <SaveButton disabled={!canSave} onSave={save} />
-              <UndoRedo
-                canUndo={canUndo}
-                canRedo={canRedo}
-                onUndo={undo}
-                onRedo={redo}
-              />
-            </>
-          ) : null}
+          {isEditing ? <EditTools session={session} /> : null}
           <FontControl schemeId={schemeId} onChange={changeScheme} />
           <ColumnControl characters={characters} onChange={changeCharacters} />
           <ZoomControl scale={scale} onChange={changeZoom} />

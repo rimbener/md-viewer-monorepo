@@ -1,3 +1,5 @@
+import '@m3e/icons/outlined/menu';
+
 import {
   createContext,
   useContext,
@@ -9,7 +11,7 @@ import { createPortal } from 'react-dom';
 
 import { M3eAppBar } from '../m3e';
 import { ColorSchemeControl } from './ColorSchemeControl';
-import { SidebarToggle } from './SidebarToggle';
+import { IconButton } from './IconButton';
 
 const TitleHostContext = createContext<HTMLElement | null>(null);
 
@@ -31,9 +33,12 @@ export function TopAppBar({
     <>
       <M3eAppBar size="small" style={styles.bar}>
         <span slot="leading">
-          <SidebarToggle
-            isVisible={isSidebarVisible}
-            onToggle={onToggleSidebar}
+          <IconButton
+            icon="menu"
+            label={isSidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
+            tooltip="Shows or hides the list of markdown files (⌘B, Ctrl+B)"
+            expanded={isSidebarVisible}
+            onClick={onToggleSidebar}
           />
         </span>
         <div slot="title" ref={setTitle} style={styles.title} />

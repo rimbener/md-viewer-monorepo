@@ -11,6 +11,7 @@ import {
   textOf,
 } from './documentSession';
 import { usePlatform } from './platform';
+import { isHttpUrl } from './url';
 
 // Long enough that a run of keystrokes parses once, short enough to still read as live.
 const REPARSE_DELAY_MS = 150;
@@ -18,6 +19,8 @@ const REPARSE_DELAY_MS = 150;
 function messageOf(cause: unknown, fallback: string): string {
   return cause instanceof Error ? cause.message : fallback;
 }
+
+export type DocumentSession = ReturnType<typeof useDocumentSession>;
 
 export function useDocumentSession(path: string | null) {
   const platform = usePlatform();
@@ -125,6 +128,12 @@ export function useDocumentSession(path: string | null) {
     isDirty: draft !== null,
     diskChanged: state.diskChanged,
     isSaving: state.isSaving,
+    canSave:
+      draft !== null &&
+      !state.isSaving &&
+      platform.writeFile !== undefined &&
+      savedPath !== null &&
+      !isHttpUrl(savedPath),
     saveError: state.saveError,
     canUndo: canUndoIn(state),
     canRedo: canRedoIn(state),

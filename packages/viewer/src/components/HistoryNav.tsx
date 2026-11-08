@@ -22,17 +22,17 @@ export function HistoryNav({
       actions={[
         {
           icon: 'chevron_left',
-          accessibilityLabel: 'Back',
+          label: 'Back',
           tooltip: 'Shows the previous file opened in this folder',
           disabled: !canGoBack,
-          onPress: onBack,
+          onClick: onBack,
         },
         {
           icon: 'chevron_right',
-          accessibilityLabel: 'Next',
+          label: 'Next',
           tooltip: 'Shows the next file opened in this folder',
           disabled: !canGoNext,
-          onPress: onNext,
+          onClick: onNext,
         },
       ]}
     />

@@ -1,13 +1,11 @@
 import { M3eButtonGroup, M3eIcon, M3eIconButton } from '../m3e';
+import type { IconButtonProps } from './IconButton';
 import { Tooltip, useControlId } from './Tooltip';
 
-export type IconAction = {
-  icon: string;
-  accessibilityLabel: string;
-  tooltip: string;
-  disabled: boolean;
-  onPress: () => void;
-};
+type IconAction = Pick<
+  IconButtonProps,
+  'icon' | 'label' | 'tooltip' | 'onClick'
+> & { disabled: boolean };
 
 /** Two icon buttons joined as one group: back and next, undo and redo. */
 export function PairedIconButtons({
@@ -22,11 +20,11 @@ export function PairedIconButtons({
       <M3eButtonGroup variant="connected">
         {actions.map((action, index) => (
           <M3eIconButton
-            key={action.accessibilityLabel}
+            key={action.label}
             id={`${id}-${index}`}
-            aria-label={action.accessibilityLabel}
+            aria-label={action.label}
             disabled={action.disabled}
-            onClick={action.onPress}
+            onClick={action.onClick}
           >
             <M3eIcon name={action.icon} />
           </M3eIconButton>
@@ -35,7 +33,7 @@ export function PairedIconButtons({
       {/* Outside the group, which shapes its buttons by their position. */}
       {actions.map((action, index) => (
         <Tooltip
-          key={action.accessibilityLabel}
+          key={action.label}
           controlId={`${id}-${index}`}
           text={action.tooltip}
         />
