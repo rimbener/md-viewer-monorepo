@@ -1,7 +1,7 @@
 import '@m3e/icons/outlined/note_add';
 import '@m3e/icons/outlined/refresh';
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 import { M3eButton, M3eIcon, M3eIconButton } from '../m3e';
 import { usePlatform } from '../platform';
@@ -39,9 +39,11 @@ interface SidebarProps {
   session: SidebarSession;
   /** Asks for a new markdown file in `folder`. Null where that is not offered. */
   onAddFile: ((folder: string) => void) | null;
+  /** The handle on the end edge that resizes the drawer. */
+  resizer?: ReactNode;
 }
 
-export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
+export function Sidebar({ slot, session, onAddFile, resizer }: SidebarProps) {
   const {
     root,
     folder,
@@ -75,7 +77,7 @@ export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        width: 280,
+        position: 'relative',
         height: '100%',
         backgroundColor: theme.sidebar,
       }}
@@ -217,6 +219,7 @@ export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
           </span>
         </div>
       ) : null}
+      {resizer}
     </aside>
   );
 }

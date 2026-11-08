@@ -10,6 +10,10 @@ import { DocumentPanel } from './components/DocumentPanel';
 import { NewFileDialog } from './components/NewFileDialog';
 import { M3eDrawerContainer } from './m3e';
 import { Sidebar } from './components/Sidebar';
+import {
+  SIDEBAR_WIDTH_PROPERTY,
+  SidebarResizer,
+} from './components/SidebarResizer';
 import { TopAppBar } from './components/TopAppBar';
 import { PlatformProvider, usePlatform, type Platform } from './platform';
 import { useTheme } from './theme';
@@ -46,12 +50,24 @@ function Session() {
           {...drawer.containerProps}
           startMode="auto"
           startDivider
-          style={styles.drawer}
+          style={
+            {
+              ...styles.drawer,
+              [SIDEBAR_WIDTH_PROPERTY]: `${drawer.sidebarWidth}px`,
+            } as CSSProperties
+          }
         >
           <Sidebar
             slot="start"
             session={session}
             onAddFile={platform.createFile ? setNewFileFolder : null}
+            resizer={
+              <SidebarResizer
+                width={drawer.sidebarWidth}
+                drawerRef={drawer.drawerRef}
+                onCommit={drawer.chooseSidebarWidth}
+              />
+            }
           />
           <DocumentPanel
             file={session.selectedFile}
@@ -97,6 +113,5 @@ const styles = {
     flex: 1,
     minWidth: 0,
     minHeight: 0,
-    '--m3e-drawer-container-width': '280px',
   } as CSSProperties,
 };

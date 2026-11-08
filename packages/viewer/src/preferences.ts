@@ -1,6 +1,6 @@
 /**
  * Viewer preferences that outlive a launch: the zoom level, the line length,
- * the font size,
+ * the font size, the sidebar width,
  * the font scheme, the color scheme, the sidebar and editor visibility, the
  * editor's share of the split, the
  * folder and file that were open last, the last folders opened, the
@@ -31,6 +31,7 @@ import {
   encodeScrollPositions,
   type ScrollPosition,
 } from './scrollPositions';
+import { isSidebarWidth } from './sidebarWidth';
 import { isEditorFraction } from './split';
 import { storage } from './storage';
 import { isSchemeId } from './typography';
@@ -45,6 +46,7 @@ const FILE_KEY = 'mdviewer.lastFile';
 const FONT_KEY = 'mdviewer.fontScheme';
 const COLOR_SCHEME_KEY = 'mdviewer.colorScheme';
 const SIDEBAR_KEY = 'mdviewer.sidebarVisible';
+const SIDEBAR_WIDTH_KEY = 'mdviewer.sidebarWidth';
 const EDITOR_KEY = 'mdviewer.editorVisible';
 const EDITOR_MODE_KEY = 'mdviewer.editorMode';
 const EDITOR_FRACTION_KEY = 'mdviewer.editorFraction';
@@ -148,6 +150,21 @@ export function saveColorScheme(schemeId: ColorSchemeId): void {
  * Whether the file tree was showing, or null when that was never chosen. The
  * caller supplies the default, so it is not duplicated here.
  */
+/** The stored sidebar width, or null when there is no usable one. */
+export async function loadSidebarWidth(): Promise<number | null> {
+  const stored = await read(SIDEBAR_WIDTH_KEY);
+  if (stored === null) {
+    return null;
+  }
+  const value = Number.parseFloat(stored);
+  return isSidebarWidth(value) ? value : null;
+}
+
+/** Records the sidebar width for the next launch; failures are ignored. */
+export function saveSidebarWidth(width: number): void {
+  write(SIDEBAR_WIDTH_KEY, String(width));
+}
+
 export async function loadSidebarVisible(): Promise<boolean | null> {
   const stored = await read(SIDEBAR_KEY);
   return stored === null ? null : stored === 'true';

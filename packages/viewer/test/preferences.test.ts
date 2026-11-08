@@ -5,6 +5,7 @@ import {
   forgetRecentFolder,
   loadCharacters,
   loadFontSize,
+  loadSidebarWidth,
   loadColorScheme,
   loadFileHistory,
   loadFontScheme,
@@ -17,6 +18,7 @@ import {
   rememberRecentFolder,
   saveCharacters,
   saveFontSize,
+  saveSidebarWidth,
   saveColorScheme,
   saveFileHistory,
   saveFontScheme,
@@ -106,6 +108,24 @@ describe('font size persistence', () => {
 
     await storage.setItem(key, '13.5');
     await expect(loadFontSize()).resolves.toBeNull();
+  });
+});
+
+describe('sidebar width persistence', () => {
+  const key = 'mdviewer.sidebarWidth';
+
+  it('round-trips a width', async () => {
+    saveSidebarWidth(320);
+    expect(storage.setItem).toHaveBeenCalledWith(key, '320');
+    await expect(loadSidebarWidth()).resolves.toBe(320);
+  });
+
+  it('rejects a stored value out of range or not whole', async () => {
+    await storage.setItem(key, '100');
+    await expect(loadSidebarWidth()).resolves.toBeNull();
+
+    await storage.setItem(key, '300.5');
+    await expect(loadSidebarWidth()).resolves.toBeNull();
   });
 });
 

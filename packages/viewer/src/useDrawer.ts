@@ -1,7 +1,13 @@
 import { useCallback, useRef, type MouseEvent } from 'react';
 
 import type { M3eDrawerContainerElement } from './m3e';
-import { loadSidebarVisible, saveSidebarVisible } from './preferences';
+import {
+  loadSidebarVisible,
+  loadSidebarWidth,
+  saveSidebarVisible,
+  saveSidebarWidth,
+} from './preferences';
+import { DEFAULT_SIDEBAR_WIDTH } from './sidebarWidth';
 import { useShortcut } from './shortcuts';
 import { useStoredPreference } from './useStoredPreference';
 
@@ -25,6 +31,12 @@ export function useDrawer() {
   const toggleSidebar = useCallback(
     () => chooseSidebar(!isSidebarVisible),
     [chooseSidebar, isSidebarVisible],
+  );
+
+  const [sidebarWidth, chooseSidebarWidth] = useStoredPreference(
+    loadSidebarWidth,
+    saveSidebarWidth,
+    DEFAULT_SIDEBAR_WIDTH,
   );
 
   const drawerRef = useRef<M3eDrawerContainerElement>(null);
@@ -80,6 +92,9 @@ export function useDrawer() {
     isSidebarVisible,
     toggleSidebar,
     closeModal,
+    sidebarWidth,
+    chooseSidebarWidth,
+    drawerRef,
     containerProps: {
       ref: drawerRef,
       start: isSidebarVisible,

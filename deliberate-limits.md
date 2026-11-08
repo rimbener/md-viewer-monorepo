@@ -43,7 +43,9 @@ component library does that better than code written once for this app.
 The cost is about 140 kB gzip in the web bundle, and a library that mostly one
 person maintains. It is MIT licensed and built on Lit, so a fork stays
 possible. Where m3e has no part, the app keeps its own small code (the split
-reset on double click), and that code reads only M3 tokens.
+reset on double click, the sidebar resize handle), and that code reads only M3
+tokens. The drawer animates its width, so the handle adds one rule to the
+drawer's shadow root that stops the animation during a drag.
 
 ## Gherkin is read, not checked
 

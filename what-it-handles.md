@@ -279,6 +279,10 @@ aside, with a scrim over the rest. There, a click on the scrim hides the
 sidebar and the app remembers that; picking a file or pressing Command-F hides
 it too, and the app does not remember that. When the window becomes narrow,
 the drawer closes by itself, and that is not remembered either.
+Drag the end edge of the sidebar to make it wider or narrower, from 200 px to
+560 px. The arrow keys move the edge in 16 px steps when it has focus, and
+Home and End go to the limits. A double click on the edge sets 280 px again.
+The app remembers the width for the next launch.
 The field marks hits in the open document. Letter case does not matter.
 While the editor shows, alone or beside the preview, Find searches the
 markdown source in the editor. The preview is searched only when the editor is

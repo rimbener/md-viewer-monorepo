@@ -46,7 +46,8 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
   scan, open folder or file from outside, selected file, Back/Next history.
   Each async result carries a request id; the reducer ignores a stale one.
   `src/useFolderSession.ts` does the platform calls and sends the events.
-  `src/useDrawer.ts` owns the drawer, the scrim and sidebar visibility.
+  `src/useDrawer.ts` owns the drawer, the scrim, sidebar visibility and
+  width; `components/SidebarResizer.tsx` is the drag handle.
   `components/DocumentPanel.tsx` shows one document — zoom, font scheme, the
   editor pane; `src/useDocumentSession.ts` reads, watches and saves it;
   `src/useFindSession.ts` owns find and replace (query, hits, current hit).
