@@ -177,7 +177,8 @@ than deep object literals — see the `outline()` helpers in
 `parseBlocks.test.ts` and `gherkin.test.ts`, and `marks()` in
 `highlight.test.ts`. Readers also get an invariant test over fuzzed input. View
 tests use Testing Library on jsdom with the in-memory platform in
-`packages/viewer/test/fakePlatform.tsx`. Document rendering is asserted through
+`packages/viewer/test/fakePlatform.tsx`. `renderViewer` renders in Strict Mode, as
+the apps do, so render code must give the same result when it runs twice. Document rendering is asserted through
 `element.style`; controls are asserted by state (`disabled`, `checked`,
 `selected`, `aria-*`), never by style.
 

@@ -10,7 +10,7 @@ import {
   render,
   type RenderResult,
 } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import { StrictMode, type ReactElement } from 'react';
 import type { Mock } from 'vitest';
 
 import { PlatformProvider, type Platform } from '../src/platform';
@@ -118,7 +118,12 @@ export async function settle(passes = 6): Promise<void> {
 export async function renderViewer(platform: Platform): Promise<RenderResult> {
   let result: RenderResult | undefined;
   await act(async () => {
-    result = render(<Viewer platform={platform} />);
+    // Both apps render in Strict Mode, so the views are tested in it too.
+    result = render(
+      <StrictMode>
+        <Viewer platform={platform} />
+      </StrictMode>,
+    );
   });
   await settle();
   return result as RenderResult;

@@ -10,6 +10,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useRef,
   type ReactNode,
   type RefObject,
@@ -21,12 +22,12 @@ import { useTheme } from './theme';
 /** Space left above the current hit when the view scrolls to it. */
 const REVEAL_MARGIN = 48;
 
+type Run = readonly { text: string; hit: number }[];
+
 type FindContextValue = {
   query: string;
   active: number;
-  remaining: () => number;
-  claim: () => number;
-  cap: () => void;
+  runOf: (id: string, text: string) => Run;
 };
 
 const FindContext = createContext<FindContextValue | null>(null);
@@ -47,25 +48,23 @@ export function FindProvider({
   children,
 }: FindProviderProps) {
   // Reset before children render. They fill it; the effect below reads it.
-  const counter = useRef({ n: 0, capped: false });
-  counter.current = { n: 0, capped: false };
+  const counter = useRef({ n: 0, capped: false, runs: new Map<string, Run>() });
+  counter.current = { n: 0, capped: false, runs: new Map() };
 
-  const remaining = useCallback(
-    () => Math.max(0, MAX_MATCHES - counter.current.n),
-    [],
+  // Strict Mode renders each run twice; the second render must reuse the first one's hits.
+  const runOf = useCallback(
+    (id: string, text: string): Run => {
+      const pass = counter.current;
+      const known = pass.runs.get(id);
+      if (known !== undefined) {
+        return known;
+      }
+      const run = splitRun(text, query, pass);
+      pass.runs.set(id, run);
+      return run;
+    },
+    [query],
   );
-  const claim = useCallback(() => {
-    if (counter.current.n >= MAX_MATCHES) {
-      counter.current.capped = true;
-      return -1;
-    }
-    const index = counter.current.n;
-    counter.current.n += 1;
-    return index;
-  }, []);
-  const cap = useCallback(() => {
-    counter.current.capped = true;
-  }, []);
 
   useEffect(() => {
     onCount(counter.current.n, counter.current.capped);
@@ -78,7 +77,7 @@ export function FindProvider({
   }, [active, query, scrollRef]);
 
   return (
-    <FindContext.Provider value={{ query, active, remaining, claim, cap }}>
+    <FindContext.Provider value={{ query, active, runOf }}>
       {children}
     </FindContext.Provider>
   );
@@ -107,35 +106,49 @@ export function useShowText(): (text: string, key?: number) => ReactNode {
     marking ? <MarkedRuns key={key} text={text} /> : text;
 }
 
+function splitRun(
+  text: string,
+  query: string,
+  pass: { n: number; capped: boolean },
+): Run {
+  const room = Math.max(0, MAX_MATCHES - pass.n);
+  if (room === 0) {
+    if (text.toLowerCase().includes(query.toLowerCase())) {
+      pass.capped = true;
+    }
+    return [{ text, hit: -1 }];
+  }
+  const { parts, more } = splitMatches(text, query, room);
+  if (more) {
+    pass.capped = true;
+  }
+  return parts.map(part => {
+    if (!part.match) {
+      return { text: part.text, hit: -1 };
+    }
+    pass.n += 1;
+    return { text: part.text, hit: pass.n - 1 };
+  });
+}
+
 function MarkedRuns({ text }: { text: string }) {
   const find = useContext(FindContext);
+  const id = useId();
   if (find === null || find.query.length === 0) {
     return <>{text}</>;
   }
 
-  const room = find.remaining();
-  if (room === 0) {
-    if (text.toLowerCase().includes(find.query.toLowerCase())) {
-      find.cap();
-    }
-    return <>{text}</>;
-  }
-
-  const { parts, more } = splitMatches(text, find.query, room);
-  if (more) {
-    find.cap();
-  }
-
   return (
     <>
-      {parts.map((part, index) => {
-        const hit = part.match ? find.claim() : -1;
-        return hit < 0 ? (
-          <Fragment key={index}>{part.text}</Fragment>
-        ) : (
-          <Hit key={index} text={part.text} index={hit} />
-        );
-      })}
+      {find
+        .runOf(id, text)
+        .map((part, index) =>
+          part.hit < 0 ? (
+            <Fragment key={index}>{part.text}</Fragment>
+          ) : (
+            <Hit key={index} text={part.text} index={part.hit} />
+          ),
+        )}
     </>
   );
 }
