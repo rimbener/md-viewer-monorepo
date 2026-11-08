@@ -277,9 +277,9 @@ The field marks hits in the open document. Letter case does not matter.
 While the editor shows, alone or beside the preview, Find searches the
 markdown source in the editor. The preview is searched only when the editor is
 hidden.
-A Replace field of the same kind sits beside Find, with Replace one and
-Replace all. It
-shows only while the editor shows, because it changes the source. Command-G, or Control-G off the Mac,
+A Replace field of the same kind sits beside Find. The Replace one (check
+mark) and Replace all (double check mark) icon buttons sit inside its right
+end. It shows only while the editor shows, because it changes the source. Command-G, or Control-G off the Mac,
 focuses the Replace field instead of the browser find-next. If the editor is
 hidden, it opens the editor beside the preview first. Replace one changes the
 current hit and moves to the next one. Return in the Replace field does the

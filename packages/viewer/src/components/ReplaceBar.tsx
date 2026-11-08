@@ -1,6 +1,10 @@
+import '@m3e/icons/outlined/check';
+import '@m3e/icons/outlined/done_all';
+import '@m3e/icons/outlined/find_replace';
+
 import { useEffect, useRef, type CSSProperties } from 'react';
 
-import { M3eButton, M3eFormField } from '../m3e';
+import { M3eFormField, M3eIcon, M3eIconButton } from '../m3e';
 import { Tooltip, useControlId } from './Tooltip';
 
 type ReplaceBarProps = {
@@ -37,8 +41,9 @@ export function ReplaceBar({
   }, [focusKey, onFocused]);
 
   return (
-    <div style={styles.row}>
+    <>
       <M3eFormField variant="outlined" hideSubscript="always">
+        <M3eIcon slot="prefix" name="find_replace" />
         <input
           ref={fieldRef}
           aria-label="Replace with"
@@ -56,39 +61,39 @@ export function ReplaceBar({
           autoCapitalize="none"
           spellCheck={false}
         />
+        <span slot="suffix" style={styles.actions}>
+          <M3eIconButton
+            id={replaceOneId}
+            aria-label="Replace one"
+            disabled={!canReplace}
+            onClick={onReplaceOne}
+          >
+            <M3eIcon name="check" />
+          </M3eIconButton>
+          <M3eIconButton
+            id={replaceAllId}
+            aria-label="Replace all"
+            disabled={!canReplace}
+            onClick={onReplaceAll}
+          >
+            <M3eIcon name="done_all" />
+          </M3eIconButton>
+        </span>
       </M3eFormField>
-      <M3eButton
-        id={replaceOneId}
-        variant="text"
-        disabled={!canReplace}
-        onClick={onReplaceOne}
-      >
-        Replace one
-      </M3eButton>
       <Tooltip
         controlId={replaceOneId}
         text="Replaces the current match (Return in the field)"
       />
-      <M3eButton
-        id={replaceAllId}
-        variant="text"
-        disabled={!canReplace}
-        onClick={onReplaceAll}
-      >
-        Replace all
-      </M3eButton>
       <Tooltip
         controlId={replaceAllId}
         text="Replaces every match in the source"
       />
-    </div>
+    </>
   );
 }
 
 const styles = {
-  row: {
+  actions: {
     display: 'flex',
-    alignItems: 'center',
-    gap: 8,
   },
 } satisfies Record<string, CSSProperties>;
