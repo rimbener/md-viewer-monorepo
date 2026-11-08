@@ -107,6 +107,10 @@ interface DocumentPanelProps {
   onNext: () => void;
   /** Shows a markdown file that a link in the document names. */
   onOpenFile: (path: string) => void;
+  isToolbarVisible: boolean;
+  isFindVisible: boolean;
+  /** Shows the find row, which Replace needs. */
+  onShowFind: () => void;
 }
 
 /** Reads the selected file and renders it as markdown. */
@@ -118,6 +122,9 @@ export function DocumentPanel({
   onBack,
   onNext,
   onOpenFile,
+  isToolbarVisible,
+  isFindVisible,
+  onShowFind,
 }: DocumentPanelProps) {
   const theme = useTheme();
   /** The path read with unfenced features laid out; any other path is not. */
@@ -203,8 +210,9 @@ export function DocumentPanel({
     if (editorMode === 'preview') {
       chooseEditorMode('split');
     }
+    onShowFind();
     focusReplace();
-  }, [editorMode, chooseEditorMode, focusReplace]);
+  }, [editorMode, chooseEditorMode, onShowFind, focusReplace]);
 
   // A document too large to parse is shown as plain text, and editing it would
   // reparse nothing — so the source pane has nothing to offer there.
@@ -302,12 +310,14 @@ export function DocumentPanel({
   if (file === null) {
     return (
       <main style={styles.container}>
-        <header style={headerStyle}>
-          <div style={styles.toolRow}>
-            <M3eToolbar>{historyTool}</M3eToolbar>
-            {themeTool}
-          </div>
-        </header>
+        {isToolbarVisible ? (
+          <header style={headerStyle}>
+            <div style={styles.toolRow}>
+              <M3eToolbar>{historyTool}</M3eToolbar>
+              {themeTool}
+            </div>
+          </header>
+        ) : null}
         <div style={{ ...styles.body, ...styles.centered }}>
           <span style={{ ...styles.message, color: theme.mutedText }}>
             {isSidebarVisible
@@ -387,47 +397,62 @@ export function DocumentPanel({
             : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
         </span>
       </AppBarTitle>
-      <header style={headerStyle}>
+      <header
+        style={
+          isToolbarVisible || isFindVisible
+            ? headerStyle
+            : { ...headerStyle, display: 'none' }
+        }
+      >
         {/* One toolbar per group: m3e keeps a toolbar on one line, the row wraps. */}
-        <div style={styles.toolRow}>
-          <M3eToolbar>{historyTool}</M3eToolbar>
-          {canRenderGherkin ? (
+        {isToolbarVisible ? (
+          <div style={styles.toolRow}>
+            <M3eToolbar>{historyTool}</M3eToolbar>
+            {canRenderGherkin ? (
+              <M3eToolbar>
+                <IconButton
+                  icon="checklist"
+                  label={isGherkin ? 'Render as markdown' : 'Render as gherkin'}
+                  tooltip="Lays out an unfenced Feature: as Gherkin"
+                  selected={isGherkin}
+                  onClick={() => setGherkinPath(isGherkin ? null : path)}
+                />
+              </M3eToolbar>
+            ) : null}
             <M3eToolbar>
-              <IconButton
-                icon="checklist"
-                label={isGherkin ? 'Render as markdown' : 'Render as gherkin'}
-                tooltip="Lays out an unfenced Feature: as Gherkin"
-                selected={isGherkin}
-                onClick={() => setGherkinPath(isGherkin ? null : path)}
+              <FontControl schemeId={schemeId} onChange={changeScheme} />
+            </M3eToolbar>
+            <M3eToolbar>
+              <ColumnControl
+                characters={characters}
+                onChange={changeCharacters}
               />
             </M3eToolbar>
-          ) : null}
-          <M3eToolbar>
-            <FontControl schemeId={schemeId} onChange={changeScheme} />
-          </M3eToolbar>
-          <M3eToolbar>
-            <ColumnControl
-              characters={characters}
-              onChange={changeCharacters}
-            />
-          </M3eToolbar>
-          <M3eToolbar>
-            <FontSizeControl size={fontSize} onChange={changeFontSize} />
-          </M3eToolbar>
-          <M3eToolbar>
-            <ZoomControl scale={scale} onChange={changeZoom} />
-          </M3eToolbar>
-          {themeTool}
-          <M3eToolbar>
-            <EditorToggle
-              mode={editorMode}
-              disabled={!canEdit}
-              onChange={chooseEditorMode}
-            />
-            {isEditing ? <EditTools session={session} /> : null}
-          </M3eToolbar>
-        </div>
-        <div style={styles.findRow}>
+            <M3eToolbar>
+              <FontSizeControl size={fontSize} onChange={changeFontSize} />
+            </M3eToolbar>
+            <M3eToolbar>
+              <ZoomControl scale={scale} onChange={changeZoom} />
+            </M3eToolbar>
+            {themeTool}
+            <M3eToolbar>
+              <EditorToggle
+                mode={editorMode}
+                disabled={!canEdit}
+                onChange={chooseEditorMode}
+              />
+              {isEditing ? <EditTools session={session} /> : null}
+            </M3eToolbar>
+          </div>
+        ) : null}
+        {/* Hidden, not removed: Command-F shows it and the field takes the focus. */}
+        <div
+          style={
+            isFindVisible
+              ? styles.findRow
+              : { ...styles.findRow, display: 'none' }
+          }
+        >
           <DocumentSearch
             query={find.query}
             count={find.count}

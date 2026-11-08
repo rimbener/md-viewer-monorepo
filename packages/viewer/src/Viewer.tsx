@@ -3,10 +3,14 @@
  * document on the right. The platform it runs on comes in as a prop.
  */
 
+import '@m3e/icons/outlined/search';
+import '@m3e/icons/outlined/toolbar';
+
 import { useState, type CSSProperties } from 'react';
 
 import { ThemeRoot } from './components/ThemeRoot';
 import { DocumentPanel } from './components/DocumentPanel';
+import { IconButton } from './components/IconButton';
 import { NewFileDialog } from './components/NewFileDialog';
 import { M3eDrawerContainer } from './m3e';
 import { Sidebar } from './components/Sidebar';
@@ -19,12 +23,14 @@ import { PlatformProvider, usePlatform, type Platform } from './platform';
 import { useTheme } from './theme';
 import { useDrawer } from './useDrawer';
 import { useFolderSession } from './useFolderSession';
+import { useToolVisibility } from './useToolVisibility';
 
 function Session() {
   const theme = useTheme();
   const platform = usePlatform();
   const drawer = useDrawer();
   const session = useFolderSession(drawer.closeModal);
+  const tools = useToolVisibility();
   const [newFileFolder, setNewFileFolder] = useState<string | null>(null);
 
   return (
@@ -45,6 +51,24 @@ function Session() {
       <TopAppBar
         isSidebarVisible={drawer.isSidebarVisible}
         onToggleSidebar={drawer.toggleSidebar}
+        actions={
+          <>
+            <IconButton
+              icon="search"
+              label="Find and replace"
+              tooltip="Shows or hides the Find and Replace fields"
+              selected={tools.isFindVisible}
+              onClick={tools.toggleFind}
+            />
+            <IconButton
+              icon="toolbar"
+              label="Toolbar"
+              tooltip="Shows or hides the tools above the document"
+              selected={tools.isToolbarVisible}
+              onClick={tools.toggleToolbar}
+            />
+          </>
+        }
       >
         <M3eDrawerContainer
           {...drawer.containerProps}
@@ -77,6 +101,9 @@ function Session() {
             onBack={session.goBack}
             onNext={session.goNext}
             onOpenFile={session.openLinkedFile}
+            isToolbarVisible={tools.isToolbarVisible}
+            isFindVisible={tools.isFindVisible}
+            onShowFind={tools.showFind}
           />
         </M3eDrawerContainer>
       </TopAppBar>

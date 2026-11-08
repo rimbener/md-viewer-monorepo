@@ -1,6 +1,6 @@
 /**
  * Viewer preferences that outlive a launch: the zoom level, the line length,
- * the font size, the sidebar width,
+ * the font size, the sidebar width, the toolbar and find row visibility,
  * the font scheme, the color scheme, the sidebar and editor visibility, the
  * editor's share of the split, the
  * folder and file that were open last, the last folders opened, the
@@ -47,6 +47,8 @@ const FONT_KEY = 'mdviewer.fontScheme';
 const COLOR_SCHEME_KEY = 'mdviewer.colorScheme';
 const SIDEBAR_KEY = 'mdviewer.sidebarVisible';
 const SIDEBAR_WIDTH_KEY = 'mdviewer.sidebarWidth';
+const TOOLBAR_KEY = 'mdviewer.toolbarVisible';
+const FIND_KEY = 'mdviewer.findVisible';
 const EDITOR_KEY = 'mdviewer.editorVisible';
 const EDITOR_MODE_KEY = 'mdviewer.editorMode';
 const EDITOR_FRACTION_KEY = 'mdviewer.editorFraction';
@@ -172,6 +174,24 @@ export async function loadSidebarVisible(): Promise<boolean | null> {
 
 export function saveSidebarVisible(isVisible: boolean): void {
   write(SIDEBAR_KEY, String(isVisible));
+}
+
+export async function loadToolbarVisible(): Promise<boolean | null> {
+  const stored = await read(TOOLBAR_KEY);
+  return stored === null ? null : stored === 'true';
+}
+
+export function saveToolbarVisible(isVisible: boolean): void {
+  write(TOOLBAR_KEY, String(isVisible));
+}
+
+export async function loadFindVisible(): Promise<boolean | null> {
+  const stored = await read(FIND_KEY);
+  return stored === null ? null : stored === 'true';
+}
+
+export function saveFindVisible(isVisible: boolean): void {
+  write(FIND_KEY, String(isVisible));
 }
 
 /** Whether the source editor was open, or null when that was never chosen. */

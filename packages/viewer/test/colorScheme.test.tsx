@@ -44,7 +44,7 @@ afterEach(() => {
 async function renderPanel(): Promise<void> {
   renderWithPlatform(
     <ThemeRoot>
-      <TopAppBar isSidebarVisible onToggleSidebar={() => {}}>
+      <TopAppBar isSidebarVisible onToggleSidebar={() => {}} actions={null}>
         <DocumentPanel
           file={file}
           isSidebarVisible
@@ -53,6 +53,9 @@ async function renderPanel(): Promise<void> {
           onBack={() => {}}
           onNext={() => {}}
           onOpenFile={() => {}}
+          isToolbarVisible
+          isFindVisible
+          onShowFind={() => {}}
         />
       </TopAppBar>
     </ThemeRoot>,

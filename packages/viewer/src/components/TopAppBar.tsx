@@ -17,6 +17,8 @@ const TitleHostContext = createContext<HTMLElement | null>(null);
 type TopAppBarProps = {
   isSidebarVisible: boolean;
   onToggleSidebar: () => void;
+  /** Buttons at the end of the bar. */
+  actions: ReactNode;
   children: ReactNode;
 };
 
@@ -24,6 +26,7 @@ type TopAppBarProps = {
 export function TopAppBar({
   isSidebarVisible,
   onToggleSidebar,
+  actions,
   children,
 }: TopAppBarProps) {
   const [title, setTitle] = useState<HTMLElement | null>(null);
@@ -41,6 +44,7 @@ export function TopAppBar({
           />
         </span>
         <div slot="title" ref={setTitle} style={styles.title} />
+        <span slot="trailing">{actions}</span>
       </M3eAppBar>
       <TitleHostContext.Provider value={title}>
         {children}

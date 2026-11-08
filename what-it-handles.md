@@ -267,7 +267,12 @@ its last line.
 ## Find
 
 A top app bar goes across the full window, above the sidebar and the
-document. From left to right: the menu button and the file name. The tools row under it, in the document
+document. From left to right: the menu button, the file name, then two toggle
+buttons: Find and replace (search icon) shows or hides the Find and Replace
+row, and Toolbar shows or hides the tools row. Both start on, and the app
+remembers them for the next launch. Command-F shows a hidden Find row and
+focuses the field; Command-G shows it and focuses Replace. Command-S and the
+other shortcuts work while the tools are hidden. The tools row under it, in the document
 column, holds buttons only, in this order: History, the Gherkin
 toggle when it applies, Font, Line length, Font size, Zoom, Theme, and last
 the editor button with Save and Undo/Redo. Each group is its own toolbar, and the groups

@@ -37,6 +37,9 @@ async function renderPanel(): Promise<void> {
       onBack={() => {}}
       onNext={() => {}}
       onOpenFile={() => {}}
+      isToolbarVisible
+      isFindVisible
+      onShowFind={() => {}}
     />,
     createFakePlatform({}, { [file.path]: 'Last line of the note.' }),
   );

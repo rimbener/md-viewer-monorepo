@@ -41,6 +41,9 @@ async function renderPanel(): Promise<void> {
       onBack={() => {}}
       onNext={() => {}}
       onOpenFile={() => {}}
+      isToolbarVisible
+      isFindVisible
+      onShowFind={() => {}}
     />,
     createFakePlatform({}, { [file.path]: 'A long note.' }),
   );
