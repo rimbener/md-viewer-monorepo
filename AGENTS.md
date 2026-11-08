@@ -126,14 +126,15 @@ scheme carries a `scale` measured from the macOS face's x-height and an
 characters into a column width in pixels. Families are CSS stacks: the measured
 macOS face, then close Windows and Linux faces. `Markdown.tsx` derives every
 size from `zoom * scheme.<role>.scale` inside one memoized `createStyles`,
-handed down through a context.
+handed down through a context. The font size (`src/fontSize.ts`) multiplies
+type only (font sizes, line heights); spacing follows zoom alone.
 
 ## Persistence and editing
 
 `src/preferences.ts` wraps `src/storage.ts` (`localStorage`) and is
 deliberately best-effort: a failed read falls back to the default, a failed
 write is dropped, and stored values are validated on the way in
-(`isZoomLevel`, `isSchemeId`, absolute-path checks).
+(`isZoomLevel`, `isFontSize`, `isSchemeId`, absolute-path checks).
 `src/useStoredPreference.ts` restores one preference and returns
 `[value, choose, setWithoutChoosing]`: it reads on mount, ignores a read that
 ends after unmount, and saves on `choose`. A stored value never overwrites a

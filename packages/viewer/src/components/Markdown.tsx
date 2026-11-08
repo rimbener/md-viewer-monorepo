@@ -1,8 +1,9 @@
 /**
  * Renders a parsed markdown document as DOM.
  *
- * Every size is derived from a zoom factor and handed down through context, so
- * changing the zoom rebuilds one set of styles instead of touching each element.
+ * Every size is derived from a zoom factor and a text scale and handed down
+ * through context, so a change rebuilds one set of styles instead of touching
+ * each element. The text scale changes type only; zoom changes type and space.
  */
 
 import {
@@ -47,13 +48,14 @@ const COPIED_MS = 1500;
 
 type MarkdownStyles = ReturnType<typeof createStyles>;
 
-function createStyles(scale: number, scheme: FontScheme) {
+function createStyles(scale: number, textScale: number, scheme: FontScheme) {
   /** Rounds to a half pixel, which is as fine as the screen resolves. */
   const round = (value: number) => Math.round(value * 2) / 2;
-  const heading = (value: number) =>
-    round(value * scale * scheme.heading.scale);
+  const type = scale * textScale;
+  const heading = (value: number) => round(value * type * scheme.heading.scale);
+  const body = (value: number) => round(value * type * scheme.body.scale);
+  const code = (value: number) => round(value * type * scheme.code.scale);
   const size = (value: number) => round(value * scale * scheme.body.scale);
-  const code = (value: number) => round(value * scale * scheme.code.scale);
 
   const headingStyle = (
     fontSize: number,
@@ -68,12 +70,12 @@ function createStyles(scale: number, scheme: FontScheme) {
 
   const paragraph: CSSProperties = {
     fontFamily: scheme.body.family,
-    fontSize: size(BODY_SIZE),
-    lineHeight: `${size(21)}px`,
+    fontSize: body(BODY_SIZE),
+    lineHeight: `${body(21)}px`,
   };
 
   return {
-    scale,
+    type,
     scheme,
     spacing: size(BLOCK_SPACING),
     headings: {
@@ -114,9 +116,9 @@ function createStyles(scale: number, scheme: FontScheme) {
       listItem: { display: 'flex', alignItems: 'flex-start' },
       looseItem: { marginBottom: size(BLOCK_SPACING) },
       tightItem: { marginBottom: 2 },
-      bullet: { ...paragraph, flexShrink: 0, width: size(18) },
+      bullet: { ...paragraph, flexShrink: 0, width: body(18) },
       orderedBullet: {
-        width: size(26),
+        width: body(26),
         paddingRight: size(6),
         textAlign: 'right',
       },
@@ -145,7 +147,7 @@ function createStyles(scale: number, scheme: FontScheme) {
 }
 
 const StyleContext = createContext<MarkdownStyles>(
-  createStyles(1, schemeById(null)),
+  createStyles(1, 1, schemeById(null)),
 );
 
 function useStyles(): MarkdownStyles {
@@ -158,6 +160,8 @@ interface MarkdownProps {
   basePath: string;
   /** Zoom factor; 1 is the natural size. */
   scale?: number;
+  /** Text size relative to the default; 1 is the default. */
+  textScale?: number;
   /** Font scheme id; an unknown one falls back to the default. */
   schemeId?: string | null;
 }
@@ -166,10 +170,14 @@ export function Markdown({
   blocks,
   basePath,
   scale = 1,
+  textScale = 1,
   schemeId = null,
 }: MarkdownProps) {
   const scheme = useMemo(() => schemeById(schemeId), [schemeId]);
-  const styles = useMemo(() => createStyles(scale, scheme), [scale, scheme]);
+  const styles = useMemo(
+    () => createStyles(scale, textScale, scheme),
+    [scale, textScale, scheme],
+  );
 
   return (
     <StyleContext.Provider value={styles}>
@@ -431,7 +439,7 @@ function CodeFence({
 
 /** A ```mermaid fence. A fence Mermaid cannot draw stays source. */
 function MermaidBlock({ text, spacing }: { text: string; spacing: number }) {
-  const { scale, scheme, sheet } = useStyles();
+  const { type, scheme, sheet } = useStyles();
   const [asText, setAsText] = useState(false);
 
   return (
@@ -453,7 +461,7 @@ function MermaidBlock({ text, spacing }: { text: string; spacing: number }) {
       ) : (
         <Mermaid
           text={text}
-          scale={scale}
+          scale={type}
           bodyScale={scheme.body.scale}
           fontFamily={scheme.body.family}
           onFail={() => setAsText(true)}
@@ -547,7 +555,7 @@ function CodeText({
 
 /** A ```gherkin fence, reparsed as a feature and rendered as one. */
 function GherkinBlock({ text, spacing }: { text: string; spacing: number }) {
-  const { scale, scheme, sheet } = useStyles();
+  const { type, scheme, sheet } = useStyles();
   const nodes = useMemo(() => parseGherkin(text), [text]);
 
   return (
@@ -555,7 +563,7 @@ function GherkinBlock({ text, spacing }: { text: string; spacing: number }) {
       <div style={sheet.buttonRow}>
         <CopyButton text={text} />
       </div>
-      <Gherkin nodes={nodes} scale={scale} scheme={scheme} spacing={spacing} />
+      <Gherkin nodes={nodes} scale={type} scheme={scheme} spacing={spacing} />
     </div>
   );
 }

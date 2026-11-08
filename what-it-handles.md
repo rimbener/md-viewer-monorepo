@@ -125,7 +125,7 @@ another document opens.
 A fenced block tagged `mermaid` is drawn as a diagram instead of being printed
 as source. The drawing is Mermaid itself, running in the page, so every
 diagram type that the bundled build can draw is drawn. Colours come from the app
-theme. The type size follows the zoom and the body font.
+theme. The type size follows the zoom, the font size and the body font.
 
 The Mermaid package is part of the build. It is not loaded from a third-party
 server. It loads on the first diagram, so a document without one does not pay
@@ -181,7 +181,7 @@ Next in the document header move through the list. Opening a file adds it and
 drops the files that were ahead. The list keeps the last 100 opens. The 20
 folders opened most recently each keep a list.
 
-Zoom, the font scheme, the line length and the color scheme are properties of
+Zoom, the font size, the font scheme, the line length and the color scheme are properties of
 the reader: they survive switching files and come back on the next launch.
 Each file keeps its scroll position. A file opens where it was left, after a
 switch, a reload or the next launch. When the content is not yet tall enough,
@@ -230,8 +230,14 @@ first save.
 
 Undo and Redo sit to the right of Save, as two joined icon buttons. Back and
 Next in History look the same. Font is an outlined button with the font name.
-Width and Zoom each have −, the value and +: pressing the value resets it, and
-it is disabled at the default. Command-Z or Control-Z undoes;
+Width, Size and Zoom each have −, the value and +: pressing the value resets it, and
+it is disabled at the default.
+
+Size sets the body text from 10 px to 36 px in steps of 1 px, and starts at
+14 px. Headings, code, Gherkin, diagrams and the source editor change in the
+same ratio. The space between blocks does not change. The column keeps its
+line length in characters, so it gets wider with the text. Zoom multiplies on
+top of the size: it changes text and space. Command-Z or Control-Z undoes;
 Shift-Command-Z, Shift-Control-Z or Control-Y redoes. Each file keeps its own
 history while the app runs.
 
@@ -255,7 +261,7 @@ document. From left to right: the menu button, the file name and the color
 scheme control. The tools row under it, in the document
 column, is a toolbar of buttons only, in this order: History, the Gherkin
 toggle when it applies, the editor button with Save and Undo/Redo, then Font,
-Width and Zoom. Paired buttons (Back and Next, Undo and Redo, the − value +
+Width, Size and Zoom. Paired buttons (Back and Next, Undo and Redo, the − value +
 steps) are connected button groups. The tools have no titles; each one
 explains itself in a tooltip on hover or focus.
 

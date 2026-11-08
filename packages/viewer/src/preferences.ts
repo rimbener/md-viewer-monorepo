@@ -1,5 +1,6 @@
 /**
  * Viewer preferences that outlive a launch: the zoom level, the line length,
+ * the font size,
  * the font scheme, the color scheme, the sidebar and editor visibility, the
  * editor's share of the split, the
  * folder and file that were open last, the last folders opened, the
@@ -13,6 +14,7 @@
 import { isColorSchemeId, type ColorSchemeId } from './colorScheme';
 import { isCharacterCount } from './column';
 import { isEditorMode, type EditorMode } from './editorMode';
+import { isFontSize } from './fontSize';
 import {
   decodeFileHistory,
   encodeFileHistory,
@@ -36,6 +38,7 @@ import { isZoomLevel } from './zoom';
 
 const ZOOM_KEY = 'mdviewer.zoom';
 const CHARACTERS_KEY = 'mdviewer.characters';
+const FONT_SIZE_KEY = 'mdviewer.fontSize';
 const FOLDER_KEY = 'mdviewer.lastFolder';
 const BOOKMARK_KEY = 'mdviewer.lastFolderBookmark';
 const FILE_KEY = 'mdviewer.lastFile';
@@ -104,6 +107,21 @@ export async function loadCharacters(): Promise<number | null> {
 /** Records the line length for the next launch; failures are ignored. */
 export function saveCharacters(characters: number): void {
   write(CHARACTERS_KEY, String(characters));
+}
+
+/** The stored font size, or null when there is no usable one. */
+export async function loadFontSize(): Promise<number | null> {
+  const stored = await read(FONT_SIZE_KEY);
+  if (stored === null) {
+    return null;
+  }
+  const value = Number.parseFloat(stored);
+  return isFontSize(value) ? value : null;
+}
+
+/** Records the font size for the next launch; failures are ignored. */
+export function saveFontSize(size: number): void {
+  write(FONT_SIZE_KEY, String(size));
 }
 
 /** The chosen font scheme, or null when there is no usable one. */

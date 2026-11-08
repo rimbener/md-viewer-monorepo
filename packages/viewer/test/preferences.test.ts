@@ -4,6 +4,7 @@ import { emptyFileHistory, recordVisit } from '../src/fileHistory';
 import {
   forgetRecentFolder,
   loadCharacters,
+  loadFontSize,
   loadColorScheme,
   loadFileHistory,
   loadFontScheme,
@@ -15,6 +16,7 @@ import {
   moveFileHistory,
   rememberRecentFolder,
   saveCharacters,
+  saveFontSize,
   saveColorScheme,
   saveFileHistory,
   saveFontScheme,
@@ -86,6 +88,24 @@ describe('line length persistence', () => {
   it('survives a storage failure on read', async () => {
     storage.getItem.mockRejectedValueOnce(new Error('disk is on fire'));
     await expect(loadCharacters()).resolves.toBeNull();
+  });
+});
+
+describe('font size persistence', () => {
+  const key = 'mdviewer.fontSize';
+
+  it('round-trips a size', async () => {
+    saveFontSize(16);
+    expect(storage.setItem).toHaveBeenCalledWith(key, '16');
+    await expect(loadFontSize()).resolves.toBe(16);
+  });
+
+  it('rejects a stored value out of range or not whole', async () => {
+    await storage.setItem(key, '40');
+    await expect(loadFontSize()).resolves.toBeNull();
+
+    await storage.setItem(key, '13.5');
+    await expect(loadFontSize()).resolves.toBeNull();
   });
 });
 

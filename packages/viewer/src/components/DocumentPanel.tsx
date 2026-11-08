@@ -18,11 +18,13 @@ import {
   loadEditorFraction,
   loadEditorMode,
   loadFontScheme,
+  loadFontSize,
   loadZoom,
   saveCharacters,
   saveEditorFraction,
   saveEditorMode,
   saveFontScheme,
+  saveFontSize,
   saveZoom,
 } from '../preferences';
 import { useScrollMemory } from '../scrollMemory';
@@ -42,6 +44,7 @@ import {
   DEFAULT_SCHEME_ID,
   schemeById,
 } from '../typography';
+import { DEFAULT_FONT_SIZE, textScaleOf } from '../fontSize';
 import { DEFAULT_ZOOM } from '../zoom';
 import { ColumnControl } from './ColumnControl';
 import { DocumentSearch } from './DocumentSearch';
@@ -57,9 +60,10 @@ import { EditorSplit } from './EditorSplit';
 import { AppBarTitle } from './TopAppBar';
 import { ReplaceBar } from './ReplaceBar';
 import { oneLine } from './text';
+import { FontSizeControl } from './FontSizeControl';
 import { ZoomControl } from './ZoomControl';
 
-/** Body line in `Markdown.tsx` (`size(21)`), before zoom and scheme scale. */
+/** Body line in `Markdown.tsx` (`body(21)`), before zoom and scheme scale. */
 const BODY_LINE = 21;
 
 /** Plain-text fallback line, before zoom. */
@@ -113,13 +117,20 @@ export function DocumentPanel({
   const theme = useTheme();
   /** The path read with unfenced features laid out; any other path is not. */
   const [gherkinPath, setGherkinPath] = useState<string | null>(null);
-  // Zoom and line length are properties of the reader rather than of the
-  // document: they survive switching files, and are restored on the next launch.
+  // Zoom, font size and line length are properties of the reader rather than
+  // of the document: they survive switching files, and are restored on the
+  // next launch.
   const [scale, changeZoom] = useStoredPreference(
     loadZoom,
     saveZoom,
     DEFAULT_ZOOM,
   );
+  const [fontSize, changeFontSize] = useStoredPreference(
+    loadFontSize,
+    saveFontSize,
+    DEFAULT_FONT_SIZE,
+  );
+  const type = scale * textScaleOf(fontSize);
   const [characters, changeCharacters] = useStoredPreference(
     loadCharacters,
     saveCharacters,
@@ -218,10 +229,10 @@ export function DocumentPanel({
 
   // Prose is read most comfortably at a bounded line length, so the column is
   // capped and centred rather than filling however wide the window happens to
-  // be. The cap tracks zoom and the chosen character count.
+  // be. The cap tracks the text size and the chosen character count.
   const maxWidth = useMemo(
-    () => columnWidth(schemeById(schemeId), scale, characters),
-    [schemeId, scale, characters],
+    () => columnWidth(schemeById(schemeId), type, characters),
+    [schemeId, type, characters],
   );
 
   const mountKey = isLoading
@@ -293,8 +304,8 @@ export function DocumentPanel({
   }
 
   const lineHeight = isTruncated
-    ? PLAIN_LINE * scale
-    : bodyLineHeight(scale, schemeById(schemeId).body.scale);
+    ? PLAIN_LINE * type
+    : bodyLineHeight(type, schemeById(schemeId).body.scale);
   const endSpace = Math.max(
     0,
     bodyHeight - lineHeight - CONTENT_PADDING_BOTTOM - LAST_LINE_INSET,
@@ -324,7 +335,7 @@ export function DocumentPanel({
             <p style={{ ...styles.message, color: theme.mutedText }}>
               This file is too large to render; showing it as plain text.
             </p>
-            <PlainBody text={rendered ?? ''} scale={scale} />
+            <PlainBody text={rendered ?? ''} scale={type} />
           </>
         ) : (
           <div style={{ ...styles.column, maxWidth }}>
@@ -332,6 +343,7 @@ export function DocumentPanel({
               blocks={blocks}
               basePath={basePath}
               scale={scale}
+              textScale={textScaleOf(fontSize)}
               schemeId={schemeId}
             />
           </div>
@@ -378,6 +390,7 @@ export function DocumentPanel({
           {isEditing ? <EditTools session={session} /> : null}
           <FontControl schemeId={schemeId} onChange={changeScheme} />
           <ColumnControl characters={characters} onChange={changeCharacters} />
+          <FontSizeControl size={fontSize} onChange={changeFontSize} />
           <ZoomControl scale={scale} onChange={changeZoom} />
         </M3eToolbar>
         <div style={styles.findRow}>
@@ -423,7 +436,7 @@ export function DocumentPanel({
             editor={
               <Editor
                 value={text ?? ''}
-                scale={scale}
+                scale={type}
                 lastLineInset={LAST_LINE_INSET}
                 onChange={edit}
                 onUndo={undo}
