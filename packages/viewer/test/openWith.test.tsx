@@ -7,6 +7,7 @@ import { act, screen } from '@testing-library/react';
 
 import {
   createFakePlatform,
+  press,
   renderViewer,
   settle,
   storeSession,
@@ -73,4 +74,20 @@ it('takes the file Finder opened once, under Strict Mode', async () => {
   expect(
     screen.getByRole('heading', { name: 'From Finder' }),
   ).toBeInTheDocument();
+});
+
+it('forgets the file from outside once a folder is opened', async () => {
+  const platform = createFakePlatform(
+    { '/notes': ['todo.md'] },
+    { '/opened/readme.md': '# From Finder\n' },
+  );
+  platform.takeOpenedFile.mockResolvedValueOnce('/opened/readme.md');
+  platform.askForFolder.mockResolvedValueOnce('/notes');
+
+  await renderViewer(platform);
+  expect(platform.forgetOpenedFile).not.toHaveBeenCalled();
+  await press(screen.getByRole('button', { name: 'Change Folder…' }));
+
+  expect(platform.forgetOpenedFile).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('treeitem', { name: 'todo.md' })).toBeInTheDocument();
 });

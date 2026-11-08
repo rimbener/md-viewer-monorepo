@@ -91,6 +91,43 @@ it('marks hits and moves the current one', async () => {
   expectBackgrounds('alpha', [HIT, CURRENT]);
 });
 
+it('counts and steps through hits across many text runs', async () => {
+  const user = userEvent.setup();
+  await renderViewer(
+    createFakePlatform(
+      { '/notes': ['notes.md'] },
+      {
+        '/notes/notes.md': [
+          '# Title',
+          '',
+          'one alpha and *alpha*',
+          '',
+          '- alpha item',
+          '- second **alpha**',
+        ].join('\n'),
+      },
+    ),
+  );
+
+  await user.type(findField(), 'alpha');
+
+  expect(screen.getByLabelText('Match 1 of 4')).toBeInTheDocument();
+  expect(hits('alpha').map(mark => mark.dataset.findHit)).toEqual([
+    '0',
+    '1',
+    '2',
+    '3',
+  ]);
+  expectBackgrounds('alpha', [CURRENT, HIT, HIT, HIT]);
+
+  await user.click(screen.getByRole('button', { name: 'Next match' }));
+  await user.click(screen.getByRole('button', { name: 'Next match' }));
+
+  expect(screen.getByLabelText('Match 3 of 4')).toBeInTheDocument();
+  expectBackgrounds('alpha', [HIT, HIT, CURRENT, HIT]);
+  expect(hits('alpha')[2]?.closest('li')).not.toBeNull();
+});
+
 it('moves with the down arrow in the field', async () => {
   const user = userEvent.setup();
   await renderApp();

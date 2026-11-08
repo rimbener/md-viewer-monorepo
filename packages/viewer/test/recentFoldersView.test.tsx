@@ -124,6 +124,18 @@ it('adds a folder chosen from the panel', async () => {
   );
 });
 
+it('closes the old folder before it bookmarks the chosen one', async () => {
+  const platform = folderPlatform();
+  platform.askForFolder.mockResolvedValueOnce('/work');
+
+  await renderViewer(platform);
+
+  const [closed] = platform.closeFolder.mock.invocationCallOrder;
+  const [bookmarked] = platform.bookmarkFolder.mock.invocationCallOrder;
+  expect(platform.closeFolder).toHaveBeenCalledTimes(1);
+  expect(closed).toBeLessThan(bookmarked ?? -1);
+});
+
 it('stays on the open folder when the chosen one cannot be opened', async () => {
   const platform = folderPlatform();
   storeNotesAndDocs(platform);
