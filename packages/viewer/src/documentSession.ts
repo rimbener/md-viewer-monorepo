@@ -150,6 +150,10 @@ function step(
     : apply(state, state.path, next.text, next.history);
 }
 
+function read(state: DocumentSession, text: string): DocumentSession {
+  return { ...state, source: text, isLoading: false, error: null };
+}
+
 function save(
   state: DocumentSession,
   path: string,
@@ -175,15 +179,20 @@ export function reduceDocumentSession(
     case 'opened':
       return open(state, event.path);
     case 'read':
-      return event.path === state.path
-        ? { ...state, source: event.text, isLoading: false }
-        : state;
+      return event.path === state.path ? read(state, event.text) : state;
     case 'readFailed':
       return event.path === state.path
         ? { ...state, source: null, error: event.message, isLoading: false }
         : state;
     case 'reread':
-      if (event.path !== state.path || event.text === state.source) {
+      if (event.path !== state.path) {
+        return state;
+      }
+      // A reread issued before the first read ends makes that read stale.
+      if (state.isLoading) {
+        return read(state, event.text);
+      }
+      if (event.text === state.source) {
         return state;
       }
       if (event.text === draftOf(state)) {

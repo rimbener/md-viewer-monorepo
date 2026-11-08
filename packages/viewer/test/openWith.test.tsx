@@ -60,3 +60,17 @@ it('switches to a file Finder opens while the app is running', async () => {
   expect(screen.getByRole('heading', { name: 'Other' })).toBeInTheDocument();
   expect(platform.readDir).not.toHaveBeenCalled();
 });
+
+it('takes the file Finder opened once, under Strict Mode', async () => {
+  storeSession('/notes', '/notes/todo.md');
+  const platform = openedPlatform();
+  platform.takeOpenedFile.mockResolvedValueOnce('/opened/readme.md');
+
+  await renderViewer(platform);
+
+  expect(platform.takeOpenedFile).toHaveBeenCalledTimes(1);
+  expect(platform.folderExists).not.toHaveBeenCalled();
+  expect(
+    screen.getByRole('heading', { name: 'From Finder' }),
+  ).toBeInTheDocument();
+});

@@ -274,54 +274,67 @@ export function useFolderSession(onFileChosen: () => void) {
     [platform, send],
   );
 
-  // A file from outside wins over the stored folder. With neither, ask for one.
   useEffect(() => {
     let cancelled = false;
-    const isRestoring = () =>
-      !cancelled && stateRef.current.phase === 'restoring';
     const stopWatch = platform.watchOpenedFile(path => {
       if (!cancelled) {
         showOpenedFile(path);
       }
     });
-
-    (async () => {
-      const opened = await platform.takeOpenedFile();
-      if (!isRestoring()) {
-        return;
-      }
-      if (opened !== null) {
-        showOpenedFile(opened);
-        return;
-      }
-
-      const restored = await restoreFolder(platform);
-      const folder = restored?.path ?? null;
-      const isUsable =
-        folder !== null && (await folderExists(platform, folder));
-      if (!isRestoring()) {
-        return;
-      }
-
-      if (restored !== null && isUsable) {
-        const target = await loadLastFile();
-        if (!isRestoring()) {
-          return;
-        }
-        send({ type: 'restored', folder: restored.path, target });
-        noteRecent(restored.path, restored.bookmark, restored.replaced);
-        return;
-      }
-
-      send({ type: 'nothingRestored' });
-      if (platform.canOpenFolders) {
-        chooseFolder();
-      }
-    })();
-
     return () => {
       cancelled = true;
       stopWatch();
+    };
+  }, [platform, showOpenedFile]);
+
+  const isMounted = useRef(false);
+  const hasRestoreStarted = useRef(false);
+
+  // A file from outside wins over the stored folder. With neither, ask for one.
+  useEffect(() => {
+    isMounted.current = true;
+    // Strict Mode runs this twice; taking the opened file again would lose it.
+    if (!hasRestoreStarted.current) {
+      hasRestoreStarted.current = true;
+      const isRestoring = () =>
+        isMounted.current && stateRef.current.phase === 'restoring';
+
+      (async () => {
+        const opened = await platform.takeOpenedFile();
+        if (!isRestoring()) {
+          return;
+        }
+        if (opened !== null) {
+          showOpenedFile(opened);
+          return;
+        }
+
+        const restored = await restoreFolder(platform);
+        const folder = restored?.path ?? null;
+        const isUsable =
+          folder !== null && (await folderExists(platform, folder));
+        if (!isRestoring()) {
+          return;
+        }
+
+        if (restored !== null && isUsable) {
+          const target = await loadLastFile();
+          if (!isRestoring()) {
+            return;
+          }
+          send({ type: 'restored', folder: restored.path, target });
+          noteRecent(restored.path, restored.bookmark, restored.replaced);
+          return;
+        }
+
+        send({ type: 'nothingRestored' });
+        if (platform.canOpenFolders) {
+          chooseFolder();
+        }
+      })();
+    }
+    return () => {
+      isMounted.current = false;
     };
   }, [chooseFolder, noteRecent, platform, send, showOpenedFile]);
 

@@ -212,6 +212,20 @@ describe('reduceDocumentSession', () => {
     expect(line(state)).toBe('/a.md: a1 | a1 undo');
   });
 
+  it('takes a reread that ends before the first read as the read', () => {
+    const state = run([
+      { type: 'opened', path: '/a.md' },
+      { type: 'reread', path: '/a.md', text: 'a' },
+    ]);
+    expect(line(state)).toBe('/a.md: a | a');
+    const switched = run([
+      ...openA,
+      { type: 'opened', path: '/b.md' },
+      { type: 'reread', path: '/b.md', text: 'a' },
+    ]);
+    expect(line(switched)).toBe('/b.md: a | a');
+  });
+
   it('ignores reads that belong to another file', () => {
     const state = run([
       ...openB,

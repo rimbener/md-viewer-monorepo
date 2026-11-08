@@ -76,6 +76,7 @@ it('reopens the folder the bookmark points at, wherever it moved to', async () =
 
   await renderViewer(platform);
 
+  expect(platform.openFolder).toHaveBeenCalledTimes(1);
   expect(platform.openFolder).toHaveBeenCalledWith('BOOKMARK');
   expect(platform.askForFolder).not.toHaveBeenCalled();
   expect(treeItem('notes.md')).toBeInTheDocument();
@@ -103,6 +104,7 @@ it('makes the bookmark again when the resolved one is stale', async () => {
 
   await renderViewer(platform);
 
+  expect(platform.bookmarkFolder).toHaveBeenCalledTimes(1);
   expect(window.localStorage.getItem('mdviewer.lastFolderBookmark')).toBe(
     'FRESH',
   );
