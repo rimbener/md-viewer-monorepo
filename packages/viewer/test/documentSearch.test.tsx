@@ -68,11 +68,11 @@ it('explains the tools in tooltips, not in titles above them', async () => {
   }
 });
 
-it('places the field in a search bar in the top app bar', async () => {
+it('places the field under the tools, as the same field as Replace', async () => {
   await renderApp();
 
-  expect(findField().closest('m3e-search-bar')).not.toBeNull();
-  expect(findField().closest('m3e-app-bar')).not.toBeNull();
+  expect(findField().closest('m3e-form-field')).not.toBeNull();
+  expect(findField().closest('m3e-app-bar')).toBeNull();
   expect(findField().closest('m3e-toolbar')).toBeNull();
 });
 

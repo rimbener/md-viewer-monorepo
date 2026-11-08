@@ -10,7 +10,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 
-import { M3eIcon, M3eIconButton, M3eSearchBar } from '../m3e';
+import { M3eFormField, M3eIcon, M3eIconButton } from '../m3e';
 import { MAX_QUERY_LENGTH } from '../search';
 
 type DocumentSearchProps = {
@@ -22,7 +22,7 @@ type DocumentSearchProps = {
   onActive: (index: number) => void;
 };
 
-/** The Find search bar in the top app bar: field, match count, previous / next. */
+/** The Find field: match count, previous / next and clear inside its end. */
 export function DocumentSearch({
   query,
   count,
@@ -71,10 +71,9 @@ export function DocumentSearch({
   };
 
   return (
-    <M3eSearchBar style={styles.bar}>
-      <M3eIcon slot="leading" name="search" />
+    <M3eFormField variant="outlined" hideSubscript="always">
+      <M3eIcon slot="prefix" name="search" />
       <input
-        slot="input"
         role="searchbox"
         ref={fieldRef}
         aria-label="Find in document"
@@ -88,17 +87,18 @@ export function DocumentSearch({
         spellCheck={false}
         maxLength={MAX_QUERY_LENGTH}
       />
-      <span slot="trailing" style={styles.trailing}>
-        <span
-          aria-label={
-            count === 0
-              ? 'No matches'
-              : `Match ${active + 1} of ${count}${capped ? ' or more' : ''}`
-          }
-          style={styles.count}
-        >
-          {count === 0 ? '0' : `${active + 1}/${count}${capped ? '+' : ''}`}
-        </span>
+      <span
+        slot="suffix-text"
+        aria-label={
+          count === 0
+            ? 'No matches'
+            : `Match ${active + 1} of ${count}${capped ? ' or more' : ''}`
+        }
+        style={styles.count}
+      >
+        {count === 0 ? '0' : `${active + 1}/${count}${capped ? '+' : ''}`}
+      </span>
+      <span slot="suffix" style={styles.actions}>
         <M3eIconButton
           aria-label="Previous match"
           disabled={count === 0}
@@ -121,16 +121,12 @@ export function DocumentSearch({
           <M3eIcon name="close" />
         </M3eIconButton>
       </span>
-    </M3eSearchBar>
+    </M3eFormField>
   );
 }
 
 const styles = {
-  // M3 search bar: 360 dp at its narrowest.
-  bar: {
-    width: 360,
-  },
-  trailing: {
+  actions: {
     display: 'flex',
     alignItems: 'center',
   },

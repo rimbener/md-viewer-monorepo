@@ -251,15 +251,15 @@ its last line.
 ## Find
 
 A top app bar goes across the full window, above the sidebar and the
-document. From left to right: the menu button, the file name, the Find search
-bar, and the color scheme control. The tools row under it, in the document
+document. From left to right: the menu button, the file name and the color
+scheme control. The tools row under it, in the document
 column, is a toolbar of buttons only, in this order: History, the Gherkin
 toggle when it applies, the editor button with Save and Undo/Redo, then Font,
 Width and Zoom. Paired buttons (Back and Next, Undo and Redo, the − value +
 steps) are connected button groups. The tools have no titles; each one
 explains itself in a tooltip on hover or focus.
 
-Find is a Material search bar with a search icon. The match count and the
+Find is an outlined text field with a search icon, on a row under the tools. The match count and the
 Previous match, Next match and Clear find icon buttons sit inside its right
 end.
 
@@ -277,7 +277,8 @@ The field marks hits in the open document. Letter case does not matter.
 While the editor shows, alone or beside the preview, Find searches the
 markdown source in the editor. The preview is searched only when the editor is
 hidden.
-A Replace row sits under the tools, with Replace one and Replace all. It
+A Replace field of the same kind sits beside Find, with Replace one and
+Replace all. It
 shows only while the editor shows, because it changes the source. Command-G, or Control-G off the Mac,
 focuses the Replace field instead of the browser find-next. If the editor is
 hidden, it opens the editor beside the preview first. Replace one changes the

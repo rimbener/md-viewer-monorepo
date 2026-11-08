@@ -14,7 +14,7 @@ type ReplaceBarProps = {
   onReplaceAll: () => void;
 };
 
-/** The replace row under the tools. It works on the source, so only while the editor shows. */
+/** Replace, beside Find. It works on the source, so only while the editor shows. */
 export function ReplaceBar({
   focusKey,
   onFocused,

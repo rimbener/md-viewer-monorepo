@@ -61,7 +61,7 @@ import { GherkinToggle } from './GherkinToggle';
 import { SaveButton } from './SaveButton';
 import { Spinner } from './Spinner';
 import { EditorSplit } from './EditorSplit';
-import { AppBarActions, AppBarTitle } from './TopAppBar';
+import { AppBarTitle } from './TopAppBar';
 import { ReplaceBar } from './ReplaceBar';
 import { UndoRedo } from './UndoRedo';
 import { oneLine } from './text';
@@ -773,16 +773,6 @@ export function DocumentPanel({
             : ` — edited, not saved${diskChanged ? ' — file changed on disk' : ''}${saveError === null ? '' : ` — ${saveError}`}`}
         </span>
       </AppBarTitle>
-      <AppBarActions>
-        <DocumentSearch
-          query={query}
-          count={matchCount}
-          active={active}
-          capped={capped}
-          onQuery={changeQuery}
-          onActive={setActive}
-        />
-      </AppBarActions>
       <header style={headerStyle}>
         <M3eToolbar>
           {historyTool}
@@ -812,17 +802,27 @@ export function DocumentPanel({
           <ColumnControl characters={characters} onChange={changeCharacters} />
           <ZoomControl scale={scale} onChange={changeZoom} />
         </M3eToolbar>
-        {canEdit && findsInSource ? (
-          <ReplaceBar
-            focusKey={replaceFocusKey}
-            onFocused={clearReplaceFocus}
-            value={replacement}
-            canReplace={matchCount > 0}
-            onValue={setReplacement}
-            onReplaceOne={replaceOne}
-            onReplaceAll={replaceEvery}
+        <div style={styles.findRow}>
+          <DocumentSearch
+            query={query}
+            count={matchCount}
+            active={active}
+            capped={capped}
+            onQuery={changeQuery}
+            onActive={setActive}
           />
-        ) : null}
+          {canEdit && findsInSource ? (
+            <ReplaceBar
+              focusKey={replaceFocusKey}
+              onFocused={clearReplaceFocus}
+              value={replacement}
+              canReplace={matchCount > 0}
+              onValue={setReplacement}
+              onReplaceOne={replaceOne}
+              onReplaceAll={replaceEvery}
+            />
+          ) : null}
+        </div>
       </header>
 
       <FindProvider
@@ -914,6 +914,12 @@ const styles = {
   },
   message: {
     fontSize: 13,
+  },
+  findRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
   },
   header: {
     display: 'flex',
