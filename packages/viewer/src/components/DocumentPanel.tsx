@@ -150,11 +150,6 @@ export function DocumentPanel({
     [chooseEditorMode, editorMode],
   );
 
-  const changeEditorFraction = useCallback(
-    (next: number) => chooseEditorFraction(next, { save: false }),
-    [chooseEditorFraction],
-  );
-
   const path = file?.path ?? null;
   const session = useDocumentSession(path);
   const {
@@ -423,8 +418,7 @@ export function DocumentPanel({
           <EditorSplit
             isSplit={editorMode === 'split'}
             fraction={editorFraction}
-            onChange={changeEditorFraction}
-            onCommit={saveEditorFraction}
+            onCommit={chooseEditorFraction}
             preview={document}
             editor={
               <Editor

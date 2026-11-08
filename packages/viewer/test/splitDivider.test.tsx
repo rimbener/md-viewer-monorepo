@@ -121,3 +121,34 @@ it('falls back to an even split for a stored share out of range', async () => {
 
   expect(pane().value).toBe(50);
 });
+
+it('keeps a share released past the limit inside it', async () => {
+  await openEditor();
+
+  await dragTo(17, true);
+
+  expect(window.localStorage.getItem(FRACTION_KEY)).toBe('0.2');
+});
+
+it('starts no text selection on a press of the handle', async () => {
+  await openEditor();
+
+  // jsdom has no PointerEvent.
+  const press = new MouseEvent('pointerdown', {
+    bubbles: true,
+    composed: true,
+    cancelable: true,
+  });
+  handle().dispatchEvent(press);
+
+  expect(press.defaultPrevented).toBe(true);
+});
+
+it('sizes each pane by the split, not by its content', async () => {
+  await openEditor();
+
+  for (const slot of ['start', 'end']) {
+    const element = pane().querySelector<HTMLElement>(`[slot="${slot}"]`)!;
+    expect(element.style.contain).toBe('inline-size');
+  }
+});

@@ -1,7 +1,8 @@
-import type { CSSProperties, MouseEvent, ReactNode } from 'react';
+import type { CSSProperties, ReactNode, SyntheticEvent } from 'react';
 
 import { M3eSplitPane, type M3eSplitPaneElement } from '../m3e';
 import {
+  clampEditorFraction,
   DEFAULT_EDITOR_FRACTION,
   EDITOR_FRACTION_STEP,
   MAX_EDITOR_FRACTION,
@@ -13,15 +14,13 @@ interface EditorSplitProps {
   isSplit: boolean;
   /** The editor's share of the split, 0 to 1. */
   fraction: number;
-  /** Every move of a drag or key press. */
-  onChange: (next: number) => void;
   /** The end of a drag or key press: the value to keep. */
   onCommit: (next: number) => void;
   editor: ReactNode;
   preview: ReactNode;
 }
 
-const percent = (fraction: number) => Math.round(fraction * 100);
+const percent = (fraction: number) => fraction * 100;
 
 function paneFraction(event: Event): number | null {
   if (event.target !== event.currentTarget) {
@@ -30,7 +29,7 @@ function paneFraction(event: Event): number | null {
   return (event.currentTarget as M3eSplitPaneElement).value / 100;
 }
 
-function isOnHandle(event: MouseEvent): boolean {
+function isOnHandle(event: SyntheticEvent): boolean {
   return event.nativeEvent
     .composedPath()
     .some(node => node instanceof HTMLElement && node.id === 'drag-handle');
@@ -43,7 +42,6 @@ function isOnHandle(event: MouseEvent): boolean {
 export function EditorSplit({
   isSplit,
   fraction,
-  onChange,
   onCommit,
   editor,
   preview,
@@ -58,21 +56,22 @@ export function EditorSplit({
       step={percent(EDITOR_FRACTION_STEP)}
       disabled={!isSplit}
       style={isSplit ? styles.split : { ...styles.split, ...styles.alone }}
-      onInput={(event: Event) => {
-        const next = paneFraction(event);
-        if (next !== null) {
-          onChange(next);
-        }
-      }}
+      // The pane moves itself during a drag; a render per move would be slow.
       onChange={(event: Event) => {
         const next = paneFraction(event);
         if (next !== null) {
-          onCommit(next);
+          onCommit(clampEditorFraction(next));
+        }
+      }}
+      onPointerDown={event => {
+        // Else the press starts a text selection that the drag extends.
+        if (isOnHandle(event)) {
+          event.preventDefault();
         }
       }}
       onDoubleClick={event => {
         if (isSplit && isOnHandle(event)) {
-          onChange(DEFAULT_EDITOR_FRACTION);
+          event.currentTarget.value = percent(DEFAULT_EDITOR_FRACTION);
           onCommit(DEFAULT_EDITOR_FRACTION);
         }
       }}
@@ -98,14 +97,16 @@ const styles = {
   alone: {
     '--m3e-split-pane-drag-handle-container-width': '0px',
   } as CSSProperties,
+  // Without inline-size containment each pane's width follows its content,
+  // not the split value, and every move measures the whole document.
   source: {
     height: '100%',
-    minWidth: 0,
+    contain: 'inline-size',
     display: 'flex',
   },
   preview: {
     height: '100%',
-    minWidth: 0,
+    contain: 'inline-size',
     display: 'flex',
     flexDirection: 'column',
   },
