@@ -116,6 +116,8 @@ m3e details that bite:
 - `htmlFor` (tooltip, menu trigger) is a property. Make control ids with
   `useControlId()` (`components/Tooltip.tsx`): m3e finds them with
   `querySelector`.
+  It finds the control only when `htmlFor` changes. If you remount the
+  control (a `key`), remount the trigger too.
 
 `src/typography.ts` is why document sizes look the way they do: each font
 scheme carries a `scale` measured from the macOS face's x-height and an

@@ -9,6 +9,7 @@ import {
   createFakePlatform,
   press,
   renderViewer,
+  settle,
   storeSession,
   type FakePlatform,
 } from './fakePlatform';
@@ -243,4 +244,39 @@ it('checks the open folder, also after a pick that fails', async () => {
 
   expect(isChecked('/notes')).toBe(true);
   expect(isChecked('/gone')).toBe(false);
+});
+
+it('opens a folder from the menu again after a pick', async () => {
+  const platform = folderPlatform();
+  storeNotesAndDocs(platform);
+  await renderViewer(platform);
+
+  await openMenu();
+  await pick('/docs');
+  expect(treeItem('d.md')).toBeInTheDocument();
+
+  await openMenu();
+  await pick('/notes');
+  expect(treeItem('a.md')).toBeInTheDocument();
+  expect(treeItem('d.md')).not.toBeInTheDocument();
+
+  await openMenu();
+  await pick('/docs');
+  expect(treeItem('d.md')).toBeInTheDocument();
+});
+
+it('keeps the menu button on the live menu after a pick', async () => {
+  const platform = folderPlatform();
+  storeNotesAndDocs(platform);
+  await renderViewer(platform);
+
+  await openMenu();
+  await pick('/docs');
+  await settle();
+
+  const button = screen.getByRole('button', { name: 'Recent folders' });
+  const trigger = button.querySelector('m3e-menu-trigger') as HTMLElement & {
+    menu: HTMLElement | null;
+  };
+  expect(trigger.menu?.isConnected).toBe(true);
 });
