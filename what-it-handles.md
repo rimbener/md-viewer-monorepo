@@ -44,6 +44,15 @@ matches how the same document reads on GitHub.
 Underscores inside words are left alone, so `some_long_name` survives intact
 while `_emphasised_` still works.
 
+A click on a link with a scheme (`https:`, `mailto:` and so on) opens it in
+the system browser or mail app. A link to a `.md` or `.mdc` file opens that
+file in the viewer: a relative link resolves against the folder of the
+document, and a `file:` link gives the path. The file is selected in the
+sidebar tree, which reads the folders on the way to it, and Back returns to
+the document with the link. In a document by URL, a relative link to a
+markdown file opens in the web app as a document by URL; the desktop app hands
+it to the browser.
+
 ## Syntax highlighting
 
 A fence tagged with one of these languages is tokenised and tinted. A `mermaid`

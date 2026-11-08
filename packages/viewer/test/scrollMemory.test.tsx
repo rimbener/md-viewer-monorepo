@@ -40,6 +40,7 @@ async function renderPanel(): Promise<void> {
       canGoNext={false}
       onBack={() => {}}
       onNext={() => {}}
+      onOpenFile={() => {}}
     />,
     createFakePlatform({}, { [file.path]: 'A long note.' }),
   );

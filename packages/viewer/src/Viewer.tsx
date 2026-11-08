@@ -76,6 +76,7 @@ function Session() {
             canGoNext={session.canGoNext}
             onBack={session.goBack}
             onNext={session.goNext}
+            onOpenFile={session.openLinkedFile}
           />
         </M3eDrawerContainer>
       </TopAppBar>

@@ -8,6 +8,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -23,7 +24,7 @@ import {
   languageOf,
   type TokenKind,
 } from '@md-viewer/markdown/highlight';
-import { hasScheme, resolveUri } from '@md-viewer/markdown/resolveUri';
+import { resolveUri } from '@md-viewer/markdown/resolveUri';
 import type {
   Block,
   CellAlignment,
@@ -32,6 +33,7 @@ import type {
 
 import { copyText } from '../clipboard';
 import { useShowText } from '../find';
+import { linkTarget } from '../links';
 import { isMermaid, MERMAID_TEXT_CAP } from '../mermaid';
 import { usePlatform } from '../platform';
 import { M3eButton } from '../m3e';
@@ -154,6 +156,9 @@ function useStyles(): MarkdownStyles {
   return useContext(StyleContext);
 }
 
+/** Follows a link from the document; the context keeps it off every prop. */
+const LinkContext = createContext<(href: string) => void>(() => {});
+
 interface MarkdownProps {
   blocks: Block[];
   /** Directory of the document, used to resolve relative image paths. */
@@ -164,6 +169,8 @@ interface MarkdownProps {
   textScale?: number;
   /** Font scheme id; an unknown one falls back to the default. */
   schemeId?: string | null;
+  /** Shows a linked markdown file in the viewer. */
+  onOpenFile?: (path: string) => void;
 }
 
 export function Markdown({
@@ -172,16 +179,37 @@ export function Markdown({
   scale = 1,
   textScale = 1,
   schemeId = null,
+  onOpenFile,
 }: MarkdownProps) {
+  const platform = usePlatform();
   const scheme = useMemo(() => schemeById(schemeId), [schemeId]);
   const styles = useMemo(
     () => createStyles(scale, textScale, scheme),
     [scale, textScale, scheme],
   );
 
+  const follow = useCallback(
+    (href: string) => {
+      const target = linkTarget(href, basePath);
+      if (target === null) {
+        return;
+      }
+      if (target.kind === 'file') {
+        onOpenFile?.(target.path);
+      } else if (target.kind === 'document' && platform.openUrl) {
+        platform.openUrl(target.url);
+      } else {
+        platform.openLink(target.url);
+      }
+    },
+    [basePath, onOpenFile, platform],
+  );
+
   return (
     <StyleContext.Provider value={styles}>
-      <BlockSequence blocks={blocks} basePath={basePath} />
+      <LinkContext.Provider value={follow}>
+        <BlockSequence blocks={blocks} basePath={basePath} />
+      </LinkContext.Provider>
     </StyleContext.Provider>
   );
 }
@@ -621,7 +649,7 @@ interface InlineProps {
 
 function Inline({ nodes, color }: InlineProps) {
   const theme = useTheme();
-  const platform = usePlatform();
+  const follow = useContext(LinkContext);
   const { sheet } = useStyles();
   const show = useShowText();
 
@@ -675,10 +703,7 @@ function Inline({ nodes, color }: InlineProps) {
                 style={{ color: theme.link, textDecoration: 'none' }}
                 onClick={(event: MouseEvent) => {
                   event.preventDefault();
-                  // Relative links point inside the document set, not the web.
-                  if (hasScheme(node.href)) {
-                    platform.openLink(node.href);
-                  }
+                  follow(node.href);
                 }}
               >
                 <Inline nodes={node.children} color={theme.link} />

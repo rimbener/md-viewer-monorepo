@@ -26,6 +26,8 @@ pnpm dev:tauri                   # desktop app (needs Rust)
 pnpm build:web                   # static site in apps/web/dist
 pnpm build:tauri                 # desktop installers
 pnpm install:macos               # build MD Viewer.app, copy to /Applications
+pnpm dev:android                 # Android app on a USB phone or emulator
+pnpm build:android               # aarch64 APK
 
 pnpm test                        # vitest, every project
 npx vitest run --project viewer  # one project: markdown, viewer, web, tauri
@@ -51,7 +53,8 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
   `components/DocumentPanel.tsx` shows one document — zoom, font scheme, the
   editor pane; `src/useDocumentSession.ts` reads, watches and saves it;
   `src/useFindSession.ts` owns find and replace (query, hits, current hit).
-  `components/Markdown.tsx` renders the parsed result.
+  `components/Markdown.tsx` renders the parsed result; `src/links.ts` decides
+  where a link click goes (browser, or a markdown file in the viewer).
   Each component that owns a Command shortcut registers it with
   `useShortcut()` (`src/shortcuts.ts`). Do not add a `keydown` listener on
   `window`.

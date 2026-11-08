@@ -145,10 +145,8 @@ export function useFolderSession(onFileChosen: () => void) {
     [onFileChosen, send],
   );
 
-  const step = useCallback(
-    (direction: 'back' | 'next') => {
-      const before = stateRef.current;
-      const after = send({ type: 'stepped', direction });
+  const reveal = useCallback(
+    (before: FolderSession, after: FolderSession) => {
       const request = after.reveal;
       if (after === before || request === null) {
         return;
@@ -158,6 +156,22 @@ export function useFolderSession(onFileChosen: () => void) {
         .catch(() => {});
     },
     [platform, send],
+  );
+
+  const step = useCallback(
+    (direction: 'back' | 'next') => {
+      const before = stateRef.current;
+      reveal(before, send({ type: 'stepped', direction }));
+    },
+    [reveal, send],
+  );
+
+  const openLinkedFile = useCallback(
+    (path: string) => {
+      const before = stateRef.current;
+      reveal(before, send({ type: 'linked', path }));
+    },
+    [reveal, send],
   );
 
   const goBack = useCallback(() => step('back'), [step]);
@@ -340,6 +354,7 @@ export function useFolderSession(onFileChosen: () => void) {
     removeRecentFolder,
     reloadFolder,
     selectFile,
+    openLinkedFile,
     selectDirectory,
     createFile,
     goBack,

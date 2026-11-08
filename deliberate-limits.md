@@ -84,12 +84,12 @@ An image renders as a picture when it is alone in its paragraph. An image mixed
 into a sentence falls back to its alt text, because an inline image has to be
 measured and baseline-aligned inside a run of text.
 
-## Relative links are inert
+## Only markdown links open in the viewer
 
-A link to another `.md` file is styled as a link but does nothing when clicked.
-Only links with a scheme — `https:`, `mailto:` and so on — are handed to the
-system. Making relative links select the target file in the sidebar tree is the
-obvious next step.
+A link to a markdown file opens in the viewer. A link to another local file,
+such as a `.csv` or a `.pdf`, does nothing, because the viewer shows only
+markdown. An anchor (`#section`) does nothing: headings have no ids to scroll
+to, and a link to `other.md#section` opens the top of that file.
 
 ## Large files fall back to plain text
 

@@ -51,6 +51,7 @@ async function renderPanel(): Promise<void> {
           canGoNext={false}
           onBack={() => {}}
           onNext={() => {}}
+          onOpenFile={() => {}}
         />
       </TopAppBar>
     </ThemeRoot>,

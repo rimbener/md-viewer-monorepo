@@ -60,6 +60,39 @@ const restored = run([
 const open = scanned(restored, tree('/docs', 'a.md', 'b.md'));
 
 describe('reduceFolderSession', () => {
+  it('selects a linked file that the tree holds', () => {
+    const linked = run([{ type: 'linked', path: '/docs/a.md' }], open);
+    expect(line(linked)).toBe(
+      'open /docs tree=/docs selected=/docs/a.md history=/docs/a.md@0',
+    );
+    expect(linked.reveal).toBeNull();
+  });
+
+  it('shows a linked file the tree has not read, then reveals it', () => {
+    const linked = run([{ type: 'linked', path: '/docs/deep/c.md' }], open);
+    expect(linked.selected?.path).toBe('/docs/deep/c.md');
+    expect(linked.reveal?.path).toBe('/docs/deep/c.md');
+
+    const walked = run(
+      [{ type: 'revealed', id: linked.reveal!.id, tree: open.tree! }],
+      linked,
+    );
+    expect(walked.selected?.path).toBe('/docs/deep/c.md');
+    expect(walked.reveal).toBeNull();
+  });
+
+  it('shows a linked file outside the folder without a reveal', () => {
+    const linked = run([{ type: 'linked', path: '/elsewhere/x.md' }], open);
+    expect(linked.selected?.path).toBe('/elsewhere/x.md');
+    expect(linked.reveal).toBeNull();
+  });
+
+  it('keeps a file from outside alone when it links to another', () => {
+    const outside = run([{ type: 'openedFromOutside', path: '/tmp/a.md' }]);
+    const linked = run([{ type: 'linked', path: '/tmp/b.md' }], outside);
+    expect(line(linked)).toBe('external null tree=/tmp selected=/tmp/b.md');
+  });
+
   it('restores a folder, scans it, then selects the stored file', () => {
     expect(line(initialFolderSession)).toBe('restoring null');
     expect(line(restored)).toBe('scanning /docs scan#1');

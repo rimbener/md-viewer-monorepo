@@ -36,6 +36,7 @@ async function renderPanel(): Promise<void> {
       canGoNext={false}
       onBack={() => {}}
       onNext={() => {}}
+      onOpenFile={() => {}}
     />,
     createFakePlatform({}, { [file.path]: 'Last line of the note.' }),
   );

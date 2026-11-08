@@ -65,6 +65,7 @@ export type FolderEvent =
   | { type: 'openedFromOutside'; path: string }
   | { type: 'historyLoaded'; id: number; stored: FileHistory }
   | { type: 'selected'; file: FileNode }
+  | { type: 'linked'; path: string }
   | { type: 'stepped'; direction: 'back' | 'next' }
   | { type: 'revealed'; id: number; tree: DirectoryNode }
   | { type: 'created'; folder: string; path: string; tree: DirectoryNode }
@@ -215,6 +216,32 @@ function step(state: FolderSession, direction: 'back' | 'next'): FolderSession {
   };
 }
 
+/**
+ * A link in the document names a file. In the folder it is selected and, when
+ * the tree has not read it yet, revealed. A file from outside stays alone.
+ */
+function link(state: FolderSession, path: string): FolderSession {
+  if (state.phase === 'external') {
+    const { root, file } = treeForOpenedFile(path);
+    return { ...state, tree: root, selected: file };
+  }
+  const found = state.tree === null ? null : findFile(state.tree, path);
+  if (found !== null) {
+    return select(state, found);
+  }
+  const name = path.slice(path.lastIndexOf('/') + 1);
+  const selected = select(state, { kind: 'file', name, path });
+  if (state.folder === null || !path.startsWith(`${state.folder}/`)) {
+    return selected;
+  }
+  const id = state.lastId + 1;
+  return {
+    ...selected,
+    reveal: { id, folder: state.folder, path },
+    lastId: id,
+  };
+}
+
 function scanned(state: FolderSession, tree: DirectoryNode): FolderSession {
   const target = state.scan?.target ?? null;
   const next: FolderSession = {
@@ -295,6 +322,8 @@ export function reduceFolderSession(
         : state;
     case 'selected':
       return select(state, event.file);
+    case 'linked':
+      return link(state, event.path);
     case 'stepped':
       return step(state, event.direction);
     case 'revealed':
@@ -302,7 +331,8 @@ export function reduceFolderSession(
         ? {
             ...state,
             tree: event.tree,
-            selected: findFile(event.tree, state.reveal.path),
+            // A file the walk did not find stays shown, as a link can name one.
+            selected: findFile(event.tree, state.reveal.path) ?? state.selected,
             reveal: null,
           }
         : state;
@@ -349,6 +379,10 @@ export function persistenceOf(
   switch (event.type) {
     case 'selected':
       return { lastFile: event.file.path, history: historyIf(isVisitNew) };
+    case 'linked':
+      return after.phase === 'external'
+        ? NOTHING_TO_PERSIST
+        : { lastFile: event.path, history: historyIf(isVisitNew) };
     case 'created':
       return after.selected?.path === event.path
         ? { lastFile: event.path, history: historyIf(isVisitNew) }

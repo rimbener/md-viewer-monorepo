@@ -103,6 +103,8 @@ interface DocumentPanelProps {
   canGoNext: boolean;
   onBack: () => void;
   onNext: () => void;
+  /** Shows a markdown file that a link in the document names. */
+  onOpenFile: (path: string) => void;
 }
 
 /** Reads the selected file and renders it as markdown. */
@@ -113,6 +115,7 @@ export function DocumentPanel({
   canGoNext,
   onBack,
   onNext,
+  onOpenFile,
 }: DocumentPanelProps) {
   const theme = useTheme();
   /** The path read with unfenced features laid out; any other path is not. */
@@ -345,6 +348,7 @@ export function DocumentPanel({
               scale={scale}
               textScale={textScaleOf(fontSize)}
               schemeId={schemeId}
+              onOpenFile={onOpenFile}
             />
           </div>
         )}
