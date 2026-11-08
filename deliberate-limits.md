@@ -157,8 +157,17 @@ all reads and writes through the Storage Access Framework, in a small Kotlin
 plugin (`apps/tauri/src-tauri/plugins/saf`). A folder has no disk path there,
 so it is known by its name, as in the web app. Each read finds the document by
 name, folder by folder, so the first read deep in a large folder is slower. The
-app is not registered to open a file from another app, and it is not in the
-Play Store.
+app is not in the Play Store.
+
+## A file shared on Android is read-only
+
+"Open with" and Share give a grant to read one file for a short time, and
+often not to write it. So the app reads the text once and keeps it in memory.
+Save fails, the file is not watched, and images with a relative path do not
+load, because the folder around the file is not granted. To edit the file, open
+its folder. The app also asks for `text/plain`, because many file managers send
+`.md` with that type, so it is offered for `.txt` files too. An app cannot make
+itself the default; the person chooses "Always".
 
 ## Back and Next are navigation, not undo
 

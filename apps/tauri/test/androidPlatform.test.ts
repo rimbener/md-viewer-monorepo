@@ -1,7 +1,7 @@
 import type { Platform } from '@md-viewer/viewer/platform';
 
 import { createAndroidPlatform } from '../src/androidPlatform';
-import type { Saf, SafFolder } from '../src/saf';
+import type { Saf, SafFolder, SafShared } from '../src/saf';
 
 type Node = { name: string; parent: string | null; text?: string };
 
@@ -13,6 +13,8 @@ function createFakeSaf(trees: Record<string, string[]>) {
   const nodes = new Map<string, Node>();
   const granted = new Set<string>();
   let picks: string[] = [];
+  const handed: SafShared[] = [];
+  const onShare = new Set<() => void>();
 
   for (const [tree, entries] of Object.entries(trees)) {
     const name = tree.split('/').pop() as string;
@@ -77,6 +79,11 @@ function createFakeSaf(trees: Record<string, string[]>) {
       nodes.set(id, { name, parent, text: '' });
       return id;
     }),
+    takeShared: vi.fn(async () => handed.shift() ?? null),
+    watchShared: vi.fn((listener: () => void) => {
+      onShare.add(listener);
+      return () => onShare.delete(listener);
+    }),
   } satisfies Saf;
 
   return {
@@ -88,6 +95,10 @@ function createFakeSaf(trees: Record<string, string[]>) {
       granted.delete(tree);
     },
     text: (id: string) => nodes.get(id)?.text,
+    share(file: SafShared) {
+      handed.push(file);
+      onShare.forEach(listener => listener());
+    },
   };
 }
 
@@ -229,5 +240,60 @@ describe('createAndroidPlatform', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('opens a shared file at its name, read-only', async () => {
+    const fake = createFakeSaf(TREES);
+    const platform = createAndroidPlatform(fake.saf);
+    fake.share({ name: 'todo.md', contents: '# Todo' });
+
+    const path = await platform.takeOpenedFile();
+
+    expect(path).toBe('/todo.md');
+    expect(await platform.readFile('/todo.md')).toBe('# Todo');
+    await expect(platform.writeFile?.('/todo.md', 'x')).rejects.toThrow(
+      'read-only',
+    );
+    expect(await platform.takeOpenedFile()).toBeNull();
+  });
+
+  it('gives a second share of the same name its own path', async () => {
+    const fake = createFakeSaf(TREES);
+    const platform = createAndroidPlatform(fake.saf);
+    fake.willPick('content://docs/notes');
+    await pick(platform);
+    fake.share({ name: 'notes', contents: 'one' });
+    fake.share({ name: 'a/b.md', contents: 'two' });
+    fake.share({ name: 'a-b.md', contents: 'three' });
+
+    expect(await platform.takeOpenedFile()).toBe('/notes (2)');
+    expect(await platform.takeOpenedFile()).toBe('/a-b.md');
+    expect(await platform.takeOpenedFile()).toBe('/a-b (2).md');
+    expect(await platform.readFile('/notes/a.md')).toBe('text of a.md');
+  });
+
+  it('fails the read of a shared file that could not be read', async () => {
+    const fake = createFakeSaf(TREES);
+    const platform = createAndroidPlatform(fake.saf);
+    fake.share({ name: 'big.md', error: 'The file is too large to open.' });
+
+    const path = (await platform.takeOpenedFile()) as string;
+
+    await expect(platform.readFile(path)).rejects.toThrow('too large');
+  });
+
+  it('hands over a file shared while the app runs, until stopped', async () => {
+    const fake = createFakeSaf(TREES);
+    const platform = createAndroidPlatform(fake.saf);
+    const onOpen = vi.fn();
+
+    const stop = platform.watchOpenedFile(onOpen);
+    fake.share({ name: 'one.md', contents: '1' });
+    await vi.waitFor(() => expect(onOpen).toHaveBeenCalledWith('/one.md'));
+    stop();
+    fake.share({ name: 'two.md', contents: '2' });
+    await Promise.resolve();
+
+    expect(onOpen).toHaveBeenCalledTimes(1);
   });
 });

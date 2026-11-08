@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.DocumentsContract.Document
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.webkit.WebView
 import androidx.activity.result.ActivityResult
@@ -16,6 +17,8 @@ import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSArray
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.util.concurrent.Executors
 
 @InvokeArg
@@ -43,6 +46,9 @@ class CreateArgs {
   lateinit var name: String
 }
 
+/** Far above what the viewer renders; it only keeps a huge file from exhausting memory. */
+private const val MAX_SHARED_BYTES = 16 * 1024 * 1024
+
 private const val ACCESS =
   Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
@@ -62,8 +68,97 @@ class SafPlugin(private val activity: Activity) : Plugin(activity) {
 
   private var edges: SafeArea? = null
 
+  /** A file from "Open with" or Share, held until the page takes it. Touched on `io` only. */
+  private var shared: JSObject? = null
+
   override fun load(webView: WebView) {
     edges = SafeArea(webView).also { it.start() }
+    val intent = activity.intent
+    // Reopened from recents, Android hands over the old intent again.
+    if (intent != null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+      receive(intent, notify = false)
+    }
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    receive(intent, notify = true)
+  }
+
+  private fun receive(intent: Intent, notify: Boolean) {
+    val text = intent.getStringExtra(Intent.EXTRA_TEXT)
+    val stream = when (intent.action) {
+      Intent.ACTION_VIEW -> intent.data
+      Intent.ACTION_SEND ->
+        @Suppress("DEPRECATION")
+        intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+      else -> return
+    }
+    if (stream == null && (intent.action != Intent.ACTION_SEND || text == null)) {
+      return
+    }
+    // The read grant ends with the activity, so the text is read now.
+    io.execute {
+      shared = if (stream != null) {
+        readShared(stream)
+      } else {
+        sharedFile(intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: "Shared text") {
+          put("contents", text)
+        }
+      }
+      if (notify) {
+        trigger("shared", JSObject())
+      }
+    }
+  }
+
+  private fun sharedFile(name: String, fill: JSObject.() -> Unit): JSObject {
+    val file = JSObject()
+    file.put("name", name)
+    file.fill()
+    return file
+  }
+
+  private fun readShared(uri: Uri): JSObject {
+    val name = try {
+      resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+        ?.use { if (it.moveToFirst()) it.getString(0) else null }
+    } catch (ex: Exception) {
+      null
+    } ?: uri.lastPathSegment ?: "Shared file"
+    return sharedFile(name) {
+      try {
+        val bytes = resolver.openInputStream(uri)?.use { readAtMost(it, MAX_SHARED_BYTES) }
+          ?: throw IllegalStateException("The file cannot be read.")
+        put("contents", bytes.toString(Charsets.UTF_8))
+      } catch (ex: Exception) {
+        put("error", ex.message ?: ex.javaClass.simpleName)
+      }
+    }
+  }
+
+  private fun readAtMost(input: InputStream, limit: Int): ByteArray {
+    val out = ByteArrayOutputStream()
+    val buffer = ByteArray(64 * 1024)
+    while (true) {
+      val count = input.read(buffer)
+      if (count < 0) {
+        return out.toByteArray()
+      }
+      if (out.size() + count > limit) {
+        throw IllegalStateException("The file is too large to open.")
+      }
+      out.write(buffer, 0, count)
+    }
+  }
+
+  /** The shared file, once, or an empty object. */
+  @Command
+  fun takeShared(invoke: Invoke) {
+    run(invoke) {
+      val file = shared ?: JSObject()
+      shared = null
+      file
+    }
   }
 
   @Command

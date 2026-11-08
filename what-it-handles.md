@@ -365,6 +365,16 @@ the navigation bar and a camera cutout, and the plugin tells the page how much
 of each edge they cover. The viewer keeps its content inside those edges, and
 above the keyboard.
 
+The Android app is in the "Open with" list for `text/markdown`,
+`text/x-markdown` and `text/plain` files, and in the Share sheet for any
+`text/*` file or shared text. A person can make it the default for those
+types: Android asks "Just once" or "Always". The app reads the file at once,
+because Android gives only a short grant. The file is shown alone at
+`/<file name>`, read-only. A second file with a name in use gets
+`/<name> (2).md`. Shared text without a file is shown under its subject, or as
+"Shared text". A file shared while the app runs replaces the shown file. A
+shared file over 16 MB is not read.
+
 ## Performance
 
 Parsing the React Native `README.md` (6.5 KB) takes about 1 ms. Highlighting

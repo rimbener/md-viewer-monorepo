@@ -367,6 +367,30 @@
           "markdownDescription": "Denies the read_text command without any pre-configured scope."
         },
         {
+          "description": "Enables the register_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-register-listener",
+          "markdownDescription": "Enables the register_listener command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the register_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-register-listener",
+          "markdownDescription": "Denies the register_listener command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the remove_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-remove-listener",
+          "markdownDescription": "Enables the remove_listener command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-remove-listener",
+          "markdownDescription": "Denies the remove_listener command without any pre-configured scope."
+        },
+        {
           "description": "Enables the safe_area command without any pre-configured scope.",
           "type": "string",
           "const": "allow-safe-area",
@@ -391,6 +415,18 @@
           "markdownDescription": "Denies the stat command without any pre-configured scope."
         },
         {
+          "description": "Enables the take_shared command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-take-shared",
+          "markdownDescription": "Enables the take_shared command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the take_shared command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-take-shared",
+          "markdownDescription": "Denies the take_shared command without any pre-configured scope."
+        },
+        {
           "description": "Enables the write_text command without any pre-configured scope.",
           "type": "string",
           "const": "allow-write-text",
@@ -403,10 +439,10 @@
           "markdownDescription": "Denies the write_text command without any pre-configured scope."
         },
         {
-          "description": "Pick a folder, read, write and create the documents in it, and read the safe area.\n#### This default permission set includes:\n\n- `allow-pick-folder`\n- `allow-open-tree`\n- `allow-list-children`\n- `allow-stat`\n- `allow-read-text`\n- `allow-read-base64`\n- `allow-write-text`\n- `allow-create-file`\n- `allow-safe-area`",
+          "description": "Pick a folder, read, write and create the documents in it, take a file shared to the app, and read the safe area.\n#### This default permission set includes:\n\n- `allow-pick-folder`\n- `allow-open-tree`\n- `allow-list-children`\n- `allow-stat`\n- `allow-read-text`\n- `allow-read-base64`\n- `allow-write-text`\n- `allow-create-file`\n- `allow-safe-area`\n- `allow-take-shared`\n- `allow-register-listener`\n- `allow-remove-listener`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Pick a folder, read, write and create the documents in it, and read the safe area.\n#### This default permission set includes:\n\n- `allow-pick-folder`\n- `allow-open-tree`\n- `allow-list-children`\n- `allow-stat`\n- `allow-read-text`\n- `allow-read-base64`\n- `allow-write-text`\n- `allow-create-file`\n- `allow-safe-area`"
+          "markdownDescription": "Pick a folder, read, write and create the documents in it, take a file shared to the app, and read the safe area.\n#### This default permission set includes:\n\n- `allow-pick-folder`\n- `allow-open-tree`\n- `allow-list-children`\n- `allow-stat`\n- `allow-read-text`\n- `allow-read-base64`\n- `allow-write-text`\n- `allow-create-file`\n- `allow-safe-area`\n- `allow-take-shared`\n- `allow-register-listener`\n- `allow-remove-listener`"
         }
       ]
     }

@@ -8,6 +8,9 @@ const COMMANDS: &[&str] = &[
     "write_text",
     "create_file",
     "safe_area",
+    "take_shared",
+    "register_listener",
+    "remove_listener",
 ];
 
 fn main() {

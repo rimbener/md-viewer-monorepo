@@ -4,6 +4,8 @@
  * the Storage Access Framework. As on the web, a folder is addressed as
  * `/<folder name>/…`, and a second folder with the same name gets
  * `/<folder name> (2)`. A bookmark holds the path and the tree URI.
+ * A file opened with the app or shared to it arrives as text and lives at
+ * `/<file name>`, read-only: Android grants no lasting access to write it.
  */
 
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -14,7 +16,7 @@ import type {
   Platform,
 } from '@md-viewer/viewer/platform';
 
-import type { Saf, SafFolder } from './saf';
+import type { Saf, SafFolder, SafShared } from './saf';
 
 /** How often an open file is checked for a change. */
 const WATCH_INTERVAL_MS = 1000;
@@ -48,8 +50,23 @@ function blobFrom(data: string, mimeType: string): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
+/** `/name.md`, then `/name (2).md`, and so on, past every taken path. */
+function freePath(name: string, isTaken: (path: string) => boolean): string {
+  const clean = name.replaceAll('/', '-') || 'Shared file';
+  const dot = clean.lastIndexOf('.');
+  const stem = dot > 0 ? clean.slice(0, dot) : clean;
+  const extension = dot > 0 ? clean.slice(dot) : '';
+  let path = `/${clean}`;
+  for (let copy = 2; isTaken(path); copy += 1) {
+    path = `/${stem} (${copy})${extension}`;
+  }
+  return path;
+}
+
 export function createAndroidPlatform(saf: Saf): Platform {
   const roots = new Map<string, Root>();
+  const shared = new Map<string, SafShared>();
+  const isTaken = (path: string) => roots.has(path) || shared.has(path);
   /** Document ids by viewer path, filled as folders are listed. */
   const documents = new Map<string, string>();
   const images = new Map<string, string>();
@@ -62,12 +79,28 @@ export function createAndroidPlatform(saf: Saf): Platform {
     }
     const base = preferred ?? `/${folder.name || 'Folder'}`;
     let path = base;
-    for (let copy = 2; roots.has(path); copy += 1) {
+    for (let copy = 2; isTaken(path); copy += 1) {
       path = `${base} (${copy})`;
     }
     roots.set(path, { tree: folder.tree, root: folder.root });
     documents.set(path, folder.root);
     return path;
+  };
+
+  const takeShared = async () => {
+    const file = await saf.takeShared();
+    if (file === null) {
+      return null;
+    }
+    const path = freePath(file.name, isTaken);
+    shared.set(path, file);
+    return path;
+  };
+
+  const readOnly = (path: string) => {
+    if (shared.has(path)) {
+      throw new Error('A shared file is read-only.');
+    }
   };
 
   const list = async (tree: string, path: string, document: string) => {
@@ -148,16 +181,25 @@ export function createAndroidPlatform(saf: Saf): Platform {
     },
 
     async readFile(path) {
+      const file = shared.get(path);
+      if (file !== undefined) {
+        if ('error' in file) {
+          throw new Error(file.error);
+        }
+        return file.contents;
+      }
       const { tree, document } = await locate(path);
       return saf.readText(tree, document);
     },
 
     async writeFile(path, contents) {
+      readOnly(path);
       const { tree, document } = await locate(path);
       await saf.writeText(tree, document, contents);
     },
 
     async createFile(path, contents) {
+      readOnly(path);
       const slash = path.lastIndexOf('/');
       const parentPath = path.slice(0, slash);
       const name = path.slice(slash + 1);
@@ -173,6 +215,9 @@ export function createAndroidPlatform(saf: Saf): Platform {
     },
 
     watchFile(path, onChange) {
+      if (shared.has(path)) {
+        return () => {};
+      }
       let last: string | null = null;
       const check = async () => {
         try {
@@ -192,12 +237,20 @@ export function createAndroidPlatform(saf: Saf): Platform {
       return () => window.clearInterval(timer);
     },
 
-    async takeOpenedFile() {
-      return null;
-    },
+    takeOpenedFile: takeShared,
 
-    watchOpenedFile() {
-      return () => {};
+    watchOpenedFile(onOpen) {
+      let stopped = false;
+      const stop = saf.watchShared(async () => {
+        const path = await takeShared().catch(() => null);
+        if (path !== null && !stopped) {
+          onOpen(path);
+        }
+      });
+      return () => {
+        stopped = true;
+        stop();
+      };
     },
 
     forgetOpenedFile() {},

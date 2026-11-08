@@ -1,7 +1,7 @@
 "$schema" = "schemas/schema.json"
 
 [default]
-description = "Pick a folder, read, write and create the documents in it, and read the safe area."
+description = "Pick a folder, read, write and create the documents in it, take a file shared to the app, and read the safe area."
 permissions = [
   "allow-pick-folder",
   "allow-open-tree",
@@ -12,4 +12,7 @@ permissions = [
   "allow-write-text",
   "allow-create-file",
   "allow-safe-area",
+  "allow-take-shared",
+  "allow-register-listener",
+  "allow-remove-listener",
 ]

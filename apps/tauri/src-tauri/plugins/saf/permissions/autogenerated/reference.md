@@ -1,6 +1,6 @@
 ## Default Permission
 
-Pick a folder, read, write and create the documents in it, and read the safe area.
+Pick a folder, read, write and create the documents in it, take a file shared to the app, and read the safe area.
 
 #### This default permission set includes the following:
 
@@ -13,6 +13,9 @@ Pick a folder, read, write and create the documents in it, and read the safe are
 - `allow-write-text`
 - `allow-create-file`
 - `allow-safe-area`
+- `allow-take-shared`
+- `allow-register-listener`
+- `allow-remove-listener`
 
 ## Permission Table
 
@@ -182,6 +185,58 @@ Denies the read_text command without any pre-configured scope.
 <tr>
 <td>
 
+`saf:allow-register-listener`
+
+</td>
+<td>
+
+Enables the register_listener command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`saf:deny-register-listener`
+
+</td>
+<td>
+
+Denies the register_listener command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`saf:allow-remove-listener`
+
+</td>
+<td>
+
+Enables the remove_listener command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`saf:deny-remove-listener`
+
+</td>
+<td>
+
+Denies the remove_listener command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `saf:allow-safe-area`
 
 </td>
@@ -227,6 +282,32 @@ Enables the stat command without any pre-configured scope.
 <td>
 
 Denies the stat command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`saf:allow-take-shared`
+
+</td>
+<td>
+
+Enables the take_shared command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`saf:deny-take-shared`
+
+</td>
+<td>
+
+Denies the take_shared command without any pre-configured scope.
 
 </td>
 </tr>
