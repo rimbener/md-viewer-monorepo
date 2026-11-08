@@ -22,9 +22,9 @@ and the [Tauri prerequisites](https://tauri.app/start/prerequisites/).
 pnpm install
 pnpm dev:web        # web app on http://localhost:5173
 pnpm dev:tauri      # desktop app, with hot reload
-pnpm build:web      # static site in apps/web/dist
-pnpm build:tauri    # installers in apps/tauri/src-tauri/target/release/bundle
-pnpm build:macos    # MD Viewer.app only
+pnpm build:web      # static site in builds/web
+pnpm build:tauri    # installers in builds/tauri
+pnpm build:macos    # MD Viewer.app only, in builds/macos
 pnpm install:macos  # build, then copy MD Viewer.app to /Applications
 pnpm test           # vitest, every package
 pnpm typecheck
@@ -41,8 +41,8 @@ Needs Android Studio (SDK, NDK, command-line tools), `JAVA_HOME`,
 pnpm --filter @md-viewer/tauri tauri android init   # once; makes src-tauri/gen/android
 cp -R apps/tauri/src-tauri/icons/android/ apps/tauri/src-tauri/gen/android/app/src/main/res/   # app icon
 pnpm dev:android                                   # on a USB phone or an emulator
-pnpm build:android                                 # aarch64 APK, signed
-adb install -r apps/tauri/src-tauri/gen/android/app/build/outputs/apk/universal/release/md-viewer.apk
+pnpm build:android                                 # aarch64 APK, signed, in builds/android
+adb install -r builds/android/md-viewer.apk
 ```
 
 The build signs the APK with the Android debug key (`~/.android/debug.keystore`),
@@ -57,6 +57,6 @@ must allow cross-origin reads, as `raw.githubusercontent.com` does.
 ## Deploy
 
 `.github/workflows/pages.yml` tests and builds the web app on every push to
-`main`, and deploys `apps/web/dist` to GitHub Pages.
+`main`, and deploys `builds/web` to GitHub Pages.
 
 Testing the zaps app

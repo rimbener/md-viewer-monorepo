@@ -33,7 +33,7 @@ jobs:
           PAGES_BASE: /${{ github.event.repository.name }}/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: apps/web/dist
+          path: builds/web
 
   deploy:
     needs: build

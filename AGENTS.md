@@ -23,8 +23,8 @@ detail. The chrome (buttons, fields, menus, tree, drawer) is Material 3 from
 ```sh
 pnpm dev:web                     # Vite dev server for apps/web
 pnpm dev:tauri                   # desktop app (needs Rust)
-pnpm build:web                   # static site in apps/web/dist
-pnpm build:tauri                 # desktop installers
+pnpm build:web                   # static site in builds/web
+pnpm build:tauri                 # desktop installers in builds/tauri
 pnpm install:macos               # build MD Viewer.app, copy to /Applications
 
 pnpm test                        # vitest, every project
