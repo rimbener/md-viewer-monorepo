@@ -16,12 +16,13 @@ export interface DocumentSession {
   path: string | null;
   source: string | null;
   drafts: ReadonlyMap<string, string>;
+  // The disk text each draft started from; a different disk text is a change made elsewhere.
+  draftBases: ReadonlyMap<string, string>;
   histories: ReadonlyMap<string, EditHistory>;
   // Trails the draft by the reparse delay, so a burst of keystrokes parses once.
   settled: string | null;
   isLoading: boolean;
   error: string | null;
-  diskChanged: boolean;
   isSaving: boolean;
   saveError: string | null;
 }
@@ -44,11 +45,11 @@ export const initialDocumentSession: DocumentSession = {
   path: null,
   source: null,
   drafts: new Map(),
+  draftBases: new Map(),
   histories: new Map(),
   settled: null,
   isLoading: false,
   error: null,
-  diskChanged: false,
   isSaving: false,
   saveError: null,
 };
@@ -61,6 +62,14 @@ function historyOf(state: DocumentSession): EditHistory {
   return state.path === null
     ? emptyEditHistory()
     : (state.histories.get(state.path) ?? emptyEditHistory());
+}
+
+export function diskChangedIn(state: DocumentSession): boolean {
+  if (state.path === null || state.source === null) {
+    return false;
+  }
+  const base = state.draftBases.get(state.path);
+  return draftOf(state) !== null && base !== undefined && base !== state.source;
 }
 
 export function textOf(state: DocumentSession): string | null {
@@ -76,11 +85,11 @@ export function isTooLarge(text: string | null): boolean {
 }
 
 export function canUndoIn(state: DocumentSession): boolean {
-  return canUndo(historyOf(state));
+  return !state.isLoading && canUndo(historyOf(state));
 }
 
 export function canRedoIn(state: DocumentSession): boolean {
-  return canRedo(historyOf(state));
+  return !state.isLoading && canRedo(historyOf(state));
 }
 
 function withEntry<V>(
@@ -98,21 +107,27 @@ function withEntry<V>(
 }
 
 function open(state: DocumentSession, path: string | null): DocumentSession {
-  const reset = { ...state, path, diskChanged: false, saveError: null };
-  if (path === null) {
-    return {
-      ...reset,
-      source: null,
-      settled: null,
-      isLoading: false,
-      error: null,
-    };
-  }
   return {
-    ...reset,
-    settled: state.drafts.get(path) ?? null,
-    isLoading: true,
+    ...state,
+    path,
+    source: null,
+    settled: path === null ? null : (state.drafts.get(path) ?? null),
+    isLoading: path !== null,
     error: null,
+    saveError: null,
+  };
+}
+
+function withDraft(
+  state: DocumentSession,
+  path: string,
+  draft: string | null,
+  source: string | null,
+): Pick<DocumentSession, 'drafts' | 'draftBases'> {
+  const base = state.draftBases.get(path) ?? source;
+  return {
+    drafts: withEntry(state.drafts, path, draft),
+    draftBases: withEntry(state.draftBases, path, draft === null ? null : base),
   };
 }
 
@@ -125,9 +140,8 @@ function apply(
   const draft = next === state.source ? null : next;
   return {
     ...state,
+    ...withDraft(state, path, draft, state.source),
     histories: withEntry(state.histories, path, history),
-    drafts: withEntry(state.drafts, path, draft),
-    diskChanged: draft === null ? false : state.diskChanged,
     saveError: null,
   };
 }
@@ -155,8 +169,17 @@ function step(
     : apply(state, state.path, next.text, next.history);
 }
 
-function read(state: DocumentSession, text: string): DocumentSession {
-  return { ...state, source: text, isLoading: false, error: null };
+function take(state: DocumentSession, path: string, text: string) {
+  const isMatched = state.drafts.get(path) === text;
+  return {
+    ...state,
+    ...(isMatched
+      ? { ...withDraft(state, path, null, text), settled: null }
+      : {}),
+    source: text,
+    isLoading: false,
+    error: null,
+  };
 }
 
 function save(
@@ -164,56 +187,37 @@ function save(
   path: string,
   contents: string,
 ): DocumentSession {
-  // Typing during the write leaves a newer draft, which stays unsaved.
-  const isWritten = state.drafts.get(path) === contents;
-  const drafts = isWritten ? withEntry(state.drafts, path, null) : state.drafts;
-  if (state.path !== path) {
-    return { ...state, drafts, isSaving: false };
-  }
-  const settled = isWritten
-    ? { settled: null, diskChanged: false }
-    : { settled: state.settled, diskChanged: state.diskChanged };
-  return { ...state, ...settled, drafts, source: contents, isSaving: false };
+  const isOpen = state.path === path;
+  // Typing, or an undo back to the old disk text, during the write leaves a
+  // text that differs from what was written: it stays a draft on top of it.
+  const current = state.drafts.get(path) ?? (isOpen ? state.source : null);
+  const draft = current === null || current === contents ? null : current;
+  const next = {
+    ...state,
+    drafts: withEntry(state.drafts, path, draft),
+    draftBases: withEntry(
+      state.draftBases,
+      path,
+      draft === null ? null : contents,
+    ),
+    isSaving: false,
+  };
+  return isOpen
+    ? {
+        ...next,
+        source: contents,
+        settled: draft === null ? null : state.settled,
+      }
+    : next;
 }
 
-export function reduceDocumentSession(
-  state: DocumentSession,
-  event: DocumentEvent,
-): DocumentSession {
+type EditEvent = Extract<
+  DocumentEvent,
+  { type: 'edited' | 'replaced' | 'undo' | 'redo' }
+>;
+
+function edit(state: DocumentSession, event: EditEvent): DocumentSession {
   switch (event.type) {
-    case 'opened':
-      return open(state, event.path);
-    case 'read':
-      return event.path === state.path ? read(state, event.text) : state;
-    case 'readFailed':
-      return event.path === state.path
-        ? { ...state, source: null, error: event.message, isLoading: false }
-        : state;
-    case 'reread':
-      if (event.path !== state.path) {
-        return state;
-      }
-      // A reread issued before the first read ends makes that read stale.
-      if (state.isLoading) {
-        return read(state, event.text);
-      }
-      if (event.text === state.source) {
-        return state;
-      }
-      if (event.text === draftOf(state)) {
-        return {
-          ...state,
-          source: event.text,
-          drafts: withEntry(state.drafts, event.path, null),
-          settled: null,
-          diskChanged: false,
-        };
-      }
-      return {
-        ...state,
-        source: event.text,
-        diskChanged: draftOf(state) !== null || state.diskChanged,
-      };
     case 'edited':
       return change(state, event.text, (history, before) =>
         recordEdit(history, before, event.at),
@@ -228,6 +232,36 @@ export function reduceDocumentSession(
       return step(state, undoEdit);
     case 'redo':
       return step(state, redoEdit);
+  }
+}
+
+export function reduceDocumentSession(
+  state: DocumentSession,
+  event: DocumentEvent,
+): DocumentSession {
+  switch (event.type) {
+    case 'opened':
+      return open(state, event.path);
+    case 'read':
+      return event.path === state.path
+        ? take(state, event.path, event.text)
+        : state;
+    case 'readFailed':
+      return event.path === state.path
+        ? { ...state, source: null, error: event.message, isLoading: false }
+        : state;
+    case 'reread':
+      // A reread can end the loading or an error: it replaced the read before it.
+      return event.path === state.path &&
+        (state.isLoading || event.text !== state.source)
+        ? take(state, event.path, event.text)
+        : state;
+    case 'edited':
+    case 'replaced':
+    case 'undo':
+    case 'redo':
+      // No disk text yet to measure a draft against.
+      return state.isLoading ? state : edit(state, event);
     case 'settled':
       return { ...state, settled: draftOf(state) };
     case 'saveStarted':

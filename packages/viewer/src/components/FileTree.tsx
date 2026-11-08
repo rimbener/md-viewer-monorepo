@@ -8,13 +8,17 @@ import {
   type M3eTreeElement,
   type M3eTreeItemElement,
 } from '../m3e';
-import { ancestorPaths } from '../scanDirectory';
+import { ancestorPaths, isInside } from '../scanDirectory';
 import { useTheme } from '../theme';
 import type { DirectoryNode, FileNode, TreeNode } from '../types';
 import { typescale } from '../typescale';
 import { oneLine } from './text';
 
-type TreeItem = HTMLElement & { selected: boolean; open: boolean };
+type TreeItem = HTMLElement & {
+  selected: boolean;
+  open: boolean;
+  updateComplete: Promise<unknown>;
+};
 
 let nextItemId = 0;
 
@@ -80,25 +84,47 @@ export function FileTree({
     for (const item of items) {
       item.open = opened.has(item.dataset.path ?? '');
     }
-    // A restored selection can sit below the fold.
-    items.find(item => item.selected)?.scrollIntoView?.({ block: 'center' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Back, Next and links can select a file inside a closed folder.
+  // A linked file joins the tree only after its folders are read.
+  const pending = useRef(selectedPath);
+  const restored = useRef(selectedPath);
   useEffect(() => {
-    if (selectedPath === null) {
+    pending.current = selectedPath;
+    if (selectedPath !== restored.current) {
+      restored.current = null;
+    }
+  }, [selectedPath]);
+  useEffect(() => {
+    if (pending.current !== null && !isInside(pending.current, root.path)) {
+      pending.current = null;
+    }
+    if (pending.current === null) {
       return;
     }
-    const ancestors = new Set(ancestorPaths(selectedPath, root.path));
-    for (const item of treeRef.current?.querySelectorAll<TreeItem>(
-      'm3e-tree-item',
-    ) ?? []) {
-      if (ancestors.has(item.dataset.path ?? '')) {
-        item.open = true;
-      }
+    const items = Array.from(
+      treeRef.current?.querySelectorAll<TreeItem>('m3e-tree-item') ?? [],
+    );
+    const selected = items.find(item => item.dataset.path === pending.current);
+    if (selected === undefined) {
+      return;
     }
-  }, [selectedPath, root.path, nodes]);
+    pending.current = null;
+    const opened = initialExpansion(root, selected.dataset.path ?? null);
+    const opening = items.filter(item => opened.has(item.dataset.path ?? ''));
+    for (const item of opening) {
+      item.open = true;
+    }
+    // A restored file can sit far below the fold; a later one is near.
+    const block =
+      selected.dataset.path === restored.current ? 'center' : 'nearest';
+    restored.current = null;
+    // The opened folders show their items on m3e's next update.
+    void Promise.all(opening.map(item => item.updateComplete)).then(() =>
+      selected.scrollIntoView?.({ block }),
+    );
+  }, [selectedPath, root]);
 
   // The tree lists its items only when its own children change. A folder read
   // on click adds nested items, which a click could not select until listed.

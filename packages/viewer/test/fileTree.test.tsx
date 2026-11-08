@@ -2,12 +2,17 @@
  * The file tree: what it selects and how it opens files.
  */
 
-import { act, fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
+import { FileTree } from '../src/components/FileTree';
+import { ThemeRoot } from '../src/components/ThemeRoot';
+import { PlatformProvider } from '../src/platform';
+import type { DirectoryNode } from '../src/types';
 import {
   createFakePlatform,
   press,
   renderViewer,
+  renderWithPlatform,
   settle,
   storeSession,
 } from './fakePlatform';
@@ -61,4 +66,75 @@ it('opens a file from the keyboard', async () => {
 
   expect(item('b.md')).toHaveAttribute('aria-selected', 'true');
   expect(screen.getByRole('heading', { name: 'B' })).toBeInTheDocument();
+});
+
+describe('scrolling to the selected file', () => {
+  const scrolls = vi.fn();
+  beforeEach(() => {
+    scrolls.mockClear();
+    HTMLElement.prototype.scrollIntoView = scrolls;
+  });
+
+  function scrolledTo(): string[] {
+    return scrolls.mock.instances.map(
+      element => (element as HTMLElement).dataset.path ?? '',
+    );
+  }
+
+  it('centers a restored file', async () => {
+    await renderNotes();
+
+    expect(scrolledTo()).toContain('/notes/a.md');
+    expect(scrolls).toHaveBeenCalledWith({ block: 'center' });
+  });
+
+  it('does not center the first file picked when none was restored', async () => {
+    const root: DirectoryNode = {
+      kind: 'directory',
+      name: 'notes',
+      path: '/notes',
+      children: [{ kind: 'file', name: 'x.md', path: '/notes/x.md' }],
+    };
+    const platform = createFakePlatform();
+    const tree = (selectedPath: string | null) => (
+      <PlatformProvider value={platform}>
+        <ThemeRoot>
+          <FileTree
+            root={root}
+            selectedPath={selectedPath}
+            onSelectFile={() => {}}
+            onSelectDirectory={() => {}}
+          />
+        </ThemeRoot>
+      </PlatformProvider>
+    );
+    const { rerender } = render(tree(null));
+    await settle();
+    rerender(tree('/notes/x.md'));
+    await settle();
+
+    expect(scrolls).toHaveBeenCalledWith({ block: 'nearest' });
+    expect(scrolls).not.toHaveBeenCalledWith({ block: 'center' });
+  });
+
+  it('scrolls to a file in a folder at the root of the disk', async () => {
+    renderWithPlatform(
+      <ThemeRoot>
+        <FileTree
+          root={{
+            kind: 'directory',
+            name: '/',
+            path: '/',
+            children: [{ kind: 'file', name: 'x.md', path: '/x.md' }],
+          }}
+          selectedPath="/x.md"
+          onSelectFile={() => {}}
+          onSelectDirectory={() => {}}
+        />
+      </ThemeRoot>,
+    );
+    await settle();
+
+    expect(scrolledTo()).toContain('/x.md');
+  });
 });

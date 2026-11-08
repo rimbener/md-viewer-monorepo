@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import {
   canRedoIn,
   canUndoIn,
+  diskChangedIn,
   draftOf,
   initialDocumentSession,
   isTooLarge,
@@ -22,6 +23,17 @@ function messageOf(cause: unknown, fallback: string): string {
 
 export type DocumentControls = ReturnType<typeof useDocumentSession>;
 
+type WriteLog = { begun: number; ended: number; waiting: (() => void)[] };
+
+function writeLog(logs: Map<string, WriteLog>, path: string): WriteLog {
+  let log = logs.get(path);
+  if (log === undefined) {
+    log = { begun: 0, ended: 0, waiting: [] };
+    logs.set(path, log);
+  }
+  return log;
+}
+
 export function useDocumentSession(path: string | null) {
   const platform = usePlatform();
   const [state, dispatch] = useReducer(
@@ -30,6 +42,8 @@ export function useDocumentSession(path: string | null) {
   );
   const draft = draftOf(state);
   const rendered = renderedOf(state);
+  // A read that overlaps a save can hold the text from before it, or half of it.
+  const writes = useRef(new Map<string, WriteLog>());
 
   useEffect(() => {
     dispatch({ type: 'opened', path });
@@ -38,24 +52,59 @@ export function useDocumentSession(path: string | null) {
     }
 
     let cancelled = false;
-    let ticket = 0;
+    let issued = 0;
+    let shown = 0;
+    let pending = 0;
     let reread: ReturnType<typeof setTimeout> | null = null;
 
+    // Reads can end out of order: only a newer result replaces the text, and a
+    // failure shows only when no read gave the file and none is left to try.
     const issue = (isReload: boolean) => {
-      const t = ++ticket;
-      const isCurrent = () => !cancelled && t === ticket;
+      const t = ++issued;
+      const log = writeLog(writes.current, path);
+      const begunAtStart = log.begun;
+      // A read that overlapped a save is read again once no save runs.
+      const readAgainIfWritten = () => {
+        if (log.begun === begunAtStart && log.ended === log.begun) {
+          return false;
+        }
+        pending += 1;
+        const retry = () => {
+          pending -= 1;
+          if (!cancelled) {
+            issue(isReload);
+          }
+        };
+        if (log.ended === log.begun) {
+          retry();
+        } else {
+          log.waiting.push(retry);
+        }
+        return true;
+      };
+      pending += 1;
       platform
         .readFile(path)
         .then(text => {
-          if (isCurrent()) {
+          if (cancelled || readAgainIfWritten()) {
+            return;
+          }
+          if (t > shown) {
+            shown = t;
             dispatch({ type: isReload ? 'reread' : 'read', path, text });
           }
         })
         .catch((cause: unknown) => {
-          if (isCurrent() && !isReload) {
+          if (cancelled || readAgainIfWritten()) {
+            return;
+          }
+          if (shown === 0 && pending === 1) {
             const message = messageOf(cause, 'Could not read the file.');
             dispatch({ type: 'readFailed', path, message });
           }
+        })
+        .finally(() => {
+          pending -= 1;
         });
     };
 
@@ -110,12 +159,20 @@ export function useDocumentSession(path: string | null) {
       return;
     }
     const contents = draft;
+    const log = writeLog(writes.current, savedPath);
+    log.begun += 1;
     dispatch({ type: 'saveStarted' });
     write(savedPath, contents)
       .then(() => dispatch({ type: 'saved', path: savedPath, contents }))
       .catch((cause: unknown) => {
         const message = messageOf(cause, 'Could not save the file.');
         dispatch({ type: 'saveFailed', path: savedPath, message });
+      })
+      .finally(() => {
+        log.ended += 1;
+        if (log.ended === log.begun) {
+          log.waiting.splice(0).forEach(retry => retry());
+        }
       });
   }, [platform, savedPath, draft]);
 
@@ -126,10 +183,11 @@ export function useDocumentSession(path: string | null) {
     isLoading: state.isLoading,
     error: state.error,
     isDirty: draft !== null,
-    diskChanged: state.diskChanged,
+    diskChanged: diskChangedIn(state),
     isSaving: state.isSaving,
     canSave:
       draft !== null &&
+      !state.isLoading &&
       !state.isSaving &&
       platform.writeFile !== undefined &&
       savedPath !== null &&

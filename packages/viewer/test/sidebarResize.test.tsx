@@ -121,3 +121,21 @@ it('keeps the old width when the drag is cancelled', async () => {
   expect(width()).toBe('280px');
   expect(window.localStorage.getItem(KEY)).toBeNull();
 });
+
+it('snaps back to the kept width when released at the limit again', async () => {
+  await renderApp();
+
+  await send(pointer('pointerdown', 100));
+  await send(pointer('pointermove', -1000));
+  await send(pointer('pointerup', -1000));
+  await settle();
+  expect(width()).toBe('200px');
+
+  await send(pointer('pointerdown', 100));
+  await send(pointer('pointermove', 160));
+  expect(width()).toBe('260px');
+  await send(pointer('pointerup', -1000));
+  await settle();
+
+  expect(width()).toBe('200px');
+});

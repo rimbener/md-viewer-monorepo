@@ -157,6 +157,14 @@ export async function scanDirectory(
   );
 }
 
+export function isInside(path: string, folder: string): boolean {
+  return folder === '/' || path.startsWith(`${folder}/`);
+}
+
+export function fileAt(path: string): FileNode {
+  return { kind: 'file', name: path.slice(path.lastIndexOf('/') + 1), path };
+}
+
 /** Replaces the directory at `replacement.path` and leaves every other branch. */
 export function replaceDirectory(
   tree: DirectoryNode,
@@ -165,7 +173,7 @@ export function replaceDirectory(
   if (tree.path === replacement.path) {
     return replacement;
   }
-  if (!replacement.path.startsWith(`${tree.path}/`)) {
+  if (!isInside(replacement.path, tree.path)) {
     return tree;
   }
 
@@ -229,7 +237,7 @@ export function findFile(node: TreeNode, path: string): FileNode | null {
     return node.path === path ? node : null;
   }
   // Only descend into the branch that could hold the path.
-  if (!path.startsWith(`${node.path}/`)) {
+  if (!isInside(path, node.path)) {
     return null;
   }
   for (const child of node.children) {
@@ -239,6 +247,25 @@ export function findFile(node: TreeNode, path: string): FileNode | null {
     }
   }
   return null;
+}
+
+// A folder not read yet, or outside the tree, cannot tell that a file is gone.
+export function isMissing(tree: DirectoryNode, path: string): boolean {
+  const folder = path.slice(0, path.lastIndexOf('/')) || '/';
+  let node: DirectoryNode | null = tree;
+  while (node !== null && node.path !== folder) {
+    const next: TreeNode | undefined = node.children.find(
+      child =>
+        child.kind === 'directory' &&
+        (child.path === folder || isInside(folder, child.path)),
+    );
+    node = next?.kind === 'directory' ? next : null;
+  }
+  return (
+    node !== null &&
+    !node.isUnread &&
+    !node.children.some(child => child.path === path)
+  );
 }
 
 /**

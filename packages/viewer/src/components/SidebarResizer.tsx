@@ -56,6 +56,12 @@ export function SidebarResizer({
   const show = (next: number) =>
     drawerRef.current?.style.setProperty(SIDEBAR_WIDTH_PROPERTY, `${next}px`);
 
+  const commit = (next: number) => {
+    const clamped = clampSidebarWidth(next);
+    show(clamped);
+    onCommit(clamped);
+  };
+
   const end = (event: PointerEvent<HTMLDivElement>, isCancelled: boolean) => {
     const current = drag.current;
     if (current === null || current.pointerId !== event.pointerId) {
@@ -69,15 +75,7 @@ export function SidebarResizer({
       show(current.startWidth);
       return;
     }
-    onCommit(
-      clampSidebarWidth(current.startWidth + event.clientX - current.startX),
-    );
-  };
-
-  const commit = (next: number) => {
-    const clamped = clampSidebarWidth(next);
-    show(clamped);
-    onCommit(clamped);
+    commit(current.startWidth + event.clientX - current.startX);
   };
 
   return (

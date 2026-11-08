@@ -10,7 +10,13 @@ import {
   type FileHistory,
 } from './fileHistory';
 import type { RecentFolder } from './recentFolders';
-import { findFile, replaceDirectory } from './scanDirectory';
+import {
+  fileAt,
+  findFile,
+  isInside,
+  isMissing,
+  replaceDirectory,
+} from './scanDirectory';
 import type { DirectoryNode, FileNode } from './types';
 
 type FolderPhase =
@@ -69,7 +75,7 @@ export type FolderEvent =
   | { type: 'stepped'; direction: 'back' | 'next' }
   | { type: 'revealed'; id: number; tree: DirectoryNode }
   | { type: 'created'; folder: string; path: string; tree: DirectoryNode }
-  | { type: 'branchScanned'; branch: DirectoryNode }
+  | { type: 'branchScanned'; folder: string; branch: DirectoryNode }
   | { type: 'recentAsked' }
   | { type: 'recentLoaded'; id: number; folders: readonly RecentFolder[] };
 
@@ -108,14 +114,13 @@ function treeForOpenedFile(path: string): {
   file: FileNode;
 } {
   const slash = path.lastIndexOf('/');
-  const name = slash < 0 ? path : path.slice(slash + 1);
   const directoryPath = slash <= 0 ? '/' : path.slice(0, slash);
   const directorySlash = directoryPath.lastIndexOf('/');
   const directoryTail =
     directorySlash < 0
       ? directoryPath
       : directoryPath.slice(directorySlash + 1);
-  const file: FileNode = { kind: 'file', name, path };
+  const file = fileAt(path);
   return {
     file,
     root: {
@@ -133,9 +138,7 @@ function withTree(
 ): FolderSession {
   const { selected } = state;
   const isGone =
-    selected !== null &&
-    tree !== null &&
-    findFile(tree, selected.path) === null;
+    selected !== null && tree !== null && isMissing(tree, selected.path);
   return { ...state, tree, selected: isGone ? null : selected };
 }
 
@@ -200,20 +203,26 @@ function step(state: FolderSession, direction: 'back' | 'next'): FolderSession {
   if (history === state.history || path === null) {
     return state;
   }
-  const moved = { ...state, history, reveal: null };
   const found = state.tree === null ? null : findFile(state.tree, path);
-  if (found !== null) {
-    return { ...moved, selected: found };
-  }
-  if (state.folder === null) {
+  const moved = {
+    ...state,
+    history,
+    reveal: null,
+    selected: found ?? fileAt(path),
+  };
+  if (found !== null || !isInFolder(state, path)) {
     return moved;
   }
   const id = state.lastId + 1;
   return {
     ...moved,
-    reveal: { id, folder: state.folder, path },
+    reveal: { id, folder: state.folder!, path },
     lastId: id,
   };
+}
+
+function isInFolder(state: FolderSession, path: string): boolean {
+  return state.folder !== null && isInside(path, state.folder);
 }
 
 /**
@@ -229,15 +238,14 @@ function link(state: FolderSession, path: string): FolderSession {
   if (found !== null) {
     return select(state, found);
   }
-  const name = path.slice(path.lastIndexOf('/') + 1);
-  const selected = select(state, { kind: 'file', name, path });
-  if (state.folder === null || !path.startsWith(`${state.folder}/`)) {
+  const selected = select(state, fileAt(path));
+  if (!isInFolder(state, path)) {
     return selected;
   }
   const id = state.lastId + 1;
   return {
     ...selected,
-    reveal: { id, folder: state.folder, path },
+    reveal: { id, folder: state.folder!, path },
     lastId: id,
   };
 }
@@ -345,7 +353,9 @@ export function reduceFolderSession(
       return created === null ? next : select(next, created);
     }
     case 'branchScanned':
-      return state.tree === null
+      // Keyed by folder, not by request: a read that ends after a reload is
+      // still current disk data. One that ends before the reload scan is lost.
+      return state.tree === null || event.folder !== state.folder
         ? state
         : withTree(state, replaceDirectory(state.tree, event.branch));
     case 'recentAsked':

@@ -223,6 +223,96 @@ describe('reduceFolderSession', () => {
     expect(revealed.selected?.path).toBe('/docs/deep/z.md');
   });
 
+  it('shows a history step outside the folder, or one the walk did not find', () => {
+    const outside = run(
+      [
+        { type: 'linked', path: '/other/out.md' },
+        { type: 'stepped', direction: 'back' },
+        { type: 'stepped', direction: 'next' },
+      ],
+      open,
+    );
+    expect([outside.selected?.path, outside.reveal]).toEqual([
+      '/other/out.md',
+      null,
+    ]);
+
+    const missing = run(
+      [
+        { type: 'selected', file: file('/docs/gone.md') },
+        { type: 'selected', file: file('/docs/a.md') },
+        { type: 'stepped', direction: 'back' },
+      ],
+      open,
+    );
+    const walked = run(
+      [
+        {
+          type: 'revealed',
+          id: missing.reveal?.id ?? -1,
+          tree: tree('/docs', 'a.md', 'b.md'),
+        },
+      ],
+      missing,
+    );
+    expect([missing.selected?.path, walked.selected?.path]).toEqual([
+      '/docs/gone.md',
+      '/docs/gone.md',
+    ]);
+  });
+
+  it('reveals a linked file in a folder at the root of the disk', () => {
+    const root = scanned(
+      run([{ type: 'picked', folder: '/', resume: null }], open),
+      tree('/', 'x.md'),
+    );
+    const linked = run([{ type: 'linked', path: '/deep/y.md' }], root);
+    expect(linked.reveal?.path).toBe('/deep/y.md');
+  });
+
+  it('keeps a selection the tree cannot list, and drops one it read as gone', () => {
+    const branch = {
+      type: 'branchScanned',
+      folder: '/docs',
+      branch: tree('/docs/sub', 'x.md'),
+    } as const;
+    const outside = run(
+      [{ type: 'linked', path: '/other/out.md' }, branch],
+      open,
+    );
+    expect(outside.selected?.path).toBe('/other/out.md');
+
+    const unread = run(
+      [{ type: 'linked', path: '/docs/deep/z.md' }, branch],
+      open,
+    );
+    expect(unread.selected?.path).toBe('/docs/deep/z.md');
+
+    const gone = scanned(
+      run([{ type: 'reloaded' }], open),
+      tree('/docs', 'a.md'),
+    );
+    expect(gone.selected).toBeNull();
+  });
+
+  it('ignores a folder read that ends after a switch to another folder', () => {
+    const sub = scanned(
+      run([{ type: 'picked', folder: '/docs/sub', resume: null }], open),
+      tree('/docs/sub', 'x.md'),
+    );
+    const late = run(
+      [
+        {
+          type: 'branchScanned',
+          folder: '/docs',
+          branch: tree('/docs/sub', 'new.md'),
+        },
+      ],
+      sub,
+    );
+    expect(late).toBe(sub);
+  });
+
   it('replays early visits onto the history read from storage', () => {
     const loading = run([{ type: 'selected', file: file('/docs/a.md') }], open);
     const loaded = run(

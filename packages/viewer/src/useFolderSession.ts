@@ -201,11 +201,12 @@ export function useFolderSession(onFileChosen: () => void) {
 
   const selectDirectory = useCallback(
     (directory: DirectoryNode) => {
-      if (stateRef.current.folder === null) {
+      const { folder } = stateRef.current;
+      if (folder === null) {
         return;
       }
       scanDirectory(platform.readDir, directory.path)
-        .then(branch => send({ type: 'branchScanned', branch }))
+        .then(branch => send({ type: 'branchScanned', folder, branch }))
         .catch(() => {});
     },
     [platform, send],
