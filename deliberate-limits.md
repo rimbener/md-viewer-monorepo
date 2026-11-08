@@ -180,6 +180,8 @@ the text matches the file again.
 
 If the file changes on disk under that buffer, the header adds `file changed
 on disk` and the typed text is kept. Disk does not overwrite a session edit.
+If the new file is equal to the buffer, the buffer is not an edit any more
+and both notes go.
 Save then writes the buffer over the new file: the person was told, and the
 choice is theirs.
 

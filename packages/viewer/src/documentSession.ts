@@ -186,6 +186,15 @@ export function reduceDocumentSession(
       if (event.path !== state.path || event.text === state.source) {
         return state;
       }
+      if (event.text === draftOf(state)) {
+        return {
+          ...state,
+          source: event.text,
+          drafts: withEntry(state.drafts, event.path, null),
+          settled: null,
+          diskChanged: false,
+        };
+      }
       return {
         ...state,
         source: event.text,

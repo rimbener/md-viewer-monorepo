@@ -181,13 +181,24 @@ describe('reduceDocumentSession', () => {
     expect(line(state)).toBe('/a.md: a1 | a2 dirty diskChanged undo');
   });
 
-  it('still counts a draft that a reread made equal to the disk', () => {
+  it('drops a draft that a reread made equal to the disk', () => {
     const state = run([
       ...openA,
       edited('a1'),
       { type: 'reread', path: '/a.md', text: 'a1' },
     ]);
-    expect(line(state)).toBe('/a.md: a1 | a1 dirty diskChanged undo');
+    expect(line(state)).toBe('/a.md: a1 | a1 undo');
+  });
+
+  it('keeps a draft that a later reread made differ again', () => {
+    const state = run([
+      ...openA,
+      edited('a1'),
+      { type: 'reread', path: '/a.md', text: 'a1' },
+      edited('a2'),
+      { type: 'reread', path: '/a.md', text: 'a3' },
+    ]);
+    expect(line(state)).toBe('/a.md: a2 | a3 dirty diskChanged undo');
   });
 
   it('ignores a reread of the own write', () => {
