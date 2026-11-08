@@ -13,6 +13,8 @@
     "build:tauri": "pnpm --filter @md-viewer/tauri tauri build",
     "build:macos": "pnpm --filter @md-viewer/tauri tauri build --bundles app",
     "install:macos": "pnpm build:macos && ditto 'apps/tauri/src-tauri/target/release/bundle/macos/MD Viewer.app' '/Applications/MD Viewer.app'",
+    "dev:android": "pnpm --filter @md-viewer/tauri tauri android dev",
+    "build:android": "pnpm --filter @md-viewer/tauri tauri android build --apk --target aarch64",
     "test": "vitest run",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",

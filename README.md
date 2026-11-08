@@ -38,10 +38,9 @@ Needs Android Studio (SDK, NDK, command-line tools), `JAVA_HOME`,
 (`rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android`).
 
 ```sh
-cd apps/tauri
-pnpm tauri android init                            # once; makes src-tauri/gen/android
-pnpm tauri android dev                             # on a USB phone or an emulator
-pnpm tauri android build --apk --target aarch64    # sign it, then adb install
+pnpm --filter @md-viewer/tauri tauri android init   # once; makes src-tauri/gen/android
+pnpm dev:android                                   # on a USB phone or an emulator
+pnpm build:android                                 # aarch64 APK; sign it, then adb install
 ```
 
 ## Open a document by URL
