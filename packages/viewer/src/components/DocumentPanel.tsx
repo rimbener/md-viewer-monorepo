@@ -43,6 +43,7 @@ import { useTheme } from '../theme';
 import type { FileNode } from '../types';
 import { M3eToolbar } from '../m3e';
 import { isHttpUrl } from '../url';
+import { useStoredPreference } from '../useStoredPreference';
 import {
   CODE_FONT,
   columnWidth,
@@ -163,8 +164,16 @@ export function DocumentPanel({
   const [saveError, setSaveError] = useState<string | null>(null);
   // Zoom and line length are properties of the reader rather than of the
   // document: they survive switching files, and are restored on the next launch.
-  const [scale, setScale] = useState(DEFAULT_ZOOM);
-  const [characters, setCharacters] = useState(DEFAULT_CHARACTERS);
+  const [scale, changeZoom] = useStoredPreference(
+    loadZoom,
+    saveZoom,
+    DEFAULT_ZOOM,
+  );
+  const [characters, changeCharacters] = useStoredPreference(
+    loadCharacters,
+    saveCharacters,
+    DEFAULT_CHARACTERS,
+  );
   const [query, setQuery] = useState('');
   const [replacement, setReplacement] = useState('');
   const [replaceFocusKey, setReplaceFocusKey] = useState(0);
@@ -177,66 +186,22 @@ export function DocumentPanel({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [bodyHeight, setBodyHeight] = useState(0);
-  const [schemeId, setSchemeId] = useState(DEFAULT_SCHEME_ID);
+  const [schemeId, changeScheme] = useStoredPreference(
+    loadFontScheme,
+    saveFontScheme,
+    DEFAULT_SCHEME_ID,
+  );
   // Reading is the common case, so the editor stays closed until asked for.
-  const [editorMode, setEditorMode] = useState<EditorMode>('preview');
-  const hasChosenZoom = useRef(false);
-  const hasChosenCharacters = useRef(false);
-  const hasChosenScheme = useRef(false);
-  const hasChosenEditor = useRef(false);
-  const [editorFraction, setEditorFraction] = useState(DEFAULT_EDITOR_FRACTION);
-  const hasChosenEditorFraction = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    loadZoom().then(stored => {
-      // Someone who zoomed while the read was in flight outranks the store.
-      if (!cancelled && stored !== null && !hasChosenZoom.current) {
-        setScale(stored);
-      }
-    });
-
-    loadCharacters().then(stored => {
-      if (!cancelled && stored !== null && !hasChosenCharacters.current) {
-        setCharacters(stored);
-      }
-    });
-
-    loadFontScheme().then(stored => {
-      if (!cancelled && stored !== null && !hasChosenScheme.current) {
-        setSchemeId(stored);
-      }
-    });
-
-    loadEditorMode().then(stored => {
-      if (!cancelled && stored !== null && !hasChosenEditor.current) {
-        setEditorMode(stored);
-      }
-    });
-
-    loadEditorFraction().then(stored => {
-      if (!cancelled && stored !== null && !hasChosenEditorFraction.current) {
-        setEditorFraction(stored);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const changeZoom = useCallback((next: number) => {
-    hasChosenZoom.current = true;
-    setScale(next);
-    saveZoom(next);
-  }, []);
-
-  const changeCharacters = useCallback((next: number) => {
-    hasChosenCharacters.current = true;
-    setCharacters(next);
-    saveCharacters(next);
-  }, []);
+  const [editorMode, chooseEditorMode] = useStoredPreference<EditorMode>(
+    loadEditorMode,
+    saveEditorMode,
+    'preview',
+  );
+  const [editorFraction, chooseEditorFraction] = useStoredPreference(
+    loadEditorFraction,
+    saveEditorFraction,
+    DEFAULT_EDITOR_FRACTION,
+  );
 
   const changeQuery = useCallback((next: string) => {
     setQuery(next);
@@ -252,28 +217,15 @@ export function DocumentPanel({
     });
   }, []);
 
-  const changeScheme = useCallback((next: string) => {
-    hasChosenScheme.current = true;
-    setSchemeId(next);
-    saveFontScheme(next);
-  }, []);
-
-  // The write stays out of the state updater, which React may call twice.
-  const chooseEditorMode = useCallback((next: EditorMode) => {
-    hasChosenEditor.current = true;
-    setEditorMode(next);
-    saveEditorMode(next);
-  }, []);
-
   const toggleEditor = useCallback(
     () => chooseEditorMode(nextEditorMode(editorMode)),
     [chooseEditorMode, editorMode],
   );
 
-  const changeEditorFraction = useCallback((next: number) => {
-    hasChosenEditorFraction.current = true;
-    setEditorFraction(next);
-  }, []);
+  const changeEditorFraction = useCallback(
+    (next: number) => chooseEditorFraction(next, { save: false }),
+    [chooseEditorFraction],
+  );
 
   const path = file?.path ?? null;
   const pathRef = useRef(path);
@@ -584,12 +536,10 @@ export function DocumentPanel({
   // Replace works on the source, so asking for it from the preview opens the split.
   const openReplace = useCallback(() => {
     if (editorMode === 'preview') {
-      hasChosenEditor.current = true;
-      setEditorMode('split');
-      saveEditorMode('split');
+      chooseEditorMode('split');
     }
     setReplaceFocusKey(key => key + 1);
-  }, [editorMode]);
+  }, [editorMode, chooseEditorMode]);
 
   const isGherkin = path !== null && gherkinPath === path;
 

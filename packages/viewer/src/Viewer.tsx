@@ -57,6 +57,7 @@ import {
 } from './scanDirectory';
 import { useTheme } from './theme';
 import type { DirectoryNode, FileNode } from './types';
+import { useStoredPreference } from './useStoredPreference';
 
 function Session() {
   const theme = useTheme();
@@ -76,8 +77,8 @@ function Session() {
   /** A stored file path waiting for the scan that can resolve it to a node. */
   const pendingFilePath = useRef<string | null>(null);
   // The tree shows by default; hiding it is how you get a full-width read.
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const hasChosenSidebar = useRef(false);
+  const [isSidebarVisible, chooseSidebar, setIsSidebarVisible] =
+    useStoredPreference(loadSidebarVisible, saveSidebarVisible, true);
   const [history, setHistory] = useState(emptyFileHistory());
   const [historyFolder, setHistoryFolder] = useState<string | null>(null);
   const [recentFolders, setRecentFolders] = useState<readonly RecentFolder[]>(
@@ -98,13 +99,6 @@ function Session() {
     setHistory(emptyFileHistory());
     historyRef.current = emptyFileHistory();
   }
-
-  // The write stays out of the state updater, which React may call twice.
-  const chooseSidebar = useCallback((next: boolean) => {
-    hasChosenSidebar.current = true;
-    setIsSidebarVisible(next);
-    saveSidebarVisible(next);
-  }, []);
 
   const toggleSidebar = useCallback(
     () => chooseSidebar(!isSidebarVisible),
@@ -130,14 +124,14 @@ function Session() {
         setIsSidebarVisible(isOpen);
       }
     },
-    [chooseSidebar],
+    [chooseSidebar, setIsSidebarVisible],
   );
 
   const closeModalDrawer = useCallback(() => {
     if (isDrawerModal()) {
       setIsSidebarVisible(false);
     }
-  }, []);
+  }, [setIsSidebarVisible]);
 
   useEffect(() => {
     const closeForFind = (event: KeyboardEvent) => {
@@ -167,7 +161,7 @@ function Session() {
     };
     window.addEventListener('keydown', closeForFind, true);
     return () => window.removeEventListener('keydown', closeForFind, true);
-  }, []);
+  }, [setIsSidebarVisible]);
 
   useEffect(() => {
     isMounted.current = true;
@@ -208,19 +202,6 @@ function Session() {
         setRecentFolders(folders);
       }
     });
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadSidebarVisible().then(stored => {
-      // Someone who toggled while the read was in flight outranks the store.
-      if (!cancelled && stored !== null && !hasChosenSidebar.current) {
-        setIsSidebarVisible(stored);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const beginFolder = useCallback(

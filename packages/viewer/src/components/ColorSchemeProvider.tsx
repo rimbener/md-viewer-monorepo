@@ -1,14 +1,9 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import { DEFAULT_COLOR_SCHEME_ID, type ColorSchemeId } from '../colorScheme';
 import { loadColorScheme, saveColorScheme } from '../preferences';
 import { ColorSchemeContext } from '../theme';
+import { useStoredPreference } from '../useStoredPreference';
 
 type ColorSchemeProviderProps = {
   children: ReactNode;
@@ -21,31 +16,13 @@ function applyColorScheme(schemeId: ColorSchemeId): void {
 }
 
 export function ColorSchemeProvider({ children }: ColorSchemeProviderProps) {
-  const [schemeId, setSchemeIdState] = useState(DEFAULT_COLOR_SCHEME_ID);
-  const hasChosen = useRef(false);
+  const [schemeId, setSchemeId] = useStoredPreference(
+    loadColorScheme,
+    saveColorScheme,
+    DEFAULT_COLOR_SCHEME_ID,
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    applyColorScheme(DEFAULT_COLOR_SCHEME_ID);
-
-    loadColorScheme().then(stored => {
-      if (!cancelled && stored !== null && !hasChosen.current) {
-        setSchemeIdState(stored);
-        applyColorScheme(stored);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const setSchemeId = useCallback((next: ColorSchemeId) => {
-    hasChosen.current = true;
-    setSchemeIdState(next);
-    saveColorScheme(next);
-    applyColorScheme(next);
-  }, []);
+  useEffect(() => applyColorScheme(schemeId), [schemeId]);
 
   return (
     <ColorSchemeContext.Provider value={{ schemeId, setSchemeId }}>

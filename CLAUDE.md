@@ -120,10 +120,11 @@ handed down through a context.
 `src/preferences.ts` wraps `src/storage.ts` (`localStorage`) and is
 deliberately best-effort: a failed read falls back to the default, a failed
 write is dropped, and stored values are validated on the way in
-(`isZoomLevel`, `isSchemeId`, absolute-path checks). Components that restore a
-preference guard against a race with the person using the app: a `hasChosen*`
-ref means a stored value never overwrites a choice made while the read was in
-flight. Copy that pattern for new preferences.
+(`isZoomLevel`, `isSchemeId`, absolute-path checks). `src/useStoredPreference.ts`
+restores one preference: it reads on mount, ignores a read that ends after
+unmount, and saves on `choose`. A stored value never overwrites a choice made
+while the read was in flight. `setWithoutChoosing` changes the value and does
+not save it (the drawer breakpoint). Use this hook for new preferences.
 
 Editing is in-memory only. `DocumentPanel` keeps a `Map` of drafts keyed by
 path in a ref, so switching files and back keeps the work, and quitting loses
