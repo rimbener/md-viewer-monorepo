@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 
-import { M3eTree, M3eTreeItem, type M3eTreeElement } from '../m3e';
+import { selectionManager } from '@m3e/web/core/a11y';
+
+import {
+  M3eTree,
+  M3eTreeItem,
+  type M3eTreeElement,
+  type M3eTreeItemElement,
+} from '../m3e';
 import { ancestorPaths } from '../scanDirectory';
 import { useTheme } from '../theme';
 import type { DirectoryNode, FileNode, TreeNode } from '../types';
@@ -8,6 +15,8 @@ import { typescale } from '../typescale';
 import { oneLine } from './text';
 
 type TreeItem = HTMLElement & { selected: boolean; open: boolean };
+
+let nextItemId = 0;
 
 /**
  * The root, plus every directory on the way down to an already-selected file —
@@ -75,6 +84,22 @@ export function FileTree({
     items.find(item => item.selected)?.scrollIntoView?.({ block: 'center' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The tree lists its items only when its own children change. A folder read
+  // on click adds nested items, which a click could not select until listed.
+  useEffect(() => {
+    const tree = treeRef.current;
+    if (tree === null) {
+      return;
+    }
+    const items = Array.from(
+      tree.querySelectorAll<M3eTreeItemElement>('m3e-tree-item'),
+    );
+    for (const item of items) {
+      item.id ||= `file-tree-item-${nextItemId++}`;
+    }
+    tree[selectionManager].setItems(items);
+  }, [root]);
 
   const onChange = (event: Event) => {
     const tree = event.currentTarget as M3eTreeElement;

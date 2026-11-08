@@ -120,6 +120,9 @@ m3e details that bite:
   `querySelector`.
   It finds the control only when `htmlFor` changes. If you remount the
   control (a `key`), remount the trigger too.
+- `m3e-tree` lists its items only when its own children change. After the
+  tree data changes, `FileTree` lists them again (`selectionManager`), or a
+  click on a new nested item selects nothing.
 
 `src/typography.ts` is why document sizes look the way they do: each font
 scheme carries a `scale` measured from the macOS face's x-height and an

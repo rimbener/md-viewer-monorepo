@@ -73,3 +73,30 @@ it('reopens a stored file deeper than three levels', async () => {
   expect(treeItem('buried.md')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Notes' })).toBeInTheDocument();
 });
+
+it('opens a file in a folder that a click read', async () => {
+  const platform = createFakePlatform(
+    {
+      '/notes': ['a/'],
+      '/notes/a': ['b/'],
+      '/notes/a/b': ['c/'],
+      '/notes/a/b/c': ['lesson.data/', 'lesson.md', 'other.md'],
+      '/notes/a/b/c/lesson.data': ['labels/'],
+      '/notes/a/b/c/lesson.data/labels': ['P1.md'],
+    },
+    {
+      '/notes/a/b/c/lesson.md': '# Lesson',
+      '/notes/a/b/c/other.md': '# Other',
+    },
+  );
+  await renderViewer(platform);
+
+  await pressFolder('a');
+  await pressFolder('b');
+  await pressFolder('c');
+  await press(screen.getByRole('treeitem', { name: 'lesson.md' }));
+  expect(screen.getByRole('heading', { name: 'Lesson' })).toBeInTheDocument();
+
+  await press(screen.getByRole('treeitem', { name: 'other.md' }));
+  expect(screen.getByRole('heading', { name: 'Other' })).toBeInTheDocument();
+});
