@@ -501,12 +501,7 @@ type SmallButtonProps = {
 
 function SmallButton({ label, onPress }: SmallButtonProps) {
   return (
-    <M3eButton
-      variant="text"
-      size="extra-small"
-      aria-label={label}
-      onClick={onPress}
-    >
+    <M3eButton variant="text" aria-label={label} onClick={onPress}>
       {label}
     </M3eButton>
   );

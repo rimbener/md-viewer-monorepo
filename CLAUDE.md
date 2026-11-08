@@ -82,8 +82,9 @@ tinted token by token, and anything else stays uniform monospace.
 
 The chrome uses m3e components (`src/m3e.ts` re-exports the ones in use) and
 never a hand-made control. Icons come from `@m3e/icons/outlined/<name>`, one
-side-effect import per icon. `ThemeRoot` renders `m3e-theme` (monochrome,
-standard motion, density -2) around every screen.
+side-effect import per icon. `ThemeRoot` renders `m3e-theme` (monochrome) around every screen.
+Use the library defaults for size, density, shape and spacing; set only a
+variant, and only where M3 gives the role (filled for the main action).
 
 Colors come from `--md-sys-color-*` roles, or from the fixed colors in
 `src/theme.ts`: syntax, Gherkin, link, find hits, and the monochrome fallback

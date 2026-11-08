@@ -31,8 +31,6 @@ function M3Theme({ children }: ThemeRootProps) {
     <M3eTheme
       ref={setElement}
       variant="monochrome"
-      motion="standard"
-      density={-2}
       scheme={M3E_SCHEME[schemeId]}
       onChange={onChange}
     >

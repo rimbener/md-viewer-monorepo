@@ -16,7 +16,6 @@ export function FontControl({ schemeId, onChange }: FontControlProps) {
     <>
       <M3eButton
         variant="outlined"
-        size="extra-small"
         aria-label={`Change font, currently ${scheme.name}`}
         id={id}
         onClick={() => onChange(nextSchemeId(scheme.id))}

@@ -16,7 +16,6 @@ export function GherkinToggle({ isActive, onToggle }: GherkinToggleProps) {
       <M3eIconButton
         toggle
         selected={isActive}
-        size="extra-small"
         aria-label={isActive ? 'Render as markdown' : 'Render as gherkin'}
         id={id}
         onBeforeInput={(event: Event) => {

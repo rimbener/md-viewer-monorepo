@@ -141,8 +141,6 @@ const styles = {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-    padding: '4px 0',
-    ...typescale('body-medium'),
   },
   empty: {
     padding: 16,

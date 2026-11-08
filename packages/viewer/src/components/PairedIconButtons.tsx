@@ -19,13 +19,11 @@ export function PairedIconButtons({
 
   return (
     <>
-      <M3eButtonGroup variant="connected" size="extra-small">
+      <M3eButtonGroup>
         {actions.map((action, index) => (
           <M3eIconButton
             key={action.accessibilityLabel}
             id={`${id}-${index}`}
-            variant="tonal"
-            size="extra-small"
             aria-label={action.accessibilityLabel}
             disabled={action.disabled}
             onClick={action.onPress}

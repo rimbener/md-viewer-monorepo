@@ -98,11 +98,7 @@ export function DocumentSearch({
 
   return (
     <div style={styles.column}>
-      <M3eFormField
-        variant="outlined"
-        hideSubscript="always"
-        style={styles.field}
-      >
+      <M3eFormField variant="outlined" hideSubscript="always">
         <M3eIcon slot="prefix" name="search" />
         <input
           ref={fieldRef}
@@ -130,7 +126,6 @@ export function DocumentSearch({
         </span>
         <span slot="suffix" style={styles.actions}>
           <M3eIconButton
-            size="extra-small"
             aria-label="Previous match"
             disabled={count === 0}
             onClick={() => go(-1)}
@@ -138,7 +133,6 @@ export function DocumentSearch({
             <M3eIcon name="keyboard_arrow_up" />
           </M3eIconButton>
           <M3eIconButton
-            size="extra-small"
             aria-label="Next match"
             disabled={count === 0}
             onClick={() => go(1)}
@@ -146,7 +140,6 @@ export function DocumentSearch({
             <M3eIcon name="keyboard_arrow_down" />
           </M3eIconButton>
           <M3eIconButton
-            size="extra-small"
             aria-label="Clear find"
             disabled={query.length === 0}
             onClick={() => onQuery('')}
@@ -161,7 +154,6 @@ export function DocumentSearch({
             id={replaceId}
             variant="outlined"
             hideSubscript="always"
-            style={styles.field}
           >
             <input
               ref={replaceRef}
@@ -191,7 +183,6 @@ export function DocumentSearch({
           <M3eButton
             id={replaceOneId}
             variant="text"
-            size="extra-small"
             disabled={!replace.isEnabled || count === 0}
             onClick={replace.onReplaceOne}
           >
@@ -204,7 +195,6 @@ export function DocumentSearch({
           <M3eButton
             id={replaceAllId}
             variant="text"
-            size="extra-small"
             disabled={!replace.isEnabled || count === 0}
             onClick={replace.onReplaceAll}
           >
@@ -224,19 +214,15 @@ const styles = {
   column: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 6,
+    gap: 8,
   },
   row: {
     display: 'flex',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
-  field: {
-    '--m3e-form-field-width': '240px',
-  } as CSSProperties,
   count: {
     fontVariantNumeric: 'tabular-nums',
-    minWidth: 28,
   },
   actions: {
     display: 'flex',

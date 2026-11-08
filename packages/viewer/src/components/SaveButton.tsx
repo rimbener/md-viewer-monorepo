@@ -14,8 +14,6 @@ export function SaveButton({ disabled = false, onSave }: SaveButtonProps) {
   return (
     <>
       <M3eIconButton
-        variant="tonal"
-        size="extra-small"
         aria-label="Save"
         id={id}
         disabled={disabled}

@@ -920,12 +920,8 @@ const styles = {
     borderBottom: '1px solid',
   },
   tools: {
-    display: 'flex',
     flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 8,
-    '--m3e-toolbar-container-color': 'transparent',
-  } as CSSProperties,
+  },
   fileName: {
     flexShrink: 1,
     margin: 0,
