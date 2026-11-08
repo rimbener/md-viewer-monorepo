@@ -45,7 +45,8 @@ pnpm build:android                                 # aarch64 APK, signed
 adb install -r apps/tauri/src-tauri/gen/android/app/build/outputs/apk/universal/release/md-viewer.apk
 ```
 
-The build signs the APK with the Android debug key (`~/.android/debug.keystore`).
+The build signs the APK with the Android debug key (`~/.android/debug.keystore`),
+and makes that key when it is missing. It needs build-tools 35 or later.
 Android refuses an update signed with a different key.
 
 ## Open a document by URL
