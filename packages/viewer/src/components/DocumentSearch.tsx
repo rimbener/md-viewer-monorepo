@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 
+import { stepActive } from '../findSession';
 import { M3eFormField, M3eIcon, M3eIconButton } from '../m3e';
 import { MAX_QUERY_LENGTH } from '../search';
 
@@ -51,10 +52,9 @@ export function DocumentSearch({
   }, []);
 
   const go = (direction: number) => {
-    if (count <= 0) {
-      return;
+    if (count > 0) {
+      onActive(stepActive(active, direction, count));
     }
-    onActive((active + direction + count) % count);
   };
 
   const handleKey = (event: KeyboardEvent<HTMLInputElement>) => {

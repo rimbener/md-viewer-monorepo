@@ -11,7 +11,6 @@ import { hasBareFeature, parseMarkdown } from '@md-viewer/markdown/parseBlocks';
 
 import { DEFAULT_CHARACTERS } from '../column';
 import { FindProvider, useShowText } from '../find';
-import { findMatches, MAX_MATCHES, replaceAll } from '../search';
 import { usePlatform } from '../platform';
 import {
   loadCharacters,
@@ -31,6 +30,7 @@ import { nextEditorMode, type EditorMode } from '../editorMode';
 import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
 import { useDocumentSession } from '../useDocumentSession';
+import { useFindSession } from '../useFindSession';
 import type { FileNode } from '../types';
 import { M3eToolbar } from '../m3e';
 import { isHttpUrl } from '../url';
@@ -128,15 +128,6 @@ export function DocumentPanel({
     saveCharacters,
     DEFAULT_CHARACTERS,
   );
-  const [query, setQuery] = useState('');
-  const [replacement, setReplacement] = useState('');
-  const [replaceFocusKey, setReplaceFocusKey] = useState(0);
-  const clearReplaceFocus = useCallback(() => setReplaceFocusKey(0), []);
-  /** After a replace, the next current hit is the first one from here. */
-  const resumeAt = useRef<number | null>(null);
-  const [active, setActive] = useState(0);
-  const [matchCount, setMatchCount] = useState(0);
-  const [capped, setCapped] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [bodyHeight, setBodyHeight] = useState(0);
@@ -156,20 +147,6 @@ export function DocumentPanel({
     saveEditorFraction,
     DEFAULT_EDITOR_FRACTION,
   );
-
-  const changeQuery = useCallback((next: string) => {
-    setQuery(next);
-    setActive(0);
-  }, []);
-
-  const handleCount = useCallback((count: number, isCapped: boolean) => {
-    setMatchCount(prev => (prev === count ? prev : count));
-    setCapped(prev => (prev === isCapped ? prev : isCapped));
-    setActive(prev => {
-      const next = count === 0 ? 0 : Math.min(prev, count - 1);
-      return next === prev ? prev : next;
-    });
-  }, []);
 
   const toggleEditor = useCallback(
     () => chooseEditorMode(nextEditorMode(editorMode)),
@@ -200,13 +177,6 @@ export function DocumentPanel({
     redo,
     save,
   } = useDocumentSession(path);
-
-  useEffect(() => {
-    setQuery('');
-    setActive(0);
-    setMatchCount(0);
-    setCapped(false);
-  }, [path]);
 
   /** What Command-S does now, or null while Save is not on offer. */
   const saveShortcut = useRef<(() => void) | null>(null);
@@ -245,47 +215,21 @@ export function DocumentPanel({
     error === null &&
     !isLoading &&
     file !== null;
-  const sourceMatches = useMemo(
-    () => (findsInSource ? findMatches(text ?? '', query, MAX_MATCHES) : null),
-    [findsInSource, text, query],
-  );
-  useEffect(() => {
-    if (sourceMatches === null) {
-      return;
-    }
-    handleCount(sourceMatches.starts.length, sourceMatches.more);
-    const from = resumeAt.current;
-    if (from !== null) {
-      resumeAt.current = null;
-      const next = sourceMatches.starts.findIndex(start => start >= from);
-      setActive(next === -1 ? 0 : next);
-    }
-  }, [sourceMatches, handleCount]);
-
-  const replaceOne = useCallback(() => {
-    const start = sourceMatches?.starts[active];
-    if (start === undefined || text === null) {
-      return;
-    }
-    resumeAt.current = start + replacement.length;
-    replaceText(
-      text.slice(0, start) + replacement + text.slice(start + query.length),
-    );
-  }, [sourceMatches, active, text, replacement, query, replaceText]);
-
-  const replaceEvery = useCallback(() => {
-    if (text !== null) {
-      replaceText(replaceAll(text, query, replacement).text);
-    }
-  }, [text, query, replacement, replaceText]);
+  const find = useFindSession({
+    path,
+    text,
+    inSource: findsInSource,
+    replace: replaceText,
+  });
+  const { focusReplace } = find;
 
   // Replace works on the source, so asking for it from the preview opens the split.
   const openReplace = useCallback(() => {
     if (editorMode === 'preview') {
       chooseEditorMode('split');
     }
-    setReplaceFocusKey(key => key + 1);
-  }, [editorMode, chooseEditorMode]);
+    focusReplace();
+  }, [editorMode, chooseEditorMode, focusReplace]);
 
   const isGherkin = path !== null && gherkinPath === path;
 
@@ -498,33 +442,28 @@ export function DocumentPanel({
         </M3eToolbar>
         <div style={styles.findRow}>
           <DocumentSearch
-            query={query}
-            count={matchCount}
-            active={active}
-            capped={capped}
-            onQuery={changeQuery}
-            onActive={setActive}
+            query={find.query}
+            count={find.count}
+            active={find.active}
+            capped={find.capped}
+            onQuery={find.setQuery}
+            onActive={find.setActive}
           />
           {canEdit && findsInSource ? (
             <ReplaceBar
-              focusKey={replaceFocusKey}
-              onFocused={clearReplaceFocus}
-              value={replacement}
-              canReplace={matchCount > 0}
-              onValue={setReplacement}
-              onReplaceOne={replaceOne}
-              onReplaceAll={replaceEvery}
+              focusKey={find.replaceFocusKey}
+              onFocused={find.replaceFocused}
+              value={find.replacement}
+              canReplace={find.count > 0}
+              onValue={find.setReplacement}
+              onReplaceOne={find.replaceOne}
+              onReplaceAll={find.replaceAll}
             />
           ) : null}
         </div>
       </header>
 
-      <FindProvider
-        query={findsInSource ? '' : query}
-        active={active}
-        scrollRef={scrollRef}
-        onCount={findsInSource ? ignoreCount : handleCount}
-      >
+      <FindProvider {...find.previewFind} scrollRef={scrollRef}>
         {isLoading ? (
           <div style={{ ...styles.body, ...styles.centered }}>
             <Spinner />
@@ -552,11 +491,7 @@ export function DocumentPanel({
                 onRedo={redo}
                 fieldRef={scrollSync.attachEditor}
                 onScroll={scrollSync.onEditorScroll}
-                marks={
-                  sourceMatches === null || query.length === 0
-                    ? null
-                    : { query, starts: sourceMatches.starts, active }
-                }
+                marks={find.sourceMarks}
               />
             }
           />
@@ -567,8 +502,6 @@ export function DocumentPanel({
     </main>
   );
 }
-
-function ignoreCount(): void {}
 
 type PlainBodyProps = {
   text: string;

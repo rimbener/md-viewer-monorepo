@@ -43,8 +43,9 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
   subpath (`@md-viewer/markdown/parseBlocks`). No barrel.
 - `packages/viewer` — the React viewer. `src/Viewer.tsx` owns the session: the
   chosen folder, the scanned tree, the selected file, sidebar visibility.
-  `components/DocumentPanel.tsx` shows one document — zoom, font scheme, find,
-  the editor pane; `src/useDocumentSession.ts` reads, watches and saves it. `components/Markdown.tsx` renders the parsed result.
+  `components/DocumentPanel.tsx` shows one document — zoom, font scheme, the
+  editor pane; `src/useDocumentSession.ts` reads, watches and saves it;
+  `src/useFindSession.ts` owns find and replace (query, hits, current hit). `components/Markdown.tsx` renders the parsed result.
 - `apps/web` — `webPlatform.ts` (File System Access API, IndexedDB handles,
   `?src=` URLs) and the "not compatible" gate in `App.tsx`.
 - `apps/tauri` — `tauriPlatform.ts` (fs, dialog and opener plugins) and
