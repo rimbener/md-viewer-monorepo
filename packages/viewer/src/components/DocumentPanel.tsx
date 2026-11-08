@@ -676,7 +676,7 @@ export function DocumentPanel({
     return (
       <main style={styles.container}>
         <header style={headerStyle}>
-          <M3eToolbar style={styles.tools}>{historyTool}</M3eToolbar>
+          <M3eToolbar>{historyTool}</M3eToolbar>
         </header>
         <div style={{ ...styles.body, ...styles.centered }}>
           <span style={{ ...styles.message, color: theme.mutedText }}>
@@ -772,7 +772,7 @@ export function DocumentPanel({
         </span>
       </AppBarTitle>
       <header style={headerStyle}>
-        <M3eToolbar style={styles.tools}>
+        <M3eToolbar>
           {historyTool}
           {canRenderGherkin ? (
             <GherkinToggle
@@ -796,7 +796,6 @@ export function DocumentPanel({
               />
             </>
           ) : null}
-          <div style={{ flex: 1 }} />
           <FontControl schemeId={schemeId} onChange={changeScheme} />
           <ColumnControl characters={characters} onChange={changeCharacters} />
           <ZoomControl scale={scale} onChange={changeZoom} />
@@ -918,9 +917,6 @@ const styles = {
     flexDirection: 'column',
     padding: '0 16px 8px',
     borderBottom: '1px solid',
-  },
-  tools: {
-    flexWrap: 'wrap',
   },
   fileName: {
     flexShrink: 1,
