@@ -96,6 +96,14 @@ describe('findSession', () => {
     expect(line(after)).toBe('"" 2/2');
   });
 
+  it('drops the resume point on a new query or file', () => {
+    const replaced = run([{ type: 'replacedOne', resumeAt: 6 }]);
+    expect(line(run([{ type: 'queried', query: 'b' }], replaced))).toBe(
+      '"b" 1/0',
+    );
+    expect(line(run([{ type: 'reset' }], replaced))).toBe('"" 1/0');
+  });
+
   it('keeps the resume point while only the preview counts', () => {
     const state = run([
       { type: 'replacedOne', resumeAt: 6 },
@@ -186,5 +194,14 @@ describe('useFindSession', () => {
     act(() => result.current.replaceAll());
 
     expect(replace.mock.calls).toEqual([['cat dog cat'], ['dog dog dog']]);
+  });
+  it('moves to the next hit when a replace changes nothing', () => {
+    const { result, replace } = setup();
+    act(() => result.current.setQuery('cat'));
+    act(() => result.current.setReplacement('cat'));
+    act(() => result.current.replaceOne());
+
+    expect(replace).not.toHaveBeenCalled();
+    expect(result.current.active).toBe(1);
   });
 });

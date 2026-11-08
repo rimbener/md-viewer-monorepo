@@ -85,6 +85,21 @@ export function FileTree({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Back, Next and links can select a file inside a closed folder.
+  useEffect(() => {
+    if (selectedPath === null) {
+      return;
+    }
+    const ancestors = new Set(ancestorPaths(selectedPath, root.path));
+    for (const item of treeRef.current?.querySelectorAll<TreeItem>(
+      'm3e-tree-item',
+    ) ?? []) {
+      if (ancestors.has(item.dataset.path ?? '')) {
+        item.open = true;
+      }
+    }
+  }, [selectedPath, root.path, nodes]);
+
   // The tree lists its items only when its own children change. A folder read
   // on click adds nested items, which a click could not select until listed.
   useEffect(() => {

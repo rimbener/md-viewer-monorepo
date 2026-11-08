@@ -56,7 +56,7 @@ export function SidebarResizer({
   const show = (next: number) =>
     drawerRef.current?.style.setProperty(SIDEBAR_WIDTH_PROPERTY, `${next}px`);
 
-  const end = (event: PointerEvent<HTMLDivElement>) => {
+  const end = (event: PointerEvent<HTMLDivElement>, isCancelled: boolean) => {
     const current = drag.current;
     if (current === null || current.pointerId !== event.pointerId) {
       return;
@@ -64,6 +64,11 @@ export function SidebarResizer({
     drag.current = null;
     setIsActive(false);
     drawerRef.current?.removeAttribute(RESIZING);
+    // A cancelled pointer has no usable position, often 0.
+    if (isCancelled) {
+      show(current.startWidth);
+      return;
+    }
     onCommit(
       clampSidebarWidth(current.startWidth + event.clientX - current.startX),
     );
@@ -119,8 +124,8 @@ export function SidebarResizer({
           );
         }
       }}
-      onPointerUp={end}
-      onPointerCancel={end}
+      onPointerUp={event => end(event, false)}
+      onPointerCancel={event => end(event, true)}
       onDoubleClick={() => commit(DEFAULT_SIDEBAR_WIDTH)}
       onKeyDown={(event: KeyboardEvent) => {
         const next =

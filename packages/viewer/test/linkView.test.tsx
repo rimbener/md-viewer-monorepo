@@ -49,6 +49,12 @@ it('opens a linked markdown file in the viewer and shows it in the tree', async 
     'aria-selected',
     'true',
   );
+  for (const folder of ['/notes/a', '/notes/a/b', '/notes/a/b/c']) {
+    const item = document.querySelector<HTMLElement & { open: boolean }>(
+      `m3e-tree-item[data-path="${folder}"]`,
+    );
+    expect(item?.open).toBe(true);
+  }
   expect(platform.openLink).not.toHaveBeenCalled();
 
   await press(screen.getByRole('button', { name: 'Back' }));

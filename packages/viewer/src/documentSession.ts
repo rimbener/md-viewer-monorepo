@@ -100,7 +100,13 @@ function withEntry<V>(
 function open(state: DocumentSession, path: string | null): DocumentSession {
   const reset = { ...state, path, diskChanged: false, saveError: null };
   if (path === null) {
-    return { ...reset, source: null, settled: null, error: null };
+    return {
+      ...reset,
+      source: null,
+      settled: null,
+      isLoading: false,
+      error: null,
+    };
   }
   return {
     ...reset,

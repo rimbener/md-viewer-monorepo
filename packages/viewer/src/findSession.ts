@@ -98,9 +98,15 @@ export function reduceFindSession(
 ): FindSession {
   switch (event.type) {
     case 'reset':
-      return patch(state, { query: '', active: 0, count: 0, capped: false });
+      return patch(state, {
+        query: '',
+        active: 0,
+        count: 0,
+        capped: false,
+        resumeAt: null,
+      });
     case 'queried':
-      return patch(state, { query: event.query, active: 0 });
+      return patch(state, { query: event.query, active: 0, resumeAt: null });
     case 'replacementChanged':
       return patch(state, { replacement: event.replacement });
     case 'chose':

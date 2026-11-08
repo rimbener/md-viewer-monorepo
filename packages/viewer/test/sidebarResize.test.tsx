@@ -109,3 +109,15 @@ it('falls back to 280 px for a stored width out of range', async () => {
   await renderApp();
   expect(width()).toBe('280px');
 });
+
+it('keeps the old width when the drag is cancelled', async () => {
+  await renderApp();
+
+  await send(pointer('pointerdown', 100));
+  await send(pointer('pointermove', 160));
+  await send(pointer('pointercancel', 0));
+  await settle();
+
+  expect(width()).toBe('280px');
+  expect(window.localStorage.getItem(KEY)).toBeNull();
+});

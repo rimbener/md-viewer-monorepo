@@ -4,6 +4,7 @@ import {
   initialFindSession,
   reduceFindSession,
   replaceOneIn,
+  stepActive,
 } from './findSession';
 import { findMatches, MAX_MATCHES, replaceAll as replaceAllIn } from './search';
 
@@ -77,6 +78,14 @@ export function useFindSession({
       return;
     }
     const next = replaceOneIn(text, start, query, replacement);
+    // Unchanged text brings no new count, so a resume point would linger.
+    if (next.text === text) {
+      dispatch({
+        type: 'chose',
+        active: stepActive(active, 1, sourceMatches!.starts.length),
+      });
+      return;
+    }
     dispatch({ type: 'replacedOne', resumeAt: next.resumeAt });
     replace(next.text);
   }, [sourceMatches, active, text, query, replacement, replace]);

@@ -148,10 +148,6 @@ export function saveColorScheme(schemeId: ColorSchemeId): void {
   write(COLOR_SCHEME_KEY, schemeId);
 }
 
-/**
- * Whether the file tree was showing, or null when that was never chosen. The
- * caller supplies the default, so it is not duplicated here.
- */
 /** The stored sidebar width, or null when there is no usable one. */
 export async function loadSidebarWidth(): Promise<number | null> {
   const stored = await read(SIDEBAR_WIDTH_KEY);
@@ -167,6 +163,10 @@ export function saveSidebarWidth(width: number): void {
   write(SIDEBAR_WIDTH_KEY, String(width));
 }
 
+/**
+ * Whether the file tree was showing, or null when that was never chosen. The
+ * caller supplies the default, so it is not duplicated here.
+ */
 export async function loadSidebarVisible(): Promise<boolean | null> {
   const stored = await read(SIDEBAR_KEY);
   return stored === null ? null : stored === 'true';

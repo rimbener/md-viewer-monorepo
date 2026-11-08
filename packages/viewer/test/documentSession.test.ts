@@ -234,6 +234,14 @@ describe('reduceDocumentSession', () => {
     ]);
     expect(line(state)).toBe('/b.md: b | b');
   });
+
+  it('stops loading when the file closes before its read ends', () => {
+    const state = run([
+      { type: 'opened', path: '/a.md' },
+      { type: 'opened', path: null },
+    ]);
+    expect(line(state)).toBe('null: null | null');
+  });
 });
 
 describe('useDocumentSession', () => {
