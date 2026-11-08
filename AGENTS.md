@@ -46,6 +46,9 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
   `components/DocumentPanel.tsx` shows one document — zoom, font scheme, the
   editor pane; `src/useDocumentSession.ts` reads, watches and saves it;
   `src/useFindSession.ts` owns find and replace (query, hits, current hit). `components/Markdown.tsx` renders the parsed result.
+  Each component that owns a Command shortcut registers it with
+  `useShortcut()` (`src/shortcuts.ts`). Do not add a `keydown` listener on
+  `window`.
 - `apps/web` — `webPlatform.ts` (File System Access API, IndexedDB handles,
   `?src=` URLs) and the "not compatible" gate in `App.tsx`.
 - `apps/tauri` — `tauriPlatform.ts` (fs, dialog and opener plugins) and

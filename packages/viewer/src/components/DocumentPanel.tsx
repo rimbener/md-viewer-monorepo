@@ -26,6 +26,7 @@ import {
 } from '../preferences';
 import { useScrollMemory } from '../scrollMemory';
 import { useScrollSync } from '../scrollSync';
+import { useShortcut } from '../shortcuts';
 import { nextEditorMode, type EditorMode } from '../editorMode';
 import { DEFAULT_EDITOR_FRACTION } from '../split';
 import { useTheme } from '../theme';
@@ -95,7 +96,6 @@ function observeHeight(
 interface DocumentPanelProps {
   file: FileNode | null;
   isSidebarVisible: boolean;
-  onToggleSidebar: () => void;
   canGoBack: boolean;
   canGoNext: boolean;
   onBack: () => void;
@@ -106,7 +106,6 @@ interface DocumentPanelProps {
 export function DocumentPanel({
   file,
   isSidebarVisible,
-  onToggleSidebar,
   canGoBack,
   canGoNext,
   onBack,
@@ -178,36 +177,6 @@ export function DocumentPanel({
     save,
   } = useDocumentSession(path);
 
-  /** What Command-S does now, or null while Save is not on offer. */
-  const saveShortcut = useRef<(() => void) | null>(null);
-  /** What Command-E does now, or null while the editor button is disabled. */
-  const editorShortcut = useRef<(() => void) | null>(null);
-  const sidebarShortcut = useRef(onToggleSidebar);
-  /** What Command-G does now, or null while nothing can be replaced. */
-  const replaceShortcut = useRef<(() => void) | null>(null);
-  sidebarShortcut.current = onToggleSidebar;
-
-  useEffect(() => {
-    // Control stands in for Command off the Mac; the page's own S, E, B and G give way.
-    const onKey = (event: globalThis.KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
-        return;
-      }
-      const shortcut = {
-        s: saveShortcut,
-        e: editorShortcut,
-        b: sidebarShortcut,
-        g: replaceShortcut,
-      }[event.key.toLowerCase()];
-      if (shortcut !== undefined) {
-        event.preventDefault();
-        shortcut.current?.();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   // Find goes where the editor is: the source whenever it shows, else the preview.
   const findsInSource =
     editorMode !== 'preview' &&
@@ -230,6 +199,20 @@ export function DocumentPanel({
     }
     focusReplace();
   }, [editorMode, chooseEditorMode, focusReplace]);
+
+  // A document too large to parse is shown as plain text, and editing it would
+  // reparse nothing — so the source pane has nothing to offer there.
+  const canEdit = file !== null && !isTruncated && error === null;
+  const canSave =
+    file !== null &&
+    isDirty &&
+    !isSaving &&
+    platform.writeFile !== undefined &&
+    !isHttpUrl(file.path);
+  const isEditing = editorMode !== 'preview' && canEdit;
+  useShortcut('s', isEditing && canSave ? save : null);
+  useShortcut('e', canEdit ? toggleEditor : null);
+  useShortcut('g', canEdit ? openReplace : null);
 
   const isGherkin = path !== null && gherkinPath === path;
 
@@ -308,10 +291,6 @@ export function DocumentPanel({
     borderBottomColor: theme.border,
   };
 
-  saveShortcut.current = null;
-  editorShortcut.current = null;
-  replaceShortcut.current = null;
-
   if (file === null) {
     return (
       <main style={styles.container}>
@@ -329,22 +308,6 @@ export function DocumentPanel({
     );
   }
 
-  // A document too large to parse is shown as plain text, and editing it would
-  // reparse nothing — so the source pane has nothing to offer there.
-  const canEdit = !isTruncated && error === null;
-  const canSave =
-    isDirty &&
-    !isSaving &&
-    platform.writeFile !== undefined &&
-    !isHttpUrl(file.path);
-  if (canEdit) {
-    editorShortcut.current = toggleEditor;
-    replaceShortcut.current = openReplace;
-  }
-  const isEditing = editorMode !== 'preview' && canEdit;
-  if (isEditing && canSave) {
-    saveShortcut.current = save;
-  }
   const lineHeight = isTruncated
     ? PLAIN_LINE * scale
     : bodyLineHeight(scale, schemeById(schemeId).body.scale);

@@ -47,7 +47,6 @@ async function renderPanel(): Promise<void> {
         <DocumentPanel
           file={file}
           isSidebarVisible
-          onToggleSidebar={() => {}}
           canGoBack={false}
           canGoNext={false}
           onBack={() => {}}

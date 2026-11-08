@@ -3,16 +3,12 @@ import '@m3e/icons/outlined/keyboard_arrow_down';
 import '@m3e/icons/outlined/keyboard_arrow_up';
 import '@m3e/icons/outlined/search';
 
-import {
-  useEffect,
-  useRef,
-  type CSSProperties,
-  type KeyboardEvent,
-} from 'react';
+import { useRef, type CSSProperties, type KeyboardEvent } from 'react';
 
 import { stepActive } from '../findSession';
 import { M3eFormField, M3eIcon, M3eIconButton } from '../m3e';
 import { MAX_QUERY_LENGTH } from '../search';
+import { useShortcut } from '../shortcuts';
 
 type DocumentSearchProps = {
   query: string;
@@ -34,22 +30,14 @@ export function DocumentSearch({
 }: DocumentSearchProps) {
   const fieldRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Command-F (Control-F off the Mac) finds in the document, not the page.
-    const focusFind = (event: globalThis.KeyboardEvent) => {
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        !event.altKey &&
-        event.key.toLowerCase() === 'f'
-      ) {
-        event.preventDefault();
-        fieldRef.current?.focus();
-        fieldRef.current?.select();
-      }
-    };
-    window.addEventListener('keydown', focusFind);
-    return () => window.removeEventListener('keydown', focusFind);
-  }, []);
+  useShortcut(
+    'f',
+    () => {
+      fieldRef.current?.focus();
+      fieldRef.current?.select();
+    },
+    { withShift: true },
+  );
 
   const go = (direction: number) => {
     if (count > 0) {

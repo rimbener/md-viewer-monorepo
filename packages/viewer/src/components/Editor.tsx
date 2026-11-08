@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { isCommand } from '../shortcuts';
 import { useTheme, type Theme } from '../theme';
 import { CODE_FONT } from '../typography';
 
@@ -224,7 +225,7 @@ export function Editor({
           onChange(event.target.value);
         }}
         onKeyDown={event => {
-          if (!(event.metaKey || event.ctrlKey) || event.altKey) {
+          if (!isCommand(event)) {
             return;
           }
           const key = event.key.toLowerCase();

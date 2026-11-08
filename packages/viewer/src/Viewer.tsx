@@ -55,6 +55,7 @@ import {
   scanDirectory,
   scanToFile,
 } from './scanDirectory';
+import { useShortcut } from './shortcuts';
 import { useTheme } from './theme';
 import type { DirectoryNode, FileNode } from './types';
 import { useStoredPreference } from './useStoredPreference';
@@ -133,35 +134,22 @@ function Session() {
     }
   }, [setIsSidebarVisible]);
 
-  useEffect(() => {
-    const closeForFind = (event: KeyboardEvent) => {
+  useShortcut('b', toggleSidebar);
+  useShortcut(
+    'f',
+    () => {
       const drawer = drawerRef.current;
-      if (
-        !(event.metaKey || event.ctrlKey) ||
-        event.altKey ||
-        event.key.toLowerCase() !== 'f' ||
-        drawer === null ||
-        !drawer.start ||
-        !isDrawerModal()
-      ) {
-        return;
+      if (drawer === null || !drawer.start || !isDrawerModal()) {
+        return false;
       }
       // An open modal drawer makes the document inert, so the find field
       // cannot take the focus until the drawer has closed.
-      event.preventDefault();
-      event.stopImmediatePropagation();
       setIsSidebarVisible(false);
       drawer.start = false;
-      const { key, metaKey, ctrlKey } = event;
-      drawer.updateComplete.then(() =>
-        window.dispatchEvent(
-          new KeyboardEvent('keydown', { key, metaKey, ctrlKey }),
-        ),
-      );
-    };
-    window.addEventListener('keydown', closeForFind, true);
-    return () => window.removeEventListener('keydown', closeForFind, true);
-  }, [setIsSidebarVisible]);
+      return drawer.updateComplete;
+    },
+    { withShift: true, first: true },
+  );
 
   useEffect(() => {
     isMounted.current = true;
@@ -619,7 +607,6 @@ function Session() {
           <DocumentPanel
             file={selectedFile}
             isSidebarVisible={isSidebarVisible}
-            onToggleSidebar={toggleSidebar}
             canGoBack={canGoBack(history)}
             canGoNext={canGoNext(history)}
             onBack={goBack}
