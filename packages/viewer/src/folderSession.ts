@@ -13,22 +13,22 @@ import type { RecentFolder } from './recentFolders';
 import { findFile, replaceDirectory } from './scanDirectory';
 import type { DirectoryNode, FileNode } from './types';
 
-export type FolderPhase =
+type FolderPhase =
   'restoring' | 'idle' | 'scanning' | 'open' | 'failed' | 'external';
 
-export interface ScanRequest {
+interface ScanRequest {
   id: number;
   folder: string;
   target: string | null;
 }
 
-export interface HistoryRequest {
+interface HistoryRequest {
   id: number;
   folder: string;
   openedAt: string | null;
 }
 
-export interface RevealRequest {
+interface RevealRequest {
   id: number;
   folder: string;
   path: string;
@@ -102,7 +102,7 @@ export function canStepNext(state: FolderSession): boolean {
 }
 
 /** One file, under its parent folder name. The parent is not read. */
-export function treeForOpenedFile(path: string): {
+function treeForOpenedFile(path: string): {
   root: DirectoryNode;
   file: FileNode;
 } {
@@ -126,7 +126,6 @@ export function treeForOpenedFile(path: string): {
   };
 }
 
-// A tree without the selected file drops it; no tree at all keeps it.
 function withTree(
   state: FolderSession,
   tree: DirectoryNode | null,

@@ -56,7 +56,6 @@ export function RecentFolderMenu({
         disabled={disabled}
         style={{ width: '100%' }}
       >
-        {/* m3e finds the menu only when `for` changes, so a new menu needs a new trigger. */}
         <M3eMenuTrigger key={picks} htmlFor={menuId}>
           <span style={oneLine}>{label}</span>
         </M3eMenuTrigger>

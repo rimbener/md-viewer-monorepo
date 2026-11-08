@@ -2,11 +2,11 @@ import '@m3e/icons/outlined/redo';
 import '@m3e/icons/outlined/save';
 import '@m3e/icons/outlined/undo';
 
-import type { DocumentSession } from '../useDocumentSession';
+import type { DocumentControls } from '../useDocumentSession';
 import { IconButton } from './IconButton';
 import { PairedIconButtons } from './PairedIconButtons';
 
-export function EditTools({ session }: { session: DocumentSession }) {
+export function EditTools({ session }: { session: DocumentControls }) {
   return (
     <>
       <IconButton

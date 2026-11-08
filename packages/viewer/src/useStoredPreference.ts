@@ -6,7 +6,11 @@ export function useStoredPreference<T>(
   load: () => Promise<T | null>,
   save: (value: T) => void,
   initial: T,
-): [T, (next: T, options?: ChooseOptions) => void, (next: T) => void] {
+): [
+  value: T,
+  choose: (next: T, options?: ChooseOptions) => void,
+  setWithoutChoosing: (next: T) => void,
+] {
   const [value, setValue] = useState(initial);
   const hasChosen = useRef(false);
 

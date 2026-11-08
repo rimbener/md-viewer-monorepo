@@ -20,7 +20,7 @@ function messageOf(cause: unknown, fallback: string): string {
   return cause instanceof Error ? cause.message : fallback;
 }
 
-export type DocumentSession = ReturnType<typeof useDocumentSession>;
+export type DocumentControls = ReturnType<typeof useDocumentSession>;
 
 export function useDocumentSession(path: string | null) {
   const platform = usePlatform();

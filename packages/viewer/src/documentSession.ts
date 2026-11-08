@@ -10,7 +10,7 @@ import {
 } from './editHistory';
 
 // Past this size the document is almost certainly not prose, and parsing blocks the page.
-export const MAX_RENDERED_CHARACTERS = 500_000;
+const MAX_RENDERED_CHARACTERS = 500_000;
 
 export interface DocumentSession {
   path: string | null;
@@ -110,7 +110,6 @@ function open(state: DocumentSession, path: string | null): DocumentSession {
   };
 }
 
-// Text that matches the file on disk is not a draft.
 function apply(
   state: DocumentSession,
   path: string,

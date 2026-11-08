@@ -49,7 +49,8 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
   `src/useDrawer.ts` owns the drawer, the scrim and sidebar visibility.
   `components/DocumentPanel.tsx` shows one document — zoom, font scheme, the
   editor pane; `src/useDocumentSession.ts` reads, watches and saves it;
-  `src/useFindSession.ts` owns find and replace (query, hits, current hit). `components/Markdown.tsx` renders the parsed result.
+  `src/useFindSession.ts` owns find and replace (query, hits, current hit).
+  `components/Markdown.tsx` renders the parsed result.
   Each component that owns a Command shortcut registers it with
   `useShortcut()` (`src/shortcuts.ts`). Do not add a `keydown` listener on
   `window`.
@@ -132,18 +133,21 @@ handed down through a context.
 `src/preferences.ts` wraps `src/storage.ts` (`localStorage`) and is
 deliberately best-effort: a failed read falls back to the default, a failed
 write is dropped, and stored values are validated on the way in
-(`isZoomLevel`, `isSchemeId`, absolute-path checks). `src/useStoredPreference.ts`
-restores one preference: it reads on mount, ignores a read that ends after
-unmount, and saves on `choose`. A stored value never overwrites a choice made
-while the read was in flight. `setWithoutChoosing` changes the value and does
-not save it (the drawer breakpoint). Use this hook for new preferences.
+(`isZoomLevel`, `isSchemeId`, absolute-path checks).
+`src/useStoredPreference.ts` restores one preference and returns
+`[value, choose, setWithoutChoosing]`: it reads on mount, ignores a read that
+ends after unmount, and saves on `choose`. A stored value never overwrites a
+choice made while the read was in flight. `setWithoutChoosing` changes the
+value and does not save it (the drawer breakpoint). Use this hook for new
+preferences.
 
 Editing is in-memory only. `src/documentSession.ts` is a pure reducer that
 owns the text of the open file: disk copy, drafts and undo history per path,
 save state, the disk-changed flag. Switching files and back keeps the work;
 quitting loses it. `src/useDocumentSession.ts` is the thin shell: platform
-read, watch and write, and the timers. Test races on the reducer. The preview reparses 150 ms after the last keystroke, and documents over
-500,000 characters fall back to plain text with the editor disabled.
+read, watch and write, and the timers. Test races on the reducer. The preview
+reparses 150 ms after the last keystroke, and documents over 500,000
+characters fall back to plain text with the editor disabled.
 
 ## Conventions
 
@@ -177,10 +181,11 @@ than deep object literals — see the `outline()` helpers in
 `parseBlocks.test.ts` and `gherkin.test.ts`, and `marks()` in
 `highlight.test.ts`. Readers also get an invariant test over fuzzed input. View
 tests use Testing Library on jsdom with the in-memory platform in
-`packages/viewer/test/fakePlatform.tsx`. `renderViewer` renders in Strict Mode, as
-the apps do, so render code must give the same result when it runs twice. Document rendering is asserted through
-`element.style`; controls are asserted by state (`disabled`, `checked`,
-`selected`, `aria-*`), never by style.
+`packages/viewer/test/fakePlatform.tsx`. `renderViewer` renders in Strict
+Mode, as the apps do, so render code must give the same result when it runs
+twice. Document rendering is asserted through `element.style`; controls are
+asserted by state (`disabled`, `checked`, `selected`, `aria-*`), never by
+style.
 
 jsdom runs m3e through `test/m3ePolyfills.ts` and the `@lit/react` alias in
 `packages/viewer/m3eTestConfig.ts`. m3e reflects attributes on its async
