@@ -47,11 +47,12 @@ async function openWith(query: string, replacement: string) {
   return user;
 }
 
-it('shows no replace row while the editor is hidden', async () => {
+it('shows the replace row disabled in the preview', async () => {
   await renderApp();
 
-  expect(screen.queryByRole('textbox', { name: 'Replace with' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Replace one' })).toBeNull();
+  expect(replaceField()).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Replace one' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Replace all' })).toBeDisabled();
 });
 
 it('opens the split and focuses the replace field on Command-G', async () => {
@@ -124,13 +125,23 @@ it('undoes a replace all in one step', async () => {
   expect(source()).toHaveValue(SOURCE);
 });
 
-it('hides the replace row with the editor and keeps its text', async () => {
+it('disables the replace row when the editor hides, and keeps its text', async () => {
   const user = await openWith('alpha', 'beta');
 
   await user.click(screen.getByRole('radio', { name: 'Preview' }));
-  expect(screen.queryByRole('textbox', { name: 'Replace with' })).toBeNull();
-  await user.click(screen.getByRole('radio', { name: 'Split' }));
 
+  expect(replaceField()).toBeDisabled();
   expect(replaceField()).toHaveValue('beta');
-  expect(replaceField()).not.toHaveFocus();
+});
+
+it('disables the replace row for a file too large to edit', async () => {
+  await renderViewer(
+    createFakePlatform(
+      { '/notes': ['notes.md'] },
+      { '/notes/notes.md': 'a'.repeat(500_001) },
+    ),
+  );
+
+  expect(replaceField()).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Replace all' })).toBeDisabled();
 });

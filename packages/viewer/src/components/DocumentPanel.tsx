@@ -402,17 +402,17 @@ export function DocumentPanel({
             onQuery={find.setQuery}
             onActive={find.setActive}
           />
-          {canEdit && findsInSource ? (
-            <ReplaceBar
-              focusKey={find.replaceFocusKey}
-              onFocused={find.replaceFocused}
-              value={find.replacement}
-              canReplace={find.count > 0}
-              onValue={find.setReplacement}
-              onReplaceOne={find.replaceOne}
-              onReplaceAll={find.replaceAll}
-            />
-          ) : null}
+          <ReplaceBar
+            focusKey={find.replaceFocusKey}
+            onFocused={find.replaceFocused}
+            value={find.replacement}
+            // Replace changes the source, so it works only while the editor shows.
+            disabled={!canEdit || !findsInSource}
+            canReplace={find.count > 0}
+            onValue={find.setReplacement}
+            onReplaceOne={find.replaceOne}
+            onReplaceAll={find.replaceAll}
+          />
         </div>
       </header>
 

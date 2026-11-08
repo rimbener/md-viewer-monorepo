@@ -5,6 +5,7 @@ import '@m3e/icons/outlined/find_replace';
 import { useEffect, useRef, type CSSProperties } from 'react';
 
 import { M3eFormField, M3eIcon, M3eIconButton } from '../m3e';
+import { findFieldStyle } from './DocumentSearch';
 import { Tooltip, useControlId } from './Tooltip';
 
 type ReplaceBarProps = {
@@ -12,17 +13,20 @@ type ReplaceBarProps = {
   focusKey: number;
   onFocused: () => void;
   value: string;
+  /** The editor is hidden, or the document cannot be edited. */
+  disabled: boolean;
   canReplace: boolean;
   onValue: (value: string) => void;
   onReplaceOne: () => void;
   onReplaceAll: () => void;
 };
 
-/** Replace, beside Find. It works on the source, so only while the editor shows. */
+/** Replace, beside Find. It changes the source, so it works only while the editor shows. */
 export function ReplaceBar({
   focusKey,
   onFocused,
   value,
+  disabled,
   canReplace,
   onValue,
   onReplaceOne,
@@ -42,13 +46,18 @@ export function ReplaceBar({
 
   return (
     <>
-      <M3eFormField variant="outlined" hideSubscript="always">
+      <M3eFormField
+        variant="outlined"
+        hideSubscript="always"
+        style={findFieldStyle}
+      >
         <M3eIcon slot="prefix" name="find_replace" />
         <input
           ref={fieldRef}
           aria-label="Replace with"
           placeholder="Replace"
           value={value}
+          disabled={disabled}
           onChange={event => onValue(event.target.value)}
           onKeyDown={event => {
             if (event.key === 'Enter') {
@@ -65,7 +74,7 @@ export function ReplaceBar({
           <M3eIconButton
             id={replaceOneId}
             aria-label="Replace one"
-            disabled={!canReplace}
+            disabled={disabled || !canReplace}
             onClick={onReplaceOne}
           >
             <M3eIcon name="check" />
@@ -73,7 +82,7 @@ export function ReplaceBar({
           <M3eIconButton
             id={replaceAllId}
             aria-label="Replace all"
-            disabled={!canReplace}
+            disabled={disabled || !canReplace}
             onClick={onReplaceAll}
           >
             <M3eIcon name="done_all" />

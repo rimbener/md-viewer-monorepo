@@ -59,7 +59,11 @@ export function DocumentSearch({
   };
 
   return (
-    <M3eFormField variant="outlined" hideSubscript="always">
+    <M3eFormField
+      variant="outlined"
+      hideSubscript="always"
+      style={findFieldStyle}
+    >
       <M3eIcon slot="prefix" name="search" />
       <input
         role="searchbox"
@@ -112,6 +116,15 @@ export function DocumentSearch({
     </M3eFormField>
   );
 }
+
+/**
+ * Find and Replace grow to share the row. Their buttons sit inside the field,
+ * so the default width leaves little room for text. Below 320 px each wraps.
+ */
+export const findFieldStyle: CSSProperties = {
+  flex: '1 1 320px',
+  maxWidth: 420,
+};
 
 const styles = {
   actions: {
