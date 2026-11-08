@@ -1,14 +1,14 @@
 import '@m3e/icons/outlined/note_add';
 import '@m3e/icons/outlined/refresh';
 
-import type { CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 
 import { M3eButton, M3eIcon, M3eIconButton } from '../m3e';
 import { usePlatform } from '../platform';
-import type { RecentFolder } from '../recentFolders';
+import { countFiles } from '../scanDirectory';
 import { useTheme } from '../theme';
-import type { DirectoryNode, FileNode } from '../types';
 import { typescale } from '../typescale';
+import type { FolderSessionControls } from '../useFolderSession';
 import { FileTree } from './FileTree';
 import { OpenUrlForm } from './OpenUrlForm';
 import { RecentFolderMenu } from './RecentFolderMenu';
@@ -19,43 +19,28 @@ import { Tooltip, useControlId } from './Tooltip';
 interface SidebarProps {
   /** The drawer slot it fills. */
   slot?: string;
-  root: DirectoryNode | null;
-  currentFolderPath: string | null;
-  recentFolders: readonly RecentFolder[];
-  selectedPath: string | null;
-  isScanning: boolean;
-  error: string | null;
-  fileCount: number;
-  onChooseFolder: () => void;
-  onSelectRecentFolder: (folder: RecentFolder) => void;
-  onRemoveRecentFolder: (folder: RecentFolder) => void;
-  onReloadFolder: () => void;
+  session: FolderSessionControls;
   /** Asks for a new markdown file in `folder`. Null where that is not offered. */
   onAddFile: ((folder: string) => void) | null;
-  /** Null when no walk is running that could be stopped. */
-  onCancelScan: (() => void) | null;
-  onSelectFile: (file: FileNode) => void;
-  onSelectDirectory: (directory: DirectoryNode) => void;
 }
 
-export function Sidebar({
-  slot,
-  root,
-  currentFolderPath,
-  recentFolders,
-  selectedPath,
-  isScanning,
-  error,
-  fileCount,
-  onChooseFolder,
-  onSelectRecentFolder,
-  onRemoveRecentFolder,
-  onReloadFolder,
-  onAddFile,
-  onCancelScan,
-  onSelectFile,
-  onSelectDirectory,
-}: SidebarProps) {
+export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
+  const {
+    root,
+    folder: currentFolderPath,
+    recentFolders,
+    isBusy: isScanning,
+    error,
+    chooseFolder: onChooseFolder,
+    selectRecentFolder: onSelectRecentFolder,
+    removeRecentFolder: onRemoveRecentFolder,
+    reloadFolder: onReloadFolder,
+    cancelScan: onCancelScan,
+    selectFile: onSelectFile,
+    selectDirectory: onSelectDirectory,
+  } = session;
+  const selectedPath = session.selectedFile?.path ?? null;
+  const fileCount = useMemo(() => (root ? countFiles(root) : 0), [root]);
   const theme = useTheme();
   const platform = usePlatform();
   const reloadId = useControlId();

@@ -41,8 +41,12 @@ cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
 
 - `packages/markdown` — the three readers. Pure TypeScript, imported by
   subpath (`@md-viewer/markdown/parseBlocks`). No barrel.
-- `packages/viewer` — the React viewer. `src/Viewer.tsx` owns the session: the
-  chosen folder, the scanned tree, the selected file, sidebar visibility.
+- `packages/viewer` — the React viewer. `src/Viewer.tsx` joins two hooks.
+  `src/folderSession.ts` is a pure reducer for the folder session: restore,
+  scan, open folder or file from outside, selected file, Back/Next history.
+  Each async result carries a request id; the reducer ignores a stale one.
+  `src/useFolderSession.ts` does the platform calls and sends the events.
+  `src/useDrawer.ts` owns the drawer, the scrim and sidebar visibility.
   `components/DocumentPanel.tsx` shows one document — zoom, font scheme, the
   editor pane; `src/useDocumentSession.ts` reads, watches and saves it;
   `src/useFindSession.ts` owns find and replace (query, hits, current hit). `components/Markdown.tsx` renders the parsed result.
