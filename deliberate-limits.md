@@ -135,7 +135,8 @@ URL is not watched.
 ## A file from outside stays one file
 
 A file opened from Finder, or by URL, is shown alone. The sidebar does not list
-the files beside it. The next launch reopens the last folder, not that file. A
+the files beside it. The next launch reopens the last folder, not that file.
+The parent folder goes into the recent folder menu, so one click opens it. A
 file opened while the app is running gets a new window: on macOS a new window
 of the same app, on Windows and Linux a second app. The window that is open
 keeps its file.

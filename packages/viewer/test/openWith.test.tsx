@@ -70,10 +70,56 @@ it('takes the file Finder opened once, under Strict Mode', async () => {
   await renderViewer(platform);
 
   expect(platform.takeOpenedFile).toHaveBeenCalledTimes(1);
-  expect(platform.folderExists).not.toHaveBeenCalled();
+  expect(platform.folderExists).not.toHaveBeenCalledWith('/notes');
   expect(
     screen.getByRole('heading', { name: 'From Finder' }),
   ).toBeInTheDocument();
+});
+
+function storedRecent(): string[] {
+  const stored = window.localStorage.getItem('mdviewer.recentFolders');
+  return stored === null
+    ? []
+    : (JSON.parse(stored) as { path: string }[]).map(folder => folder.path);
+}
+
+it('adds the folder of the file Finder opened to recent folders', async () => {
+  const platform = createFakePlatform(
+    { '/opened': ['readme.md'] },
+    { '/opened/readme.md': '# From Finder\n' },
+  );
+  platform.takeOpenedFile.mockResolvedValue('/opened/readme.md');
+
+  await renderViewer(platform);
+  await settle();
+
+  expect(storedRecent()).toEqual(['/opened']);
+  expect(platform.readDir).not.toHaveBeenCalled();
+});
+
+it('adds the folder of a file opened while the app runs', async () => {
+  const platform = createFakePlatform(
+    { '/opened': ['other.mdc'] },
+    { '/opened/other.mdc': '# Other\n' },
+  );
+
+  await renderViewer(platform);
+  await act(async () => {
+    platform.openFromOutside('/opened/other.mdc');
+  });
+  await settle();
+
+  expect(storedRecent()).toEqual(['/opened']);
+});
+
+it('leaves recent folders alone when the folder cannot be opened again', async () => {
+  const platform = openedPlatform();
+  platform.takeOpenedFile.mockResolvedValue('/opened/readme.md');
+
+  await renderViewer(platform);
+  await settle();
+
+  expect(storedRecent()).toEqual([]);
 });
 
 it('forgets the file from outside once a folder is opened', async () => {

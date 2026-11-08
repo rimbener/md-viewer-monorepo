@@ -268,8 +268,13 @@ export function useFolderSession(onFileChosen: () => void) {
       if (send({ type: 'openedFromOutside', path }) !== before) {
         platform.closeFolder();
       }
+      folderOfOpenedFile(platform, path).then(folder => {
+        if (folder !== null) {
+          noteRecent(folder.path, folder.bookmark);
+        }
+      });
     },
-    [platform, send],
+    [noteRecent, platform, send],
   );
 
   useEffect(() => {
@@ -440,6 +445,34 @@ async function retargetFolderFiles(from: string, to: string): Promise<void> {
   const moved = retargetHistory(await loadFileHistory(from), from, to);
   if (moved.paths.length > 0) {
     await moveFileHistory(from, to, moved);
+  }
+}
+
+/**
+ * The folder that holds a file opened from outside, when it can be opened
+ * again from the recent menu. Null for a URL or a folder without access.
+ */
+async function folderOfOpenedFile(
+  platform: Platform,
+  path: string,
+): Promise<RecentFolder | null> {
+  const slash = path.lastIndexOf('/');
+  if (!path.startsWith('/') || slash <= 0) {
+    return null;
+  }
+  const folder = path.slice(0, slash);
+  const bookmark = await bookmarkFolder(platform, folder);
+  if (bookmark === null && !(await folderExists(platform, folder))) {
+    return null;
+  }
+  return { path: folder, bookmark };
+}
+
+async function bookmarkFolder(platform: Platform, path: string) {
+  try {
+    return await platform.bookmarkFolder(path);
+  } catch {
+    return null;
   }
 }
 

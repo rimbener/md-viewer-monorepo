@@ -178,8 +178,9 @@ no folder open.
 The sidebar keeps a menu of the last 10 folders, above Change Folder. The
 newest folder is first. A choice in the menu opens that folder again. The menu
 shows the folder name, with a check on the open folder. When two folders have
-the same name, it also shows the parent folder. A file opened from outside is not added. A folder that can no
-longer be opened stays in the menu until a newer folder takes its place, or
+the same name, it also shows the parent folder. A file opened from outside
+adds its parent folder, when the app can open that folder again: the desktop
+app can, the Android app and a URL cannot. A folder that can no longer be opened stays in the menu until a newer folder takes its place, or
 until the person removes it: "Remove from Recent Folders", at the end of the
 menu, opens a submenu of the folders, and a choice there removes that folder.
 This removes only the menu entry; the folder stays open if it is open. There
