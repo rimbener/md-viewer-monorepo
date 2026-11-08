@@ -1,11 +1,10 @@
 import '@m3e/icons/outlined/note_add';
 import '@m3e/icons/outlined/refresh';
 
-import { useMemo, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 import { M3eButton, M3eIcon, M3eIconButton } from '../m3e';
 import { usePlatform } from '../platform';
-import { countFiles } from '../scanDirectory';
 import { useTheme } from '../theme';
 import { typescale } from '../typescale';
 import type { FolderSessionControls } from '../useFolderSession';
@@ -16,10 +15,28 @@ import { Spinner } from './Spinner';
 import { oneLine } from './text';
 import { Tooltip, useControlId } from './Tooltip';
 
+type SidebarSession = Pick<
+  FolderSessionControls,
+  | 'root'
+  | 'folder'
+  | 'selectedFile'
+  | 'fileCount'
+  | 'recentFolders'
+  | 'isBusy'
+  | 'error'
+  | 'chooseFolder'
+  | 'selectRecentFolder'
+  | 'removeRecentFolder'
+  | 'reloadFolder'
+  | 'cancelScan'
+  | 'selectFile'
+  | 'selectDirectory'
+>;
+
 interface SidebarProps {
   /** The drawer slot it fills. */
   slot?: string;
-  session: FolderSessionControls;
+  session: SidebarSession;
   /** Asks for a new markdown file in `folder`. Null where that is not offered. */
   onAddFile: ((folder: string) => void) | null;
 }
@@ -27,32 +44,30 @@ interface SidebarProps {
 export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
   const {
     root,
-    folder: currentFolderPath,
+    folder,
+    selectedFile,
+    fileCount,
     recentFolders,
-    isBusy: isScanning,
+    isBusy,
     error,
-    chooseFolder: onChooseFolder,
-    selectRecentFolder: onSelectRecentFolder,
-    removeRecentFolder: onRemoveRecentFolder,
-    reloadFolder: onReloadFolder,
-    cancelScan: onCancelScan,
-    selectFile: onSelectFile,
-    selectDirectory: onSelectDirectory,
+    chooseFolder,
+    selectRecentFolder,
+    removeRecentFolder,
+    reloadFolder,
+    cancelScan,
+    selectFile,
+    selectDirectory,
   } = session;
-  const selectedPath = session.selectedFile?.path ?? null;
-  const fileCount = useMemo(() => (root ? countFiles(root) : 0), [root]);
+  const selectedPath = selectedFile?.path ?? null;
   const theme = useTheme();
   const platform = usePlatform();
   const reloadId = useControlId();
   const addId = useControlId();
   const cancelId = useControlId();
   const hairline = `1px solid ${theme.border}`;
-  const canCreate =
-    root !== null && currentFolderPath !== null && onAddFile !== null;
+  const canCreate = root !== null && folder !== null && onAddFile !== null;
   const newFileFolder =
-    currentFolderPath === null
-      ? null
-      : folderOfSelection(currentFolderPath, selectedPath);
+    folder === null ? null : folderOfSelection(folder, selectedPath);
 
   return (
     <aside
@@ -78,28 +93,28 @@ export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
           <div>
             <RecentFolderMenu
               folders={recentFolders}
-              currentPath={currentFolderPath}
-              disabled={isScanning}
-              onSelect={onSelectRecentFolder}
-              onRemove={onRemoveRecentFolder}
+              currentPath={folder}
+              disabled={isBusy}
+              onSelect={selectRecentFolder}
+              onRemove={removeRecentFolder}
             />
             <div style={styles.actions}>
               <M3eButton
                 variant="tonal"
-                onClick={onChooseFolder}
-                disabled={isScanning}
+                onClick={chooseFolder}
+                disabled={isBusy}
                 style={styles.grow}
               >
                 {root ? 'Change Folder…' : 'Choose Folder…'}
               </M3eButton>
-              {root && currentFolderPath !== null ? (
+              {root && folder !== null ? (
                 <>
                   <M3eIconButton
                     id={reloadId}
                     variant="tonal"
                     aria-label="Reload folder"
-                    onClick={onReloadFolder}
-                    disabled={isScanning}
+                    onClick={reloadFolder}
+                    disabled={isBusy}
                   >
                     <M3eIcon name="refresh" />
                   </M3eIconButton>
@@ -120,7 +135,7 @@ export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
                       onAddFile?.(newFileFolder);
                     }
                   }}
-                  disabled={isScanning}
+                  disabled={isBusy}
                   style={{ width: '100%', marginTop: 8 }}
                 >
                   <M3eIcon slot="icon" name="note_add" />
@@ -172,22 +187,18 @@ export function Sidebar({ slot, session, onAddFile }: SidebarProps) {
           key={root.path}
           root={root}
           selectedPath={selectedPath}
-          onSelectFile={onSelectFile}
-          onSelectDirectory={onSelectDirectory}
+          onSelectFile={selectFile}
+          onSelectDirectory={selectDirectory}
         />
       ) : (
         <div style={statusStyle}>
-          {isScanning ? <Spinner /> : null}
+          {isBusy ? <Spinner /> : null}
           <span style={{ ...typescale('body-small'), color: theme.mutedText }}>
-            {isScanning ? 'Scanning…' : (error ?? 'No folder selected yet.')}
+            {isBusy ? 'Scanning…' : (error ?? 'No folder selected yet.')}
           </span>
-          {onCancelScan ? (
+          {cancelScan ? (
             <>
-              <M3eButton
-                id={cancelId}
-                variant="outlined"
-                onClick={onCancelScan}
-              >
+              <M3eButton id={cancelId} variant="outlined" onClick={cancelScan}>
                 Cancel
               </M3eButton>
               <Tooltip

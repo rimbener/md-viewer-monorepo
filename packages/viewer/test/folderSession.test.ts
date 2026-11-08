@@ -2,6 +2,7 @@ import {
   canStepBack,
   canStepNext,
   initialFolderSession,
+  persistenceOf,
   reduceFolderSession,
   type FolderEvent,
   type FolderSession,
@@ -227,5 +228,89 @@ describe('reduceFolderSession', () => {
         second,
       ).recent,
     ).toEqual([folder]);
+  });
+});
+
+describe('persistenceOf', () => {
+  function persisted(event: FolderEvent, from: FolderSession): string {
+    const { lastFile, history } = persistenceOf(
+      from,
+      event,
+      reduceFolderSession(from, event),
+    );
+    const saved = history === null ? null : history.history.paths.join(',');
+    return `lastFile=${lastFile} history=${history?.folder}:${saved}`;
+  }
+
+  const visited = run(
+    [
+      { type: 'selected', file: file('/docs/a.md') },
+      { type: 'selected', file: file('/docs/b.md') },
+    ],
+    open,
+  );
+
+  it('saves the file and the history on a visit', () => {
+    expect(
+      persisted({ type: 'selected', file: file('/docs/a.md') }, open),
+    ).toBe('lastFile=/docs/a.md history=/docs:/docs/a.md');
+  });
+
+  it('saves only the file when a visit leaves the history as it was', () => {
+    expect(
+      persisted({ type: 'selected', file: file('/docs/b.md') }, visited),
+    ).toBe('lastFile=/docs/b.md history=undefined:null');
+  });
+
+  it('saves nothing for a file from outside', () => {
+    const external = run([{ type: 'openedFromOutside', path: '/x/y.md' }]);
+    expect(
+      persisted({ type: 'selected', file: file('/x/y.md') }, external),
+    ).toBe('lastFile=null history=undefined:null');
+  });
+
+  it('saves a step, but not a step past the end', () => {
+    expect(persisted({ type: 'stepped', direction: 'back' }, visited)).toBe(
+      'lastFile=/docs/a.md history=/docs:/docs/a.md,/docs/b.md',
+    );
+    expect(persisted({ type: 'stepped', direction: 'next' }, visited)).toBe(
+      'lastFile=null history=undefined:null',
+    );
+  });
+
+  it('saves a created file only when it is selected', () => {
+    const created = {
+      type: 'created',
+      folder: '/docs',
+      path: '/docs/c.md',
+      tree: tree('/docs', 'a.md', 'b.md', 'c.md'),
+    } as const;
+    expect(persisted(created, open)).toBe(
+      'lastFile=/docs/c.md history=/docs:/docs/c.md',
+    );
+    expect(persisted({ ...created, tree: tree('/docs', 'a.md') }, open)).toBe(
+      'lastFile=null history=undefined:null',
+    );
+  });
+
+  it('writes the loaded history back only when visits changed it', () => {
+    const id = restored.historyLoad?.id ?? -1;
+    const stored = { paths: ['/docs/old.md'], index: 0 };
+    expect(
+      persisted(
+        { type: 'historyLoaded', id, stored },
+        run([{ type: 'selected', file: file('/docs/a.md') }], open),
+      ),
+    ).toBe('lastFile=null history=/docs:/docs/old.md,/docs/b.md,/docs/a.md');
+    const current = { paths: ['/docs/old.md', '/docs/b.md'], index: 1 };
+    expect(
+      persisted({ type: 'historyLoaded', id, stored: current }, restored),
+    ).toBe('lastFile=null history=undefined:null');
+  });
+
+  it('saves nothing when a folder is picked', () => {
+    expect(
+      persisted({ type: 'picked', folder: '/other', resume: null }, visited),
+    ).toBe('lastFile=null history=undefined:null');
   });
 });

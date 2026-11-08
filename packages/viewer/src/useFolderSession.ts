@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { currentHistoryPath, retargetHistory } from './fileHistory';
 import {
@@ -6,6 +6,7 @@ import {
   canStepNext,
   initialFolderSession,
   isBusy,
+  persistenceOf,
   reduceFolderSession,
   type FolderEvent,
   type FolderSession,
@@ -26,7 +27,7 @@ import {
   saveLastFolder,
 } from './preferences';
 import type { RecentFolder } from './recentFolders';
-import { scanDirectory, scanToFile } from './scanDirectory';
+import { countFiles, scanDirectory, scanToFile } from './scanDirectory';
 import type { DirectoryNode, FileNode } from './types';
 
 function messageOf(cause: unknown, fallback: string): string {
@@ -40,9 +41,17 @@ export function useFolderSession(onFileChosen: () => void) {
 
   // Async work must see the outcome of an event at once, before React renders it.
   const send = useCallback((event: FolderEvent): FolderSession => {
-    const next = reduceFolderSession(stateRef.current, event);
+    const before = stateRef.current;
+    const next = reduceFolderSession(before, event);
     stateRef.current = next;
     setState(next);
+    const { lastFile, history } = persistenceOf(before, event, next);
+    if (history !== null) {
+      saveFileHistory(history.folder, history.history);
+    }
+    if (lastFile !== null) {
+      saveLastFile(lastFile);
+    }
     return next;
   }, []);
 
@@ -128,42 +137,20 @@ export function useFolderSession(onFileChosen: () => void) {
     [beginFolder, noteRecent, platform, send],
   );
 
-  const persistChoice = useCallback(
-    (before: FolderSession, after: FolderSession, path: string) => {
-      onFileChosen();
-      if (after.folder === null) {
-        return;
-      }
-      saveLastFile(path);
-      if (after.history !== before.history) {
-        saveFileHistory(after.folder, after.history);
-      }
-    },
-    [onFileChosen],
-  );
-
   const selectFile = useCallback(
     (file: FileNode) => {
-      const before = stateRef.current;
-      persistChoice(before, send({ type: 'selected', file }), file.path);
+      send({ type: 'selected', file });
+      onFileChosen();
     },
-    [persistChoice, send],
+    [onFileChosen, send],
   );
 
   const step = useCallback(
     (direction: 'back' | 'next') => {
       const before = stateRef.current;
       const after = send({ type: 'stepped', direction });
-      const path = currentHistoryPath(after.history);
-      if (after === before || path === null) {
-        return;
-      }
-      if (after.folder !== null) {
-        saveFileHistory(after.folder, after.history);
-      }
-      saveLastFile(path);
       const request = after.reveal;
-      if (request === null) {
+      if (after === before || request === null) {
         return;
       }
       scanToFile(platform.readDir, request.folder, request.path)
@@ -188,10 +175,10 @@ export function useFolderSession(onFileChosen: () => void) {
       const before = stateRef.current;
       const after = send({ type: 'created', folder, path, tree });
       if (after !== before && after.selected?.path === path) {
-        persistChoice(before, after, path);
+        onFileChosen();
       }
     },
-    [persistChoice, platform, send],
+    [onFileChosen, platform, send],
   );
 
   const reloadFolder = useCallback(() => {
@@ -216,13 +203,9 @@ export function useFolderSession(onFileChosen: () => void) {
     if (historyLoad === null) {
       return;
     }
-    loadFileHistory(historyLoad.folder).then(stored => {
-      const before = stateRef.current;
-      const after = send({ type: 'historyLoaded', id: historyLoad.id, stored });
-      if (after !== before && after.history !== stored) {
-        saveFileHistory(historyLoad.folder, after.history);
-      }
-    });
+    loadFileHistory(historyLoad.folder).then(stored =>
+      send({ type: 'historyLoaded', id: historyLoad.id, stored }),
+    );
   }, [historyLoad, send]);
 
   useEffect(() => {
@@ -338,8 +321,12 @@ export function useFolderSession(onFileChosen: () => void) {
     };
   }, [chooseFolder, noteRecent, platform, send, showOpenedFile]);
 
+  const { tree } = state;
+  const fileCount = useMemo(() => (tree ? countFiles(tree) : 0), [tree]);
+
   return {
-    root: state.tree,
+    root: tree,
+    fileCount,
     folder: state.folder,
     selectedFile: state.selected,
     recentFolders: state.recent,

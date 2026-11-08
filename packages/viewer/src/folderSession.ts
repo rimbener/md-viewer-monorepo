@@ -326,3 +326,44 @@ export function reduceFolderSession(
         : state;
   }
 }
+
+interface FolderPersistence {
+  lastFile: string | null;
+  history: { folder: string; history: FileHistory } | null;
+}
+
+const NOTHING_TO_PERSIST: FolderPersistence = { lastFile: null, history: null };
+
+export function persistenceOf(
+  before: FolderSession,
+  event: FolderEvent,
+  after: FolderSession,
+): FolderPersistence {
+  const { folder } = after;
+  if (after === before || folder === null) {
+    return NOTHING_TO_PERSIST;
+  }
+  const historyIf = (isNew: boolean) =>
+    isNew ? { folder, history: after.history } : null;
+  const isVisitNew = after.history !== before.history;
+  switch (event.type) {
+    case 'selected':
+      return { lastFile: event.file.path, history: historyIf(isVisitNew) };
+    case 'created':
+      return after.selected?.path === event.path
+        ? { lastFile: event.path, history: historyIf(isVisitNew) }
+        : NOTHING_TO_PERSIST;
+    case 'stepped':
+      return {
+        lastFile: currentHistoryPath(after.history),
+        history: historyIf(true),
+      };
+    case 'historyLoaded':
+      return {
+        lastFile: null,
+        history: historyIf(after.history !== event.stored),
+      };
+    default:
+      return NOTHING_TO_PERSIST;
+  }
+}
