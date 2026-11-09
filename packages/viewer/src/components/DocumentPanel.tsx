@@ -310,12 +310,10 @@ export function DocumentPanel({
   if (file === null) {
     return (
       <main style={styles.container}>
+        <AppBarTitle>{historyTool}</AppBarTitle>
         {isToolbarVisible ? (
           <header style={headerStyle}>
-            <div style={styles.toolRow}>
-              <M3eToolbar>{historyTool}</M3eToolbar>
-              {themeTool}
-            </div>
+            <div style={styles.toolRow}>{themeTool}</div>
           </header>
         ) : null}
         <div style={{ ...styles.body, ...styles.centered }}>
@@ -382,6 +380,7 @@ export function DocumentPanel({
   return (
     <main style={styles.container}>
       <AppBarTitle>
+        {historyTool}
         <h1 title={file.path} style={{ ...styles.fileName, ...oneLine }}>
           {file.name}
         </h1>
@@ -407,7 +406,6 @@ export function DocumentPanel({
         {/* One toolbar per group: m3e keeps a toolbar on one line, the row wraps. */}
         {isToolbarVisible ? (
           <div style={styles.toolRow}>
-            <M3eToolbar>{historyTool}</M3eToolbar>
             {canRenderGherkin ? (
               <M3eToolbar>
                 <IconButton

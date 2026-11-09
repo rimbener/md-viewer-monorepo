@@ -65,6 +65,7 @@ const styles = {
   },
   title: {
     display: 'flex',
+    alignItems: 'center',
     minWidth: 0,
     gap: 4,
   },

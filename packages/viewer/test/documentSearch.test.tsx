@@ -72,19 +72,19 @@ it('puts each tool group in its own toolbar, in a row that wraps', async () => {
   await renderApp();
   const toolbars = Array.from(document.querySelectorAll('m3e-toolbar'));
 
-  expect(toolbars).toHaveLength(7);
+  expect(toolbars).toHaveLength(6);
   expect((toolbars[0].parentElement as HTMLElement).style.flexWrap).toBe(
     'wrap',
   );
   expect(
     screen.getByRole('button', { name: 'Back' }).closest('m3e-toolbar'),
-  ).toBe(toolbars[0]);
+  ).toBeNull();
   expect(
     screen.getByRole('group', { name: 'Zoom' }).closest('m3e-toolbar'),
-  ).toBe(toolbars[4]);
+  ).toBe(toolbars[3]);
   expect(
     screen.getByRole('radio', { name: 'Preview' }).closest('m3e-toolbar'),
-  ).toBe(toolbars[6]);
+  ).toBe(toolbars[5]);
 });
 
 it('labels the font and step controls above their buttons', async () => {
