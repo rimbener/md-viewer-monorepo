@@ -26,6 +26,7 @@ pnpm dev:tauri                   # desktop app (needs Rust)
 pnpm build:web                   # static site in builds/web
 pnpm build:tauri                 # desktop installers in builds/tauri
 pnpm install:macos               # build MD Viewer.app, copy to /Applications
+pnpm init:android                # once per clone or worktree: gen/android + app icon
 pnpm dev:android                 # Android app on a USB phone or emulator
 pnpm build:android               # aarch64 APK in builds/android
 
@@ -38,6 +39,9 @@ pnpm lint                        # eslint
 pnpm format                      # prettier
 cargo check --manifest-path apps/tauri/src-tauri/Cargo.toml
 ```
+
+- When `apps/tauri/src-tauri/gen/android` is missing (fresh clone or new
+  worktree), run `pnpm init:android`, never plain `tauri android init`.
 
 ## Layout
 
@@ -205,5 +209,13 @@ update: `await settle()` before `toBeDisabled()`, or read the property
 reached through `shadowRoot`. A tree item takes clicks on its row: use
 `press()` or `clickTarget()`. m3e submits a form one `setTimeout` after the
 click.
+
+## Code reviews
+
+- "review" = the branch against main (`git diff main...HEAD`) plus uncommitted
+  changes.
+- "re-review" = ONLY what changed since the last review: uncommitted changes
+  (`git diff HEAD`) and commits made after it. Report bugs in that code, or
+  bugs it causes elsewhere. Do not report issues in untouched code.
 
 REMEMBER: In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision. ALWAYS use ASD-STE100 (Simplified Technical English) for explanations, documentation, etc.

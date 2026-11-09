@@ -38,8 +38,7 @@ Needs Android Studio (SDK, NDK, command-line tools), `JAVA_HOME`,
 (`rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android`).
 
 ```sh
-pnpm --filter @md-viewer/tauri tauri android init   # once; makes src-tauri/gen/android
-cp -R apps/tauri/src-tauri/icons/android/ apps/tauri/src-tauri/gen/android/app/src/main/res/   # app icon
+pnpm init:android                                  # once per clone or worktree: makes src-tauri/gen/android and copies the app icon
 pnpm dev:android                                   # on a USB phone or an emulator
 pnpm build:android                                 # aarch64 APK, signed, in builds/android
 adb install -r builds/android/md-viewer.apk
